@@ -156,6 +156,11 @@ textarea {
   color: var(--muted);
 }
 
+.muted {
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
 .brand-copy small {
   color: var(--muted);
   font-size: 0.82rem;
@@ -448,6 +453,18 @@ main {
 .project-panel {
   display: grid;
   gap: 18px;
+}
+
+.post-card__cover {
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.post-card__cover img {
+  width: 100%;
+  aspect-ratio: 1.5 / 1;
+  object-fit: cover;
 }
 
 .post-card__meta,

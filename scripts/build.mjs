@@ -303,7 +303,7 @@ const renderHomePage = (posts) => {
       <div class="post-grid">
         ${recentPosts
           .map(
-            (post) => `<article class="post-card"><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${post.slug}/">阅读文章 →</a></article>`
+            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${post.slug}/">阅读文章 →</a></article>`
           )
           .join('')}
       </div>
@@ -391,13 +391,13 @@ const renderBlogListPage = (posts) => `
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
   </section>`;
 
-const renderPostPage = (post) => `
+const renderPostPage = (post, relatedPosts) => `
   <section class="post-header reveal">
     <p class="kicker">文章详情</p>
     <h1>${post.title}</h1>
@@ -423,6 +423,14 @@ const renderPostPage = (post) => `
           <a class="button button-secondary" href="../">返回文章列表</a>
           <a class="button button-ghost" href="../../projects/">查看项目</a>
         </div>
+      </div>
+      <div class="note-card">
+        <h3>相关文章</h3>
+        <ul class="list-card">
+          ${relatedPosts
+            .map((item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.summary}</span></li>`)
+            .join('')}
+        </ul>
       </div>
     </aside>
   </section>`;
@@ -494,6 +502,7 @@ writeText(
 );
 
 for (const post of posts) {
+  const relatedPosts = posts.filter((item) => item.slug !== post.slug).slice(0, 2);
   writeText(
     path.join(outDir, 'blog', post.slug, 'index.html'),
     renderLayout({
@@ -501,7 +510,7 @@ for (const post of posts) {
       description: post.summary,
       currentPath: `/blog/${post.slug}/`,
       outputPath: path.join(outDir, 'blog', post.slug, 'index.html'),
-      body: renderPostPage(post),
+      body: renderPostPage(post, relatedPosts),
       image: post.cover
     })
   );
