@@ -22,7 +22,10 @@ dist/                   # 构建产物（构建时生成）
 
 ## 本地使用
 
+项目固定工作目录：`/root/.openclaw/workspace-fullstack-dev/personal-blog`
+
 ```bash
+cd /root/.openclaw/workspace-fullstack-dev/personal-blog
 npm run validate
 npm run build
 npm run preview
