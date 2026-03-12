@@ -495,7 +495,7 @@ writeText(
   path.join(outDir, 'blog', 'index.html'),
   renderLayout({
     title: `文章｜${site.shortName}`,
-    description: '沈昱的文章列表，记录产品、设计、前端体验与个人工作方式。',
+    description: '沈晨玙的文章列表，记录产品、设计、前端体验与个人工作方式。',
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
     body: renderBlogListPage(posts),

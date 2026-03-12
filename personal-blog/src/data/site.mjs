@@ -1,12 +1,12 @@
 export const site = {
-  title: '沈昱｜个人主页与博客',
-  shortName: '沈昱',
+  title: '沈晨玙｜个人主页与博客',
+  shortName: '沈晨玙',
   description:
-    '沈昱的个人主页与博客，记录产品、设计、工程和生活观察，分享正在做的项目、近期近况与长期思考。',
+    '沈晨玙的个人主页与博客，记录产品、设计、工程和生活观察，分享正在做的项目、近期近况与长期思考。',
   siteUrl: 'https://alex-shen1121.github.io/personal-blog/',
   repoBasePath: '/personal-blog/',
   author: {
-    name: '沈昱',
+    name: '沈晨玙',
     role: '产品与前端体验设计实践者',
     email: 'alex@example.com',
     city: '杭州 / Remote',
@@ -32,7 +32,7 @@ export const home = {
     eyebrow: '个人主页 / 博客 / 长期更新中',
     title: '把想法做成可用、可感知、可持续迭代的产品体验。',
     description:
-      '这里是沈昱的线上据点。我会在这里整理自己的工作方法、记录正在推进的项目，也留一点空间给日常观察与阶段性思考。希望它像一张持续生长的个人名片，而不是一次性的 landing page。',
+      '这里是沈晨玙的线上据点。我会在这里整理自己的工作方法、记录正在推进的项目，也留一点空间给日常观察与阶段性思考。希望它像一张持续生长的个人名片，而不是一次性的 landing page。',
     primaryCta: { label: '查看文章', href: '/blog/' },
     secondaryCta: { label: '了解我在做什么', href: '/about/' },
     metrics: [
@@ -90,7 +90,7 @@ export const home = {
 export const pages = {
   about: {
     title: '关于我',
-    description: '关于沈昱的工作方式、关注领域与做事偏好。',
+    description: '关于沈晨玙的工作方式、关注领域与做事偏好。',
     intro:
       '我偏爱那种既有逻辑、又有温度的数字产品。工作里常做的，是把目标、信息、交互和视觉统一到同一个叙事里。',
     sections: [
