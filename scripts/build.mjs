@@ -151,13 +151,15 @@ const getRelativePrefix = (outputPath) => {
   return relative.replaceAll('\\', '/');
 };
 
+const trimLocalPrefix = (value) => value.replace(/^\.\//, '');
+
 const withBase = (relativePath) => new URL(relativePath.replace(/^\//, ''), site.siteUrl).toString();
 
 const renderNav = (currentPath, prefix) => {
   const normalize = (href) => (href.endsWith('/') ? href : `${href}/`);
   const resolveHref = (href) => {
-    if (href === '/') return `${prefix}/index.html`.replace('./', '');
-    return `${prefix}/${href.replace(/^\//, '')}`.replace('./', '');
+    if (href === '/') return trimLocalPrefix(`${prefix}/index.html`);
+    return trimLocalPrefix(`${prefix}/${href.replace(/^\//, '')}`);
   };
 
   return site.navigation
@@ -171,9 +173,9 @@ const renderNav = (currentPath, prefix) => {
 const renderLayout = ({ title, description, currentPath, outputPath, body, image = '/assets/illustration-wave.svg' }) => {
   const prefix = getRelativePrefix(outputPath);
   const canonical = withBase(currentPath.replace(/^\//, '').replace(/index\.html$/, ''));
-  const stylesheetHref = `${prefix}/styles.css`.replace('./', '');
-  const scriptHref = `${prefix}/script.js`.replace('./', '');
-  const faviconHref = `${prefix}/favicon.svg`.replace('./', '');
+  const stylesheetHref = trimLocalPrefix(`${prefix}/styles.css`);
+  const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
+  const faviconHref = trimLocalPrefix(`${prefix}/favicon.svg`);
   const ogImage = withBase(image);
   const currentHref = currentPath === '/' ? '/' : currentPath;
 
