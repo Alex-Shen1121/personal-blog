@@ -1,3 +1,6 @@
+node_modules/
+dist/
+.DS_Store
 AGENTS.md
 SOUL.md
 MEMORY.md
@@ -7,3 +10,4 @@ TOOLS.md
 HEARTBEAT.md
 .openclaw/
 skills/
+personal-blog/
