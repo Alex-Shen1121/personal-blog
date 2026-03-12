@@ -1,3 +1,9 @@
-node_modules/
-dist/
-.DS_Store
+AGENTS.md
+SOUL.md
+MEMORY.md
+USER.md
+IDENTITY.md
+TOOLS.md
+HEARTBEAT.md
+.openclaw/
+skills/
