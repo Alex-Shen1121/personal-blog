@@ -1,27 +1,52 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 
-const requiredFiles = ['index.html', 'styles.css', 'script.js'];
-const requiredSectionIds = ['about', 'highlights', 'projects', 'contact'];
+const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
+const requiredSourceFiles = [
+  'styles.css',
+  'script.js',
+  'scripts/build.mjs',
+  'src/data/site.mjs',
+  'public/favicon.svg'
+];
+const requiredPages = ['about', 'projects', 'blog', 'now'];
 
-for (const file of requiredFiles) {
-  if (!existsSync(file)) {
-    console.error(`Missing required file: ${file}`);
+for (const file of requiredSourceFiles) {
+  const filePath = path.join(rootDir, file);
+  if (!existsSync(filePath)) {
+    console.error(`Missing required source file: ${file}`);
     process.exit(1);
   }
 }
 
-const html = readFileSync('index.html', 'utf8');
-
-for (const id of requiredSectionIds) {
-  if (!html.includes(`id="${id}"`)) {
-    console.error(`Missing required section id: ${id}`);
-    process.exit(1);
-  }
-}
-
-if (!html.includes('styles.css') || !html.includes('script.js')) {
-  console.error('index.html must reference styles.css and script.js');
+const postsDir = path.join(rootDir, 'content', 'posts');
+if (!existsSync(postsDir)) {
+  console.error('Missing content/posts directory.');
   process.exit(1);
 }
 
-console.log('Validation passed. Required files and sections are present.');
+const posts = readdirSync(postsDir).filter((file) => file.endsWith('.md'));
+if (posts.length < 3) {
+  console.error('At least 3 markdown posts are required.');
+  process.exit(1);
+}
+
+for (const page of requiredPages) {
+  const data = readFileSync(path.join(rootDir, 'src/data/site.mjs'), 'utf8');
+  if (!data.includes(`${page}:`)) {
+    console.error(`Missing page configuration for: ${page}`);
+    process.exit(1);
+  }
+}
+
+for (const post of posts) {
+  const source = readFileSync(path.join(postsDir, post), 'utf8');
+  for (const field of ['title:', 'date:', 'summary:', 'tags:']) {
+    if (!source.includes(field)) {
+      console.error(`Post ${post} is missing frontmatter field: ${field}`);
+      process.exit(1);
+    }
+  }
+}
+
+console.log(`Validation passed. ${posts.length} markdown posts detected and required site files exist.`);
