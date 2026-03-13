@@ -51,6 +51,44 @@ if (navToggle && nav) {
   });
 }
 
+const initBlogSearch = () => {
+  const searchSections = document.querySelectorAll('[data-post-search]');
+  if (!searchSections.length) return;
+
+  searchSections.forEach((section) => {
+    const input = section.querySelector('[data-post-search-input]');
+    const cards = [...section.querySelectorAll('[data-post-card]')];
+    const feedback = section.querySelector('[data-post-search-feedback]');
+    const emptyState = section.querySelector('[data-post-search-empty]');
+    const total = Number(section.dataset.postSearchTotal || cards.length);
+
+    if (!input || !cards.length || !feedback || !emptyState) return;
+
+    const updateResults = () => {
+      const query = input.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const searchIndex = card.dataset.searchIndex || '';
+        const matched = !query || searchIndex.includes(query);
+        card.hidden = !matched;
+        if (matched) visibleCount += 1;
+      });
+
+      emptyState.hidden = visibleCount > 0;
+      feedback.textContent = query
+        ? `关键词 “${input.value.trim()}” 共找到 ${visibleCount} / ${total} 篇文章。`
+        : `当前共 ${total} 篇文章。`;
+    };
+
+    input.addEventListener('input', updateResults);
+    input.addEventListener('search', updateResults);
+    updateResults();
+  });
+};
+
+initBlogSearch();
+
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const revealItems = document.querySelectorAll('.reveal');
 

@@ -942,7 +942,19 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
     <h1>写下来的内容，会慢慢变成自己的方法库。</h1>
     <p>目前已支持文章标签与分类系统：文章列表、标签/分类索引页与详情页都会基于 Markdown frontmatter 自动生成。</p>
   </section>
-  <section class="section reveal">
+  <section class="section reveal" data-post-search data-post-search-total="${posts.length}">
+    <div class="post-discovery panel">
+      <div class="post-discovery__intro">
+        <p class="kicker">站内搜索</p>
+        <h2>按标题、摘要、分类和标签快速查找文章。</h2>
+        <p class="section-intro">输入关键词后，列表会即时筛选，适合从一个具体话题直接找到相关内容。</p>
+      </div>
+      <label class="search-field" for="post-search-input">
+        <span>搜索文章</span>
+        <input id="post-search-input" type="search" placeholder="搜索标题、摘要、分类或标签" autocomplete="off" data-post-search-input />
+      </label>
+      <p class="search-feedback" data-post-search-feedback>当前共 ${posts.length} 篇文章。</p>
+    </div>
     <div class="post-list__header">
       <div>
         <strong class="post-list__count">共 ${posts.length} 篇文章</strong>
@@ -956,12 +968,24 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
         ${seriesList.slice(0, 2).map((series) => `<a class="tag" href="series/${series.slug}/">系列：${series.name}</a>`).join('')}
       </div>
     </div>
-    <div class="post-grid">
+    <div class="post-grid" data-post-search-grid>
       ${posts
-        .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
-        )
+        .map((post) => {
+          const searchIndex = escapeHtml([
+            post.title,
+            post.summary,
+            post.category.name,
+            ...(post.tags ?? []),
+            post.series?.name ?? ''
+          ].join(' ').toLowerCase());
+          return `<article class="post-card" data-post-card data-search-index="${searchIndex}"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
+        })
         .join('')}
+    </div>
+    <div class="empty-state search-empty" data-post-search-empty hidden>
+      <p class="kicker">暂无结果</p>
+      <h2>没有找到匹配的文章。</h2>
+      <p>可以换一个关键词，或者先从标签 / 分类页继续浏览。</p>
     </div>
   </section>`;
 
