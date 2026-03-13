@@ -895,17 +895,30 @@ main {
   line-height: 1.85;
 }
 
+.prose h1,
 .prose h2,
-.prose h3 {
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
   margin: 2.2rem 0 0.9rem;
   letter-spacing: -0.03em;
   scroll-margin-top: 112px;
 }
 
+.prose h4,
+.prose h5,
+.prose h6 {
+  font-size: 1rem;
+}
+
 .prose p,
 .prose ul,
 .prose ol,
-.prose blockquote {
+.prose blockquote,
+.prose hr,
+.prose pre,
+.prose .prose-image {
   margin: 0 0 1.1rem;
 }
 
@@ -914,17 +927,72 @@ main {
   padding-left: 1.3rem;
 }
 
+.prose li + li {
+  margin-top: 0.5rem;
+}
+
 .prose blockquote {
+  display: grid;
+  gap: 0.9rem;
   padding: 18px 20px;
   border-left: 3px solid rgba(125, 211, 252, 0.5);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   background: rgba(125, 211, 252, 0.08);
 }
 
+.prose hr {
+  border: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.prose a:hover {
+  color: #93c5fd;
+}
+
 .prose code {
   padding: 2px 6px;
   border-radius: 8px;
   background: rgba(148, 163, 184, 0.12);
+}
+
+.prose .code-block {
+  position: relative;
+  overflow-x: auto;
+  padding: 18px 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-md);
+  background: rgba(7, 17, 31, 0.78);
+}
+
+.prose .code-block::before {
+  content: attr(data-language);
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.prose .code-block code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #dbeafe;
+  white-space: pre;
+}
+
+.prose-image img {
+  width: 100%;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
 .post-aside {

@@ -110,6 +110,42 @@ const parseFrontmatter = (content) => {
   return { meta, body: rawBody.trim() };
 };
 
+const renderCodeBlock = (lines, language = '') => {
+  const lang = escapeHtml(language.trim());
+  const content = escapeHtml(lines.join('\n'));
+  const className = lang ? ` class="language-${lang}"` : '';
+  const dataLang = lang ? ` data-language="${lang}"` : '';
+  return `<pre class="code-block"${dataLang}><code${className}>${content}</code></pre>`;
+};
+
+const renderImageBlock = ({ alt, src, title }) => {
+  const safeAlt = escapeHtml(alt);
+  const safeSrc = escapeHtml(src);
+  const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+  return `<p class="prose-image"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy"${titleAttr} /></p>`;
+};
+
+const inlineMarkdown = (value) => {
+  const codeTokens = [];
+  const escaped = escapeHtml(value).replace(/`([^`]+)`/g, (_, code) => {
+    const token = `__CODE_TOKEN_${codeTokens.length}__`;
+    codeTokens.push(`<code>${code}</code>`);
+    return token;
+  });
+
+  const withMarkup = escaped
+    .replace(/!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]+)")?\)/g, (_, alt, src, title) => renderImageBlock({ alt, src, title }))
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+      const safeHref = escapeHtml(href.trim());
+      return `<a href="${safeHref}"${safeHref.startsWith('http') ? ' target="_blank" rel="noreferrer"' : ''}>${label}</a>`;
+    })
+    .replace(/~~([^~]+)~~/g, '<del>$1</del>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  return codeTokens.reduce((result, _, index) => result.replace(`__CODE_TOKEN_${index}__`, codeTokens[index]), withMarkup);
+};
+
 const markdownToHtml = (markdown) => {
   const lines = markdown.split('\n');
   const blocks = [];
@@ -117,8 +153,11 @@ const markdownToHtml = (markdown) => {
   const headingSlugCount = new Map();
   let paragraph = [];
   let listItems = [];
-  let inQuote = false;
+  let listType = null;
   let quoteLines = [];
+  let inCodeBlock = false;
+  let codeLanguage = '';
+  let codeLines = [];
 
   const createHeadingId = (text) => {
     const baseSlug = slugify(text) || 'section';
@@ -134,21 +173,48 @@ const markdownToHtml = (markdown) => {
   };
 
   const flushList = () => {
-    if (!listItems.length) return;
-    blocks.push(`<ul>${listItems.map((item) => `<li>${inlineMarkdown(item)}</li>`).join('')}</ul>`);
+    if (!listItems.length || !listType) return;
+    blocks.push(`<${listType}>${listItems.map((item) => `<li>${inlineMarkdown(item)}</li>`).join('')}</${listType}>`);
     listItems = [];
+    listType = null;
   };
 
   const flushQuote = () => {
     if (!quoteLines.length) return;
-    blocks.push(`<blockquote>${inlineMarkdown(quoteLines.join(' '))}</blockquote>`);
+    const quoteHtml = markdownToHtml(quoteLines.join('\n')).html;
+    blocks.push(`<blockquote>${quoteHtml}</blockquote>`);
     quoteLines = [];
-    inQuote = false;
+  };
+
+  const flushCodeBlock = () => {
+    if (!inCodeBlock) return;
+    blocks.push(renderCodeBlock(codeLines, codeLanguage));
+    inCodeBlock = false;
+    codeLanguage = '';
+    codeLines = [];
   };
 
   for (const rawLine of lines) {
     const line = rawLine.trimEnd();
     const trimmed = line.trim();
+
+    if (trimmed.startsWith('```')) {
+      if (inCodeBlock) {
+        flushCodeBlock();
+      } else {
+        flushParagraph();
+        flushList();
+        flushQuote();
+        inCodeBlock = true;
+        codeLanguage = trimmed.slice(3).trim();
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeLines.push(rawLine);
+      continue;
+    }
 
     if (!trimmed) {
       flushParagraph();
@@ -157,47 +223,61 @@ const markdownToHtml = (markdown) => {
       continue;
     }
 
-    if (trimmed.startsWith('## ')) {
+    if (/^---+$/.test(trimmed) || /^\*\*\*+$/.test(trimmed)) {
       flushParagraph();
       flushList();
       flushQuote();
-      const text = trimmed.slice(3);
-      const id = createHeadingId(text);
-      toc.push({ level: 2, text, id });
-      blocks.push(`<h2 id="${id}">${inlineMarkdown(text)}</h2>`);
+      blocks.push('<hr />');
       continue;
     }
 
-    if (trimmed.startsWith('### ')) {
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
       flushParagraph();
       flushList();
       flushQuote();
-      const text = trimmed.slice(4);
+      const level = headingMatch[1].length;
+      const text = headingMatch[2].trim();
       const id = createHeadingId(text);
-      toc.push({ level: 3, text, id });
-      blocks.push(`<h3 id="${id}">${inlineMarkdown(text)}</h3>`);
+      if (level <= 3) toc.push({ level, text, id });
+      blocks.push(`<h${level} id="${id}">${inlineMarkdown(text)}</h${level}>`);
       continue;
     }
 
     if (trimmed.startsWith('> ')) {
       flushParagraph();
       flushList();
-      inQuote = true;
       quoteLines.push(trimmed.slice(2));
       continue;
     }
 
-    if (trimmed.startsWith('- ')) {
+    const unorderedMatch = trimmed.match(/^[-*]\s+(.+)$/);
+    if (unorderedMatch) {
       flushParagraph();
       flushQuote();
-      listItems.push(trimmed.slice(2));
+      if (listType && listType !== 'ul') flushList();
+      listType = 'ul';
+      listItems.push(unorderedMatch[1]);
       continue;
     }
 
-    if (/^\d+\.\s+/.test(trimmed)) {
+    const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (orderedMatch) {
       flushParagraph();
       flushQuote();
-      listItems.push(trimmed.replace(/^\d+\.\s+/, ''));
+      if (listType && listType !== 'ol') flushList();
+      listType = 'ol';
+      listItems.push(orderedMatch[1]);
+      continue;
+    }
+
+    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]+)")?\)$/);
+    if (imageMatch) {
+      flushParagraph();
+      flushList();
+      flushQuote();
+      const [, alt, src, title] = imageMatch;
+      blocks.push(renderImageBlock({ alt, src, title }));
       continue;
     }
 
@@ -209,19 +289,12 @@ const markdownToHtml = (markdown) => {
   flushParagraph();
   flushList();
   flushQuote();
+  flushCodeBlock();
 
   return {
     html: blocks.join('\n'),
     toc
   };
-};
-
-const inlineMarkdown = (value) => {
-  const escaped = escapeHtml(value);
-  return escaped
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 };
 
 const getRelativePrefix = (outputPath) => {
