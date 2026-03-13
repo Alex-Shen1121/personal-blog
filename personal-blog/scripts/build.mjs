@@ -532,6 +532,30 @@ const loadPosts = () => {
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
+const getRelatedPosts = (currentPost, posts, limit = 2) => {
+  const currentTags = new Set(currentPost.tags);
+
+  return posts
+    .filter((post) => post.slug !== currentPost.slug)
+    .map((post) => {
+      const sharedTags = post.tags.filter((tag) => currentTags.has(tag));
+      return {
+        ...post,
+        sharedTags,
+        recommendationReason:
+          sharedTags.length > 0 ? `相同话题：${sharedTags.join(' / ')}` : '延伸阅读：最近更新'
+      };
+    })
+    .sort((a, b) => {
+      if (b.sharedTags.length !== a.sharedTags.length) {
+        return b.sharedTags.length - a.sharedTags.length;
+      }
+
+      return new Date(b.date) - new Date(a.date);
+    })
+    .slice(0, limit);
+};
+
 const renderBlogListPage = (posts, tags, categories) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
@@ -697,7 +721,9 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
         <h3>相关文章</h3>
         <ul class="list-card">
           ${relatedPosts
-            .map((item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.summary}</span></li>`)
+            .map(
+              (item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.recommendationReason}</span><br /><span class="muted">${item.summary}</span></li>`
+            )
             .join('')}
         </ul>
       </div>
@@ -798,6 +824,7 @@ writeText(
   })
 );
 
+<<<<<<< HEAD
 writeText(
   path.join(outDir, 'blog', 'tags', 'index.html'),
   renderLayout({
@@ -850,7 +877,7 @@ for (const category of categories) {
 }
 
 for (const [index, post] of posts.entries()) {
-  const relatedPosts = posts.filter((item) => item.slug !== post.slug).slice(0, 2);
+  const relatedPosts = getRelatedPosts(post, posts);
   const navigationPosts = {
     previous: posts[index - 1] ?? null,
     next: posts[index + 1] ?? null
