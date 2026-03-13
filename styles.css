@@ -392,6 +392,7 @@ main {
 .post-header h1 {
   margin: 0;
   letter-spacing: -0.04em;
+  text-wrap: balance;
 }
 
 .hero-copy h1 {
@@ -417,6 +418,7 @@ main {
 .contact-card p,
 .hero-visual p {
   line-height: 1.8;
+  text-wrap: pretty;
 }
 
 .hero-positioning {
@@ -607,6 +609,7 @@ main {
   max-width: 62ch;
   margin: 0;
   line-height: 1.8;
+  text-wrap: pretty;
 }
 
 .card-grid,
@@ -685,6 +688,7 @@ main {
 .contact-card h3 {
   margin: 0 0 12px;
   font-size: 1.18rem;
+  text-wrap: balance;
 }
 
 .post-card,
@@ -1407,6 +1411,7 @@ main {
 .prose {
   padding: 32px;
   line-height: 1.85;
+  text-wrap: pretty;
 }
 
 .prose h1,
@@ -1860,6 +1865,40 @@ main {
     width: min(calc(100% - 20px), var(--max-width));
   }
 
+  .site-header {
+    top: 10px;
+    margin-top: 10px;
+  }
+
+  .site-header__inner {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .brand-copy strong {
+    font-size: 0.95rem;
+  }
+
+  .brand-copy small {
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
   .hero-copy,
   .hero-visual,
   .panel,
@@ -1874,19 +1913,72 @@ main {
     border-radius: 24px;
   }
 
-  .site-header {
-    top: 10px;
-    margin-top: 10px;
+  .section {
+    padding-top: 44px;
   }
 
-  .site-header__inner {
-    padding: 14px;
+  .section-heading {
+    gap: 8px;
+    margin-bottom: 18px;
   }
 
   .hero-copy h1,
   .page-hero h1,
   .post-header h1 {
     max-width: none;
+    letter-spacing: -0.035em;
+  }
+
+  .hero-copy h1,
+  .page-hero h1 {
+    line-height: 1.02;
+  }
+
+  .post-header {
+    gap: 14px;
+    padding: 24px 0 16px;
+  }
+
+  .post-header h1 {
+    line-height: 1.06;
+  }
+
+  .hero-copy p,
+  .page-hero p,
+  .section-intro,
+  .post-card p,
+  .project-panel p,
+  .contact-card p,
+  .note-card p,
+  .prose p,
+  .prose li,
+  .prose blockquote {
+    font-size: 0.98rem;
+    line-height: 1.82;
+  }
+
+  .post-card__meta,
+  .post-header__meta,
+  .meta-row {
+    gap: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  .tag,
+  .feature-label,
+  .status-badge,
+  .filter-chip {
+    font-size: 0.82rem;
+  }
+
+  .tag,
+  .feature-label,
+  .status-badge {
+    padding: 7px 11px;
+  }
+
+  .filter-chip {
+    padding: 9px 12px;
   }
 
   .post-list__header {
@@ -1898,6 +1990,56 @@ main {
     grid-template-columns: 1fr;
   }
 
+  .prose {
+    padding: 24px 22px;
+    font-size: 1.02rem;
+    line-height: 1.92;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    margin-top: 2rem;
+    margin-bottom: 0.85rem;
+    line-height: 1.28;
+  }
+
+  .prose h2 {
+    font-size: 1.55rem;
+  }
+
+  .prose h3 {
+    font-size: 1.24rem;
+  }
+
+  .prose p,
+  .prose ul,
+  .prose ol,
+  .prose blockquote,
+  .prose hr,
+  .prose pre,
+  .prose .prose-image,
+  .prose .prose-figure {
+    margin-bottom: 1rem;
+  }
+
+  .prose ul,
+  .prose ol {
+    padding-left: 1.15rem;
+  }
+
+  .prose .code-block {
+    padding: 16px;
+  }
+
+  .prose .code-block code {
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
   .prose blockquote {
     padding: 22px 18px 22px 26px;
   }
@@ -1906,5 +2048,63 @@ main {
     top: 12px;
     left: 10px;
     font-size: 2.6rem;
+  }
+
+  .post-nav-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-shell {
+    width: min(calc(100% - 16px), var(--max-width));
+  }
+
+  .hero-copy,
+  .hero-visual,
+  .panel,
+  .note-card,
+  .contact-card,
+  .post-card,
+  .project-panel,
+  .empty-state,
+  .prose,
+  .cta-band {
+    padding: 20px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.45rem, 12vw, 3.2rem);
+  }
+
+  .page-hero h1 {
+    font-size: clamp(2.15rem, 10.4vw, 2.8rem);
+  }
+
+  .post-header h1 {
+    font-size: clamp(2rem, 9vw, 2.45rem);
+  }
+
+  .hero-copy p,
+  .page-hero p,
+  .section-intro,
+  .post-card p,
+  .project-panel p,
+  .contact-card p,
+  .note-card p,
+  .prose p,
+  .prose li,
+  .prose blockquote {
+    font-size: 0.96rem;
+  }
+
+  .post-header__meta,
+  .post-card__meta,
+  .meta-row,
+  .tag,
+  .feature-label,
+  .status-badge,
+  .filter-chip {
+    font-size: 0.8rem;
   }
 }
