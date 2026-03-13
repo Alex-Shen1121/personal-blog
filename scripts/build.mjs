@@ -150,6 +150,37 @@ const renderProjectActionLink = ({ href, label, prefix = '', variant = 'ghost', 
   return `<a class="button button-${variant} button-small project-action${external ? ' project-action--external' : ''}" href="${resolvedHref}"${external ? ' target="_blank" rel="noreferrer"' : ''}><span>${escapeHtml(label)}</span>${external ? `<span class="project-action__meta">${externalLabel}</span><span class="project-action__arrow" aria-hidden="true">↗</span>` : ''}</a>`;
 };
 
+const renderStateCard = ({
+  tag = 'div',
+  tone = 'empty',
+  icon = '',
+  kicker = '',
+  title = '',
+  titleTag = 'h2',
+  summary = '',
+  summaryAttributes = '',
+  tips = [],
+  actions = [],
+  className = '',
+  compact = false,
+  attributes = ''
+}) => {
+  const classes = ['state-card', `state-card--${tone}`, compact ? 'state-card--compact' : '', className]
+    .filter(Boolean)
+    .join(' ');
+  const summaryBlock = summary
+    ? `<p class="state-card__summary"${summaryAttributes ? ` ${summaryAttributes}` : ''}>${summary}</p>`
+    : '';
+  const tipsBlock = tips.length
+    ? `<ul class="state-card__tips">${tips.map((item) => `<li>${item}</li>`).join('')}</ul>`
+    : '';
+  const actionsBlock = actions.length
+    ? `<div class="state-card__actions">${actions.join('')}</div>`
+    : '';
+
+  return `<${tag} class="${classes}"${attributes ? ` ${attributes}` : ''}>${icon ? `<div class="state-card__icon" aria-hidden="true">${icon}</div>` : ''}<div class="state-card__body">${kicker ? `<p class="kicker">${kicker}</p>` : ''}${title ? `<${titleTag} class="state-card__title">${title}</${titleTag}>` : ''}${summaryBlock}${tipsBlock}${actionsBlock}</div></${tag}>`;
+};
+
 const getProjectMedia = (item) => normalizeProjectMedia(item?.gallery ?? item?.media);
 const getProjectPrimaryMedia = (item) => getProjectMedia(item)[0] ?? null;
 const normalizeFilterValue = (value = '') => value.trim().toLowerCase();
@@ -1184,19 +1215,18 @@ const renderProjectsPage = (page) => {
       <div class="project-grid" data-project-filter-grid>${projects
         .map((item) => renderProjectCard(item, { assetPrefix: '../', filterable: true }))
         .join('')}</div>
-      <div class="empty-state search-empty" data-project-filter-empty hidden>
-        <div class="search-empty__icon" aria-hidden="true">⌕</div>
-        <p class="kicker">暂无结果</p>
-        <h2>没有找到匹配的项目。</h2>
-        <p class="search-empty__summary" data-project-filter-empty-summary>当前筛选条件下还没有匹配内容。</p>
-        <ul class="search-empty__tips">
-          <li>试试更短的关键词，或者只保留一个筛选条件。</li>
-          <li>也可以先清空状态或方向限制，再继续浏览完整列表。</li>
-        </ul>
-        <div class="search-empty__actions">
-          <button class="button button-secondary button-small" type="button" data-project-filter-reset>重置搜索与筛选</button>
-        </div>
-      </div>
+      ${renderStateCard({
+        tone: 'empty',
+        icon: '⌕',
+        kicker: '暂无结果',
+        title: '没有找到匹配的项目。',
+        summary: '当前筛选条件下还没有匹配内容。',
+        summaryAttributes: 'data-project-filter-empty-summary',
+        tips: ['试试更短的关键词，或者只保留一个筛选条件。', '也可以先清空状态或方向限制，再继续浏览完整列表。'],
+        actions: ['<button class="button button-secondary button-small" type="button" data-project-filter-reset>重置搜索与筛选</button>'],
+        className: 'empty-state search-empty',
+        attributes: 'data-project-filter-empty hidden'
+      })}
     </section>`;
 };
 
@@ -1375,21 +1405,22 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
         })
         .join('')}
     </div>
-    <div class="empty-state search-empty" data-post-search-empty hidden>
-      <div class="search-empty__icon" aria-hidden="true">⌕</div>
-      <p class="kicker">暂无结果</p>
-      <h2>没有找到匹配的文章。</h2>
-      <p class="search-empty__summary" data-post-search-empty-summary>当前筛选条件下还没有匹配内容。</p>
-      <ul class="search-empty__tips">
-        <li>试试更短的关键词，或者只保留一个筛选条件。</li>
-        <li>也可以先从归档、标签或分类页重新挑一个入口继续浏览。</li>
-      </ul>
-      <div class="search-empty__actions">
-        <button class="button button-secondary button-small" type="button" data-post-search-reset>重置搜索与筛选</button>
-        <a class="button button-ghost button-small" href="archive/">查看归档</a>
-        <a class="button button-ghost button-small" href="tags/">查看标签页</a>
-      </div>
-    </div>
+    ${renderStateCard({
+      tone: 'empty',
+      icon: '⌕',
+      kicker: '暂无结果',
+      title: '没有找到匹配的文章。',
+      summary: '当前筛选条件下还没有匹配内容。',
+      summaryAttributes: 'data-post-search-empty-summary',
+      tips: ['试试更短的关键词，或者只保留一个筛选条件。', '也可以先从归档、标签或分类页重新挑一个入口继续浏览。'],
+      actions: [
+        '<button class="button button-secondary button-small" type="button" data-post-search-reset>重置搜索与筛选</button>',
+        '<a class="button button-ghost button-small" href="archive/">查看归档</a>',
+        '<a class="button button-ghost button-small" href="tags/">查看标签页</a>'
+      ],
+      className: 'empty-state search-empty',
+      attributes: 'data-post-search-empty hidden'
+    })}
   </section>`;
 
 const renderCategoryListPage = (categories) => `
@@ -1579,10 +1610,30 @@ const renderPostNavigation = (navigationPosts) => {
   const items = [
     navigationPosts.previous
       ? `<a class="post-nav-card" href="../${navigationPosts.previous.slug}/"><span class="kicker">上一篇</span><strong>${navigationPosts.previous.title}</strong><small>${navigationPosts.previous.summary}</small></a>`
-      : '<div class="post-nav-card post-nav-card--empty"><span class="kicker">上一篇</span><strong>已经是第一篇</strong><small>你可以回到文章列表继续浏览其他内容。</small></div>',
+      : renderStateCard({
+          tone: 'quiet',
+          icon: '←',
+          kicker: '上一篇',
+          title: '已经是第一篇',
+          titleTag: 'strong',
+          summary: '这里已经没有更早的内容了，可以回到文章列表继续挑一篇。',
+          actions: ['<a class="text-link" href="../">返回文章列表</a>'],
+          className: 'post-nav-card post-nav-card--empty',
+          compact: true
+        }),
     navigationPosts.next
       ? `<a class="post-nav-card" href="../${navigationPosts.next.slug}/"><span class="kicker">下一篇</span><strong>${navigationPosts.next.title}</strong><small>${navigationPosts.next.summary}</small></a>`
-      : '<div class="post-nav-card post-nav-card--empty"><span class="kicker">下一篇</span><strong>已经是最后一篇</strong><small>当前已经没有更后面的文章了。</small></div>'
+      : renderStateCard({
+          tone: 'quiet',
+          icon: '→',
+          kicker: '下一篇',
+          title: '已经是最后一篇',
+          titleTag: 'strong',
+          summary: '当前已经没有更后面的文章了，可以去看看项目页或返回文章列表。',
+          actions: ['<a class="text-link" href="../">返回文章列表</a>', '<a class="text-link" href="../../projects/">看看项目页</a>'],
+          className: 'post-nav-card post-nav-card--empty',
+          compact: true
+        })
   ];
 
   return `<nav class="post-pagination reveal" aria-label="文章上一篇和下一篇导航">${items.join('')}</nav>`;
@@ -1688,11 +1739,20 @@ const render404 = () => `
   <section class="page-hero reveal">
     <p class="kicker">404</p>
     <h1>这个页面暂时不存在。</h1>
-    <p>你可以回到首页继续浏览，或者直接查看文章列表。</p>
-    <div class="hero-actions">
-      <a class="button button-primary" href="./index.html">返回首页</a>
-      <a class="button button-secondary" href="./blog/">查看文章</a>
-    </div>
+    <p>可能是链接写错了，或者这部分内容还没有发布。</p>
+    ${renderStateCard({
+      tone: 'error',
+      icon: '404',
+      kicker: '错误提示',
+      title: '没有找到你要访问的页面。',
+      summary: '可以先回到首页、文章页或项目页继续浏览，避免停在一个空白入口上。',
+      tips: ['如果你是从旧链接跳转过来的，建议重新从导航进入对应页面。', '如果这是我刚提到的内容，说明它可能还在整理或尚未上线。'],
+      actions: [
+        '<a class="button button-primary button-small" href="./index.html">返回首页</a>',
+        '<a class="button button-secondary button-small" href="./blog/">查看文章</a>',
+        '<a class="button button-ghost button-small" href="./projects/">查看项目</a>'
+      ]
+    })}
   </section>`;
 
 if (existsSync(outDir)) {

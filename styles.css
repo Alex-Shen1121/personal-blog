@@ -1499,52 +1499,102 @@ body.has-reading-progress .reading-progress {
   color: var(--muted);
 }
 
-.search-empty {
+.state-card {
   display: grid;
-  justify-items: start;
-  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
   margin-top: 20px;
   padding: 32px;
+  background: var(--panel-strong);
+}
+
+.state-card--compact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 0;
+  padding: 24px;
+}
+
+.state-card--empty {
   background:
     radial-gradient(circle at top right, rgba(167, 139, 250, 0.16), transparent 30%),
     linear-gradient(135deg, rgba(125, 211, 252, 0.08), transparent 46%),
     var(--panel-strong);
 }
 
-.search-empty__icon {
+.state-card--error {
+  background:
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba(248, 113, 113, 0.08), transparent 54%),
+    var(--panel-strong);
+}
+
+.state-card--quiet {
+  background:
+    linear-gradient(135deg, var(--surface-soft-strong), transparent 58%),
+    var(--panel);
+}
+
+.state-card__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0 14px;
   border-radius: 18px;
-  border: 1px solid var(--accent-border);
-  color: var(--accent);
-  background: var(--accent-soft-strong);
-  font-size: 1.6rem;
+  border: 1px solid var(--surface-border-strong);
+  color: var(--soft);
+  background: var(--surface-soft-strong);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.search-empty h2,
-.search-empty__summary,
-.search-empty__tips {
+.state-card--empty .state-card__icon {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-soft-strong);
+}
+
+.state-card--error .state-card__icon {
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+  background: var(--warning-soft);
+}
+
+.state-card__body {
+  display: grid;
+  gap: 14px;
+}
+
+.state-card__title,
+.state-card__summary,
+.state-card__tips {
   margin: 0;
 }
 
-.search-empty__summary {
-  max-width: 52ch;
+.state-card__summary {
+  max-width: 56ch;
 }
 
-.search-empty__tips {
+.state-card__tips {
   display: grid;
   gap: 8px;
   padding-left: 1.1rem;
   color: var(--muted);
 }
 
-.search-empty__actions {
+.state-card__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
+}
+
+.page-hero > .state-card {
+  margin-top: 4px;
 }
 
 .archive-timeline {
@@ -1969,7 +2019,19 @@ body.has-reading-progress .reading-progress {
 }
 
 .post-nav-card--empty {
-  opacity: 0.78;
+  border-color: var(--surface-border-strong);
+  box-shadow: none;
+}
+
+.post-nav-card--empty:hover,
+.post-nav-card--empty:active {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--surface-border-strong);
+}
+
+.post-nav-card--empty .state-card__actions {
+  margin-top: 2px;
 }
 
 .contact-links a,
