@@ -498,8 +498,24 @@ main {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.featured-posts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+  gap: 20px;
+}
+
+.featured-posts__sidebar {
+  display: grid;
+  gap: 20px;
+}
+
+.featured-posts__intro {
+  min-height: 100%;
+}
+
 .panel h3,
 .post-card h2,
+.post-card h3,
 .project-panel h3,
 .note-card h3,
 .contact-card h3 {
@@ -511,6 +527,42 @@ main {
 .project-panel {
   display: grid;
   gap: 18px;
+}
+
+.post-card__body {
+  display: grid;
+  gap: 18px;
+}
+
+.post-card--featured {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.post-card--featured .post-card__cover,
+.post-card--featured .post-card__cover img {
+  height: 100%;
+}
+
+.post-card--featured .post-card__cover img {
+  aspect-ratio: 1.2 / 1;
+}
+
+.post-card--compact {
+  align-content: start;
+}
+
+.feature-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(125, 211, 252, 0.08);
+  color: var(--soft);
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .post-card__cover {
@@ -725,7 +777,9 @@ main {
   .contact-grid,
   .split-grid,
   .post-layout,
-  .cta-band {
+  .cta-band,
+  .featured-posts,
+  .post-card--featured {
     grid-template-columns: 1fr;
   }
 

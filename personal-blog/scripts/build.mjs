@@ -241,6 +241,7 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
 
 const renderHomePage = (posts) => {
   const recentPosts = posts.slice(0, 3);
+  const [primaryPost, ...secondaryPosts] = recentPosts;
   return `
     <section class="hero">
       <div class="hero-copy reveal">
@@ -315,17 +316,27 @@ const renderHomePage = (posts) => {
     <section class="section reveal" id="blog">
       <div class="post-list__header">
         <div class="section-heading">
-          <p class="kicker">最近写了什么</p>
-          <h2>把经验写下来，能帮助我更稳定地形成判断。</h2>
+          <p class="kicker">${home.featuredPosts.eyebrow}</p>
+          <h2>${home.featuredPosts.title}</h2>
+          <p class="section-intro">${home.featuredPosts.description}</p>
         </div>
         <a class="button button-ghost" href="blog/">查看全部文章</a>
       </div>
-      <div class="post-grid">
-        ${recentPosts
-          .map(
-            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${post.slug}/">阅读文章 →</a></article>`
-          )
-          .join('')}
+      <div class="featured-posts">
+        ${primaryPost
+          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画" /></div><div class="post-card__body"><span class="feature-label">${home.featuredPosts.primaryLabel}</span><div class="post-card__meta"><span>${formatDate(primaryPost.date)}</span><span>${primaryPost.readingTime}</span></div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
+          : ''}
+        <div class="featured-posts__sidebar">
+          <div class="featured-posts__intro panel">
+            <span class="feature-label">${home.featuredPosts.secondaryLabel}</span>
+            <p>如果你第一次来到这里，建议先从上面的主推文章开始，再顺着下面两篇继续看，会更容易理解我对内容站、界面气质和个人表达的整体判断。</p>
+          </div>
+          ${secondaryPosts
+            .map(
+              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h3>${post.title}</h3><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
+            )
+            .join('')}
+        </div>
       </div>
     </section>
 
