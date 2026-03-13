@@ -687,12 +687,25 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
   const faviconHref = trimLocalPrefix(`${prefix}/favicon.svg`);
   const ogImage = withBase(image);
   const currentHref = currentPath === '/' ? '/' : currentPath;
+  const themeBootScript = `(() => {
+  const storageKey = 'personal-blog-theme';
+  const savedTheme = localStorage.getItem(storageKey);
+  const theme = savedTheme === 'light' || savedTheme === 'dark'
+    ? savedTheme
+    : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.documentElement.dataset.theme = theme;
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', theme === 'light' ? '#f4f7fb' : '#07111f');
+  }
+})();`;
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07111f" />
     <title>${title}</title>
     <meta name="description" content="${description}" />
     <meta property="og:title" content="${title}" />
@@ -707,6 +720,7 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     <link rel="icon" type="image/svg+xml" href="${faviconHref}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script>${themeBootScript}</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="${stylesheetHref}" />
   </head>

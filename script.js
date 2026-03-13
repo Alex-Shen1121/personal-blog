@@ -4,26 +4,37 @@ const nav = document.querySelector('[data-nav]');
 const themeToggle = document.querySelector('[data-theme-toggle]');
 const yearNode = document.querySelector('[data-current-year]');
 const themeStorageKey = 'personal-blog-theme';
+const systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
 }
 
-const getPreferredTheme = () => {
+const getSavedTheme = () => {
   const saved = localStorage.getItem(themeStorageKey);
-  if (saved === 'light' || saved === 'dark') return saved;
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return saved === 'light' || saved === 'dark' ? saved : null;
 };
+
+const getPreferredTheme = () => getSavedTheme() ?? (systemThemeQuery.matches ? 'light' : 'dark');
 
 const syncThemeLabel = (theme) => {
   if (!themeToggle) return;
-  themeToggle.setAttribute('aria-label', theme === 'light' ? '切换到深色模式' : '切换到浅色模式');
+  const nextLabel = theme === 'light' ? '切换到深色模式' : '切换到浅色模式';
+  themeToggle.setAttribute('aria-label', nextLabel);
+  themeToggle.setAttribute('title', nextLabel);
   themeToggle.textContent = theme === 'light' ? '☀︎' : '☾';
+};
+
+const syncThemeColor = (theme) => {
+  if (!themeColorMeta) return;
+  themeColorMeta.setAttribute('content', theme === 'light' ? '#f4f7fb' : '#07111f');
 };
 
 const applyTheme = (theme) => {
   root.dataset.theme = theme;
   syncThemeLabel(theme);
+  syncThemeColor(theme);
 };
 
 applyTheme(getPreferredTheme());
@@ -35,6 +46,11 @@ if (themeToggle) {
     applyTheme(nextTheme);
   });
 }
+
+systemThemeQuery.addEventListener('change', (event) => {
+  if (getSavedTheme()) return;
+  applyTheme(event.matches ? 'light' : 'dark');
+});
 
 if (navToggle && nav) {
   navToggle.addEventListener('click', () => {
