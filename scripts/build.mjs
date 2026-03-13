@@ -710,12 +710,13 @@ const renderNav = (currentPath, prefix) => {
     .join('');
 };
 
-const renderLayout = ({ title, description, currentPath, outputPath, body, image = '/assets/illustration-wave.svg' }) => {
+const renderLayout = ({ title, description, currentPath, outputPath, body, image = site.brand.ogImage }) => {
   const prefix = getRelativePrefix(outputPath);
+  const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
   const canonical = withBase(currentPath.replace(/^\//, '').replace(/index\.html$/, ''));
   const stylesheetHref = trimLocalPrefix(`${prefix}/styles.css`);
   const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
-  const faviconHref = trimLocalPrefix(`${prefix}/favicon.svg`);
+  const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
   const ogImage = withBase(image);
   const currentHref = currentPath === '/' ? '/' : currentPath;
   const themeBootScript = `(() => {
@@ -742,8 +743,12 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="${site.shortName}" />
     <meta property="og:url" content="${canonical}" />
     <meta property="og:image" content="${ogImage}" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />

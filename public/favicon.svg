@@ -1,5 +1,28 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="128" height="128" rx="32" fill="#101828"/>
-  <path d="M34 92V36H60.5C75.6878 36 85 43.8944 85 56.5C85 69.1056 75.6878 77 60.5 77H45.5V92H34Z" fill="#F8FAFC"/>
-  <path d="M92 92L71 65.5L81 58L105 92H92Z" fill="#7DD3FC"/>
+  <defs>
+    <linearGradient id="bg" x1="16" y1="12" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1C2D" />
+      <stop offset="1" stop-color="#07111F" />
+    </linearGradient>
+    <linearGradient id="glow" x1="26" y1="22" x2="102" y2="106" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0.82" />
+    </linearGradient>
+    <radialGradient id="haloA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(34 30) rotate(45) scale(62 54)">
+      <stop stop-color="#7DD3FC" stop-opacity="0.3" />
+      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="haloB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(96 102) rotate(-140) scale(56 48)">
+      <stop stop-color="#A78BFA" stop-opacity="0.26" />
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="30" fill="url(#bg)" />
+  <rect x="8.75" y="8.75" width="110.5" height="110.5" rx="29.25" stroke="#94A3B8" stroke-opacity="0.22" />
+  <rect x="18" y="18" width="92" height="92" rx="24" fill="#FFFFFF" fill-opacity="0.03" />
+  <rect x="18" y="18" width="92" height="92" rx="24" fill="url(#haloA)" />
+  <rect x="18" y="18" width="92" height="92" rx="24" fill="url(#haloB)" />
+  <circle cx="96" cy="32" r="6" fill="#6EE7B7" fill-opacity="0.9" />
+  <path d="M34 44C34 39.5817 37.5817 36 42 36H86C90.4183 36 94 39.5817 94 44V84C94 88.4183 90.4183 92 86 92H42C37.5817 92 34 88.4183 34 84V44Z" fill="#FFFFFF" fill-opacity="0.03" stroke="#94A3B8" stroke-opacity="0.16" />
+  <text x="64" y="81" text-anchor="middle" fill="url(#glow)" font-size="44" font-weight="800" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">昱</text>
 </svg>

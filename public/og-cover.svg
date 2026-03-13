@@ -1,0 +1,71 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="card" x1="86" y1="58" x2="1128" y2="602" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1C2D" />
+      <stop offset="1" stop-color="#07111F" />
+    </linearGradient>
+    <linearGradient id="accent" x1="232" y1="72" x2="964" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC" stop-opacity="0.88" />
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0.82" />
+    </linearGradient>
+    <linearGradient id="accentSoft" x1="132" y1="164" x2="732" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC" stop-opacity="0.18" />
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0.06" />
+    </linearGradient>
+    <radialGradient id="haloA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(248 132) rotate(35) scale(338 206)">
+      <stop stop-color="#7DD3FC" stop-opacity="0.3" />
+      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="haloB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(996 520) rotate(-145) scale(312 196)">
+      <stop stop-color="#A78BFA" stop-opacity="0.28" />
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0" />
+    </radialGradient>
+    <filter id="blur" x="0" y="0" width="1200" height="630" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="36" />
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" rx="0" fill="#07111F" />
+  <g filter="url(#blur)">
+    <circle cx="196" cy="110" r="124" fill="#38BDF8" fill-opacity="0.22" />
+    <circle cx="1012" cy="526" r="138" fill="#A78BFA" fill-opacity="0.18" />
+  </g>
+
+  <rect x="36" y="36" width="1128" height="558" rx="34" fill="url(#card)" />
+  <rect x="36.75" y="36.75" width="1126.5" height="556.5" rx="33.25" stroke="#94A3B8" stroke-opacity="0.2" stroke-width="1.5" />
+  <rect x="58" y="58" width="1084" height="514" rx="28" fill="url(#accentSoft)" />
+  <rect x="58" y="58" width="1084" height="514" rx="28" fill="url(#haloA)" />
+  <rect x="58" y="58" width="1084" height="514" rx="28" fill="url(#haloB)" />
+
+  <path d="M84 150H756" stroke="url(#accent)" stroke-opacity="0.22" stroke-width="2" stroke-linecap="round" stroke-dasharray="10 14" />
+  <path d="M84 488H624" stroke="#7DD3FC" stroke-opacity="0.16" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 14" />
+
+  <text x="92" y="118" fill="#7DD3FC" font-size="22" font-weight="700" letter-spacing="4" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">PERSONAL BLOG · DIGITAL GARDEN</text>
+
+  <text x="92" y="250" fill="#F8FBFF" font-size="92" font-weight="800" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">沈晨玙</text>
+  <text x="92" y="322" fill="#D6E2F2" font-size="42" font-weight="700" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">个人主页与博客</text>
+  <text x="92" y="392" fill="#A8B7CF" font-size="28" font-weight="500" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">记录产品、设计、工程和生活观察</text>
+  <text x="92" y="434" fill="#A8B7CF" font-size="28" font-weight="500" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">分享项目、文章、近况与长期思考</text>
+
+  <g>
+    <rect x="92" y="486" width="152" height="46" rx="23" fill="#7DD3FC" fill-opacity="0.12" />
+    <rect x="258" y="486" width="144" height="46" rx="23" fill="#A78BFA" fill-opacity="0.12" />
+    <rect x="416" y="486" width="134" height="46" rx="23" fill="#6EE7B7" fill-opacity="0.12" />
+    <text x="168" y="515" text-anchor="middle" fill="#DFF7FF" font-size="20" font-weight="600" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">产品体验</text>
+    <text x="330" y="515" text-anchor="middle" fill="#EFE7FF" font-size="20" font-weight="600" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">前端实现</text>
+    <text x="483" y="515" text-anchor="middle" fill="#D7FFF0" font-size="20" font-weight="600" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">长期写作</text>
+  </g>
+
+  <g>
+    <rect x="840" y="84" width="258" height="258" rx="42" fill="#09172B" />
+    <rect x="840.75" y="84.75" width="256.5" height="256.5" rx="41.25" stroke="#94A3B8" stroke-opacity="0.24" stroke-width="1.5" />
+    <rect x="864" y="108" width="210" height="210" rx="34" fill="#FFFFFF" fill-opacity="0.03" />
+    <rect x="864" y="108" width="210" height="210" rx="34" fill="url(#haloA)" />
+    <circle cx="1032" cy="138" r="11" fill="#6EE7B7" fill-opacity="0.92" />
+    <text x="969" y="235" text-anchor="middle" fill="url(#accent)" font-size="112" font-weight="800" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">昱</text>
+    <text x="969" y="386" text-anchor="middle" fill="#D6E2F2" font-size="30" font-weight="700" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">产品与前端体验设计实践者</text>
+    <text x="969" y="428" text-anchor="middle" fill="#A8B7CF" font-size="22" font-weight="500" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">清晰、克制、可持续迭代</text>
+  </g>
+
+  <text x="92" y="564" fill="#94A3B8" font-size="20" font-weight="500" font-family="Inter, PingFang SC, Microsoft YaHei, sans-serif">alex-shen1121.github.io/personal-blog/</text>
+</svg>

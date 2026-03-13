@@ -5,6 +5,10 @@ export const site = {
     '沈晨玙的个人主页与博客，记录产品、设计、工程和生活观察，分享正在做的项目、近期近况与长期思考。',
   siteUrl: 'https://alex-shen1121.github.io/personal-blog/',
   repoBasePath: '/personal-blog/',
+  brand: {
+    favicon: '/favicon.svg',
+    ogImage: '/og-cover.svg'
+  },
   author: {
     name: '沈晨玙',
     role: '产品与前端体验设计实践者',
