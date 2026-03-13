@@ -233,6 +233,20 @@ const trimLocalPrefix = (value) => value.replace(/^\.\//, '');
 
 const withBase = (relativePath) => new URL(relativePath.replace(/^\//, ''), site.siteUrl).toString();
 
+const defaultCoverPool = [
+  '/assets/illustration-wave.svg',
+  '/assets/illustration-orbit.svg',
+  '/assets/illustration-grid.svg'
+];
+
+const resolvePostCover = (post) => {
+  if (post.cover) return post.cover;
+
+  const seed = `${post.category?.name ?? ''}${post.slug ?? post.title ?? ''}`;
+  const hash = Array.from(seed).reduce((total, char) => total + char.codePointAt(0), 0);
+  return defaultCoverPool[hash % defaultCoverPool.length];
+};
+
 const renderNav = (currentPath, prefix) => {
   const normalize = (href) => (href.endsWith('/') ? href : `${href}/`);
   const resolveHref = (href) => {
@@ -557,7 +571,7 @@ const loadPosts = () => {
       const slug = slugify(fileName);
       const wordCount = body.replace(/\s+/g, '').length;
       const { html, toc } = markdownToHtml(body);
-      return {
+      const post = {
         slug,
         title: meta.title,
         date: meta.date,
@@ -583,6 +597,11 @@ const loadPosts = () => {
         toc,
         wordCount,
         readingTime: estimateReadingTime(body)
+      };
+
+      return {
+        ...post,
+        cover: resolvePostCover(post)
       };
     })
     .filter((post) => !post.draft)

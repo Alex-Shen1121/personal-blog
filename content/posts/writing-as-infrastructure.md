@@ -4,7 +4,6 @@ date: 2026-02-18
 summary: 对个人创作者来说，写作不只是表达，它还承担整理判断、沉淀经验和建立长期复利的作用。
 category: 写作方法
 tags: 写作, 知识管理, 内容系统
-cover: /assets/illustration-grid.svg
 series: 个人内容站升级记录
 seriesOrder: 3
 ---
