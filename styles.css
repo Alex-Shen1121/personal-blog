@@ -586,6 +586,23 @@ main {
   align-content: start;
 }
 
+.project-card__cover,
+.project-media-card {
+  overflow: hidden;
+  margin: 0;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.project-card__cover img,
+.project-media-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.45 / 1;
+  object-fit: cover;
+}
+
 .project-card__header,
 .project-card__meta,
 .project-facts {
@@ -936,6 +953,31 @@ main {
 .project-detail-card {
   position: sticky;
   top: 108px;
+}
+
+.project-detail-main,
+.project-media-stack,
+.project-media-heading {
+  display: grid;
+  gap: 18px;
+}
+
+.project-media-heading h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+}
+
+.project-media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.project-media-card figcaption {
+  padding: 14px 16px 16px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 0.92rem;
 }
 
 .project-detail-sections {
@@ -1624,7 +1666,8 @@ main {
   .skills-stack,
   .nav-guide-grid,
   .site-footer__grid,
-  .post-pagination {
+  .post-pagination,
+  .project-media-grid {
     grid-template-columns: 1fr;
   }
 

@@ -242,6 +242,18 @@ export const pages = {
         focus: '文章系统、站点结构与长期维护成本控制',
         summary: '用最小但完整的静态方案支撑多页内容站，让写作、展示与后续迭代都更轻盈。',
         stack: ['HTML / CSS / JS', 'Node.js 构建脚本', 'GitHub Pages'],
+        gallery: [
+          {
+            src: '/assets/project-personal-blog-home.svg',
+            alt: '个人主页与博客系统首页改版后的桌面端演示图',
+            caption: '首页强调个人定位、精选内容与项目入口，让访客第一次进入时更快理解站点结构。'
+          },
+          {
+            src: '/assets/project-personal-blog-detail.svg',
+            alt: '个人主页与博客系统项目详情页与文章系统的演示图',
+            caption: '项目详情页补充状态、关键信息与案例说明，便于后续继续沉淀真实项目记录。'
+          }
+        ],
         href: '/blog/',
         linkLabel: '查看文章系统',
         sections: [
@@ -269,6 +281,13 @@ export const pages = {
         focus: '把复杂信息拆成更顺的阅读路径，并保留品牌气质',
         summary: '擅长把复杂信息拆成更顺的阅读节奏，在不吵闹的设计里建立可信度。',
         stack: ['信息架构', '叙事型页面设计', '轻量前端落地'],
+        gallery: [
+          {
+            src: '/assets/project-narrative-product-page.svg',
+            alt: '案例型产品介绍页的信息节奏与模块编排演示图',
+            caption: '用更克制的层级、留白与模块切换，把品牌表达、信息解释和行动引导放到同一条阅读路径里。'
+          }
+        ],
         href: '/about/',
         linkLabel: '查看我的做事方式',
         sections: [
@@ -296,6 +315,13 @@ export const pages = {
         focus: '围绕选题、草稿、归档与再利用建立个人内容系统',
         summary: '围绕选题、草稿、归档与再利用，形成适合个人创作者的内容系统。',
         stack: ['Markdown', '知识归档', '内容复用'],
+        gallery: [
+          {
+            src: '/assets/project-writing-workflow-board.svg',
+            alt: '个人知识与写作工作流的阶段看板演示图',
+            caption: '把选题、草稿、发布与复盘拆成更稳定的阶段，方便长期维护内容生产节奏。'
+          }
+        ],
         href: '/now/',
         linkLabel: '查看近期推进',
         sections: [

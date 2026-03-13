@@ -82,6 +82,49 @@ const renderProjectStatusBadge = (status) => {
   return `<span class="status-badge status-badge--${normalizedStatus.tone}"><span class="status-badge__dot" aria-hidden="true"></span>${normalizedStatus.label}</span>`;
 };
 
+const normalizeProjectMedia = (media) => {
+  if (!Array.isArray(media)) return [];
+
+  return media
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const src = item.src?.trim?.();
+      if (!src) return null;
+
+      return {
+        src,
+        alt: item.alt?.trim?.() || '',
+        caption: item.caption?.trim?.() || ''
+      };
+    })
+    .filter(Boolean);
+};
+
+const resolveStaticAssetPath = (assetPath, prefix = '') => {
+  if (!assetPath) return '';
+  if (/^(?:[a-z]+:)?\/\//i.test(assetPath) || assetPath.startsWith('data:')) {
+    return assetPath;
+  }
+
+  if (assetPath.startsWith('/')) {
+    return `${prefix}${assetPath.slice(1)}`;
+  }
+
+  return `${prefix}${assetPath}`;
+};
+
+const getProjectMedia = (item) => normalizeProjectMedia(item?.gallery ?? item?.media);
+const getProjectPrimaryMedia = (item) => getProjectMedia(item)[0] ?? null;
+
+const renderProjectMediaFigure = (media, prefix = '') => {
+  const src = resolveStaticAssetPath(media?.src, prefix);
+  if (!src) return '';
+
+  const alt = escapeHtml(media.alt || media.caption || '项目截图或演示图');
+  const caption = media.caption ? `<figcaption>${escapeHtml(media.caption)}</figcaption>` : '';
+  return `<figure class="project-media-card"><img src="${src}" alt="${alt}" loading="lazy" />${caption}</figure>`;
+};
+
 const estimateReadingTime = (content) => {
  const plainText = content
  .replace(/^#{1,6}\s+/gm, '')
@@ -891,7 +934,7 @@ const renderHomePage = (posts) => {
     </section>`;
 };
 
-const renderProjectCard = (item) => {
+const renderProjectCard = (item, { assetPrefix = '' } = {}) => {
   const statusBadge = renderProjectStatusBadge(item.status);
   const facts = [
     ['角色', item.role],
@@ -899,6 +942,7 @@ const renderProjectCard = (item) => {
     ['关注点', item.focus],
     ['当前阶段', getProjectStatusLabel(item.status)]
   ].filter(([, value]) => value);
+  const previewMedia = getProjectPrimaryMedia(item);
 
   const relatedHref = item.href ? (item.href.startsWith('/') ? item.href.slice(1) : item.href) : '';
   const primaryHref = item.slug ? `${item.slug}/` : relatedHref;
@@ -908,7 +952,7 @@ const renderProjectCard = (item) => {
     .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
     .join('');
 
-  return `<article class="project-panel project-card"><div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
+  return `<article class="project-panel project-card">${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}" loading="lazy" /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
     .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${primaryHref ? `<a class="button button-ghost button-small" href="${primaryHref}">${primaryLabel}</a>` : ''}</article>`;
 };
@@ -929,6 +973,7 @@ const renderProjectDetailPage = (item) => {
   const metaItems = facts
     .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
     .join('');
+  const mediaItems = getProjectMedia(item);
 
   return `
   <section class="page-hero reveal">
@@ -953,10 +998,13 @@ const renderProjectDetailPage = (item) => {
           .join('')}</dl>` : ''}
         ${item.stack?.length ? `<div><p class="kicker">相关能力</p><ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul></div>` : ''}
       </article>
-      <div class="card-grid project-detail-sections">
-        ${(item.sections ?? [])
-          .map((section) => `<article class="panel"><p class="kicker">${item.title}</p><h2>${section.title}</h2><p>${section.text}</p></article>`)
-          .join('')}
+      <div class="project-detail-main">
+        ${mediaItems.length ? `<section class="project-media-stack" aria-label="${escapeHtml(item.title)} 项目截图与演示图"><div class="project-media-heading"><p class="kicker">项目截图 / 演示图</p><h2>先快速看一下这个项目的界面与展示方式。</h2><p class="section-intro">我会优先放能说明结构、节奏或关键流程的预览图，方便在读文字前先建立直觉。</p></div><div class="project-media-grid">${mediaItems.map((media) => renderProjectMediaFigure(media, '../../')).join('')}</div></section>` : ''}
+        <div class="card-grid project-detail-sections">
+          ${(item.sections ?? [])
+            .map((section) => `<article class="panel"><p class="kicker">${item.title}</p><h2>${section.title}</h2><p>${section.text}</p></article>`)
+            .join('')}
+        </div>
       </div>
     </div>
   </section>`;
@@ -964,9 +1012,10 @@ const renderProjectDetailPage = (item) => {
 
 const renderInfoPage = (pageKey) => {
   const page = pages[pageKey];
+  const assetPrefix = pageKey === 'projects' ? '../' : '';
   const body = page.items
     ? `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
-       <section class="section reveal"><div class="project-grid">${page.items.map((item) => renderProjectCard(item)).join('')}</div></section>`
+       <section class="section reveal"><div class="project-grid">${page.items.map((item) => renderProjectCard(item, { assetPrefix })).join('')}</div></section>`
     : `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
        <section class="section reveal"><div class="card-grid">${page.sections
          .map((section) => `<article class="panel"><h3>${section.title}</h3><p>${section.text}</p></article>`)
@@ -1510,7 +1559,8 @@ for (const project of pages.projects.items ?? []) {
       description: project.summary ?? pages.projects.description,
       currentPath: `/projects/${project.slug}/`,
       outputPath: path.join(outDir, 'projects', project.slug, 'index.html'),
-      body: renderProjectDetailPage(project)
+      body: renderProjectDetailPage(project),
+      image: getProjectPrimaryMedia(project)?.src ?? '/assets/illustration-wave.svg'
     })
   );
 }
