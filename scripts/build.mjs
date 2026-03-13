@@ -152,6 +152,22 @@ const renderProjectActionLink = ({ href, label, prefix = '', variant = 'ghost', 
 
 const getProjectMedia = (item) => normalizeProjectMedia(item?.gallery ?? item?.media);
 const getProjectPrimaryMedia = (item) => getProjectMedia(item)[0] ?? null;
+const normalizeFilterValue = (value = '') => value.trim().toLowerCase();
+const collectUniqueValues = (items, getValue) => {
+  const seen = new Set();
+  const values = [];
+
+  items.forEach((item) => {
+    const value = getValue(item)?.trim?.();
+    if (!value) return;
+    const normalized = normalizeFilterValue(value);
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    values.push(value);
+  });
+
+  return values;
+};
 
 const renderProjectMediaFigure = (media, prefix = '') => {
   const src = resolveStaticAssetPath(media?.src, prefix);
@@ -971,7 +987,7 @@ const renderHomePage = (posts) => {
     </section>`;
 };
 
-const renderProjectCard = (item, { assetPrefix = '' } = {}) => {
+const renderProjectCard = (item, { assetPrefix = '', filterable = false } = {}) => {
   const statusBadge = renderProjectStatusBadge(item.status);
   const facts = [
     ['角色', item.role],
@@ -1006,8 +1022,23 @@ const renderProjectCard = (item, { assetPrefix = '' } = {}) => {
       })
     )
   ].filter(Boolean);
+  const searchIndex = [
+    item.title,
+    item.summary,
+    item.category,
+    item.role,
+    item.focus,
+    getProjectStatusLabel(item.status),
+    ...(item.stack ?? [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  const filterAttributes = filterable
+    ? ` data-project-card data-search-index="${escapeHtml(searchIndex)}" data-category="${escapeHtml(normalizeFilterValue(item.category ?? ''))}" data-status="${escapeHtml(normalizeFilterValue(getProjectStatusLabel(item.status)))}"`
+    : '';
 
-  return `<article class="project-panel project-card">${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}" loading="lazy" /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
+  return `<article class="project-panel project-card"${filterAttributes}>${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}" loading="lazy" /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
     .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${actionLinks.length ? `<div class="project-actions">${actionLinks.join('')}</div>` : ''}</article>`;
 };
@@ -1078,9 +1109,84 @@ const renderProjectDetailPage = (item) => {
   </section>`;
 };
 
+const renderProjectsPage = (page) => {
+  const projects = page.items ?? [];
+  const categories = collectUniqueValues(projects, (project) => project.category);
+  const statuses = collectUniqueValues(projects, (project) => getProjectStatusLabel(project.status));
+
+  return `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
+    <section class="section reveal" data-project-filter data-project-filter-total="${projects.length}">
+      <div class="post-discovery panel">
+        <div class="post-discovery__intro">
+          <p class="kicker">项目筛选</p>
+          <h2>按项目方向、阶段或关键词，快速收窄当前列表。</h2>
+          <p class="section-intro">更适合先从一个具体主题切入，再决定要不要打开项目详情继续看。</p>
+        </div>
+        <label class="search-field" for="project-search-input">
+          <span>搜索项目</span>
+          <input id="project-search-input" type="search" placeholder="搜索项目名称、摘要、角色或技术栈" autocomplete="off" data-project-filter-input />
+        </label>
+        <div class="discovery-toolbar">
+          <div class="filter-groups">
+            <section class="filter-group" aria-label="按项目方向筛选">
+              <div class="filter-group__header">
+                <span>项目方向</span>
+                <small>先按项目主题缩小范围</small>
+              </div>
+              <div class="filter-chips" data-filter-group="category">
+                <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="category" data-filter-value="all" aria-pressed="true">全部方向</button>
+                ${categories
+                  .map(
+                    (category) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="category" data-filter-value="${escapeHtml(normalizeFilterValue(category))}" aria-pressed="false">${category}</button>`
+                  )
+                  .join('')}
+              </div>
+            </section>
+            <section class="filter-group" aria-label="按项目状态筛选">
+              <div class="filter-group__header">
+                <span>项目状态</span>
+                <small>快速看目前处在哪个阶段</small>
+              </div>
+              <div class="filter-chips" data-filter-group="status">
+                <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="status" data-filter-value="all" aria-pressed="true">全部状态</button>
+                ${statuses
+                  .map(
+                    (status) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="status" data-filter-value="${escapeHtml(normalizeFilterValue(status))}" aria-pressed="false">${status}</button>`
+                  )
+                  .join('')}
+              </div>
+            </section>
+          </div>
+        </div>
+        <p class="search-feedback" data-project-filter-feedback>当前共 ${projects.length} 个项目。</p>
+      </div>
+      <div class="project-grid" data-project-filter-grid>${projects
+        .map((item) => renderProjectCard(item, { assetPrefix: '../', filterable: true }))
+        .join('')}</div>
+      <div class="empty-state search-empty" data-project-filter-empty hidden>
+        <div class="search-empty__icon" aria-hidden="true">⌕</div>
+        <p class="kicker">暂无结果</p>
+        <h2>没有找到匹配的项目。</h2>
+        <p class="search-empty__summary" data-project-filter-empty-summary>当前筛选条件下还没有匹配内容。</p>
+        <ul class="search-empty__tips">
+          <li>试试更短的关键词，或者只保留一个筛选条件。</li>
+          <li>也可以先清空状态或方向限制，再继续浏览完整列表。</li>
+        </ul>
+        <div class="search-empty__actions">
+          <button class="button button-secondary button-small" type="button" data-project-filter-reset>重置搜索与筛选</button>
+        </div>
+      </div>
+    </section>`;
+};
+
 const renderInfoPage = (pageKey) => {
   const page = pages[pageKey];
   const assetPrefix = pageKey === 'projects' ? '../' : '';
+
+  if (pageKey === 'projects') {
+    return renderProjectsPage(page);
+  }
+
   const body = page.items
     ? `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
        <section class="section reveal"><div class="project-grid">${page.items.map((item) => renderProjectCard(item, { assetPrefix })).join('')}</div></section>`
