@@ -918,7 +918,8 @@ main {
 .prose blockquote,
 .prose hr,
 .prose pre,
-.prose .prose-image {
+.prose .prose-image,
+.prose .prose-figure {
   margin: 0 0 1.1rem;
 }
 
@@ -1050,10 +1051,36 @@ main {
   color: #94a3b8;
 }
 
-.prose-image img {
+.prose-image img,
+.prose-figure img {
   width: 100%;
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.prose-figure {
+  display: grid;
+  gap: 0.85rem;
+  margin-inline: 0;
+}
+
+.prose-figure figcaption {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.prose-figure figcaption strong {
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+.prose-figure figcaption span {
+  color: var(--soft);
 }
 
 .post-aside {

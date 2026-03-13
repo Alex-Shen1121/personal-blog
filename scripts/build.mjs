@@ -271,11 +271,42 @@ const renderCodeBlock = (lines, language = '') => {
   return `<pre class="${preClassName}"${dataLang}><code${className}>${content}</code></pre>`;
 };
 
+const resolveContentPath = (value = '') => {
+  if (!value || /^(?:[a-z]+:)?\/\//i.test(value) || value.startsWith('#')) {
+    return value;
+  }
+
+  if (value.startsWith('/')) {
+    return `${site.repoBasePath.replace(/\/$/, '')}${value}`;
+  }
+
+  return value;
+};
+
+const parseImageCaption = (title = '') => {
+  const normalized = title.trim();
+  if (!normalized) {
+    return { heading: '', note: '' };
+  }
+
+  const [heading, ...noteParts] = normalized.split('|').map((item) => item.trim()).filter(Boolean);
+  return {
+    heading: heading ?? '',
+    note: noteParts.join(' | ')
+  };
+};
+
 const renderImageBlock = ({ alt, src, title }) => {
   const safeAlt = escapeHtml(alt);
-  const safeSrc = escapeHtml(src);
-  const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
-  return `<p class="prose-image"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy"${titleAttr} /></p>`;
+  const safeSrc = escapeHtml(resolveContentPath(src));
+  const { heading, note } = parseImageCaption(title);
+  const titleAttr = heading ? ` title="${escapeHtml(heading)}"` : '';
+
+  if (!heading && !note) {
+    return `<p class="prose-image"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy" /></p>`;
+  }
+
+  return `<figure class="prose-figure"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy"${titleAttr} /><figcaption>${heading ? `<strong>${escapeHtml(heading)}</strong>` : ''}${note ? `<span>${escapeHtml(note)}</span>` : ''}</figcaption></figure>`;
 };
 
 const inlineMarkdown = (value) => {
@@ -289,7 +320,8 @@ const inlineMarkdown = (value) => {
   const withMarkup = escaped
     .replace(/!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]+)")?\)/g, (_, alt, src, title) => renderImageBlock({ alt, src, title }))
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-      const safeHref = escapeHtml(href.trim());
+      const resolvedHref = resolveContentPath(href.trim());
+      const safeHref = escapeHtml(resolvedHref);
       return `<a href="${safeHref}"${safeHref.startsWith('http') ? ' target="_blank" rel="noreferrer"' : ''}>${label}</a>`;
     })
     .replace(/~~([^~]+)~~/g, '<del>$1</del>')
