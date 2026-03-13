@@ -26,8 +26,14 @@ if (!existsSync(postsDir)) {
 }
 
 const posts = readdirSync(postsDir).filter((file) => file.endsWith('.md'));
-if (posts.length < 3) {
-  console.error('At least 3 markdown posts are required.');
+const publishedPosts = posts.filter((post) => {
+  const source = readFileSync(path.join(postsDir, post), 'utf8');
+  const draftMatch = source.match(/^draft:\s*(true|false)\s*$/m);
+  return draftMatch?.[1] !== 'true';
+});
+
+if (publishedPosts.length < 3) {
+  console.error('At least 3 non-draft markdown posts are required.');
   process.exit(1);
 }
 
@@ -47,6 +53,12 @@ for (const post of posts) {
       process.exit(1);
     }
   }
+
+  const draftMatch = source.match(/^draft:\s*(.+)\s*$/m);
+  if (draftMatch && !['true', 'false'].includes(draftMatch[1].trim())) {
+    console.error(`Post ${post} has invalid draft field. Use draft: true or draft: false.`);
+    process.exit(1);
+  }
 }
 
-console.log(`Validation passed. ${posts.length} markdown posts detected and required site files exist.`);
+console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected and required site files exist.`);

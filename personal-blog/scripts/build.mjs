@@ -88,7 +88,18 @@ const parseFrontmatter = (content) => {
     const key = rawKey.trim();
     const value = rest.join(':').trim();
     if (!key) continue;
-    meta[key] = key === 'tags' ? value.split(',').map((item) => item.trim()).filter(Boolean) : value;
+
+    if (key === 'tags') {
+      meta[key] = value.split(',').map((item) => item.trim()).filter(Boolean);
+      continue;
+    }
+
+    if (key === 'draft') {
+      meta[key] = value.toLowerCase() === 'true';
+      continue;
+    }
+
+    meta[key] = value;
   }
 
   return { meta, body: rawBody.trim() };
@@ -553,6 +564,7 @@ const loadPosts = () => {
           slug: slugifyCategory(meta.category)
         },
         cover: meta.cover,
+        draft: meta.draft ?? false,
         body,
         html,
         toc,
@@ -560,6 +572,7 @@ const loadPosts = () => {
         readingTime: estimateReadingTime(body)
       };
     })
+    .filter((post) => !post.draft)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
