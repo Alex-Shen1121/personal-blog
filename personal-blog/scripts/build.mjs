@@ -299,6 +299,30 @@ const renderHomePage = (posts) => {
       </div>
     </section>
 
+    <section class="section reveal" id="skills">
+      <div class="section-heading">
+        <p class="kicker">${home.skills.eyebrow}</p>
+        <h2>${home.skills.title}</h2>
+        <p class="section-intro">${home.skills.description}</p>
+      </div>
+      <div class="skills-grid">
+        ${home.skills.groups
+          .map(
+            (group) => `<article class="panel skill-card"><h3>${group.title}</h3><p>${group.description}</p><ul class="tag-list">${group.items.map((item) => `<li class="tag">${item}</li>`).join('')}</ul></article>`
+          )
+          .join('')}
+      </div>
+      <article class="panel skills-stack">
+        <div>
+          <p class="kicker">${home.skills.stackLabel}</p>
+          <h3>保持轻量，但不牺牲完整度。</h3>
+        </div>
+        <ul class="tag-list">
+          ${home.skills.stack.map((item) => `<li class="tag">${item}</li>`).join('')}
+        </ul>
+      </article>
+    </section>
+
     <section class="section reveal" id="projects">
       <div class="post-list__header">
         <div class="section-heading">

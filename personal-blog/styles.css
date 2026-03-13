@@ -423,7 +423,8 @@ main {
 .status-grid,
 .post-grid,
 .split-grid,
-.contact-grid {
+.contact-grid,
+.skills-grid {
   display: grid;
   gap: 20px;
 }
@@ -494,7 +495,8 @@ main {
 .project-grid,
 .status-grid,
 .post-grid,
-.contact-grid {
+.contact-grid,
+.skills-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -503,6 +505,27 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
   gap: 20px;
+}
+
+.skills-grid {
+  margin-bottom: 20px;
+}
+
+.skill-card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.skills-stack {
+  display: grid;
+  gap: 16px;
+  align-items: center;
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+}
+
+.skills-stack h3 {
+  margin: 8px 0 0;
 }
 
 .featured-posts__sidebar,
@@ -874,7 +897,8 @@ main {
   .post-layout,
   .cta-band,
   .featured-posts,
-  .post-card--featured {
+  .post-card--featured,
+  .skills-stack {
     grid-template-columns: 1fr;
   }
 

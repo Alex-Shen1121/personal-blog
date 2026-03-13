@@ -152,6 +152,30 @@ export const home = {
       }
     ]
   },
+  skills: {
+    eyebrow: '技能 / 技术栈',
+    title: '我常用的能力组合，基本都围绕内容站、产品体验和前端落地展开。',
+    description: '相比单纯罗列工具名，我更希望把“会什么”和“通常怎么用”一起呈现出来：既说明技术栈，也说明自己擅长处理的问题。',
+    groups: [
+      {
+        title: '产品与体验',
+        description: '擅长把模糊需求收敛成更清楚的信息结构、页面节奏和交互反馈。',
+        items: ['信息架构梳理', '页面叙事设计', '交互节奏与文案细化']
+      },
+      {
+        title: '前端实现',
+        description: '偏好低复杂度但完整可维护的实现方式，优先保证结构清晰、上线稳定。',
+        items: ['HTML / CSS / Vanilla JS', '响应式布局', '轻量静态站构建']
+      },
+      {
+        title: '内容系统',
+        description: '会把写作、展示、归档和复用一起考虑，让内容站能长期生长。',
+        items: ['Markdown 内容组织', '信息模块规划', '文档驱动更新流程']
+      }
+    ],
+    stackLabel: '日常使用工具',
+    stack: ['Node.js 构建脚本', 'Git / GitHub', 'GitHub Actions', 'GitHub Pages', 'Figma', 'SEO 基础配置']
+  },
   tools: ['HTML / CSS / Vanilla JS', 'GitHub Pages', '轻量脚本化内容生成', 'Figma / 文档驱动工作流']
 };
 
