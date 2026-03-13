@@ -47,6 +47,21 @@ const renderTagLinks = (tags, basePath = '') =>
     .map((tag) => `<li><a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a></li>`)
     .join('')}</ul>`;
 
+const estimateReadingTime = (content) => {
+ const plainText = content
+ .replace(/^#{1,6}\s+/gm, '')
+ .replace(/^>\s+/gm, '')
+ .replace(/^[-*]\s+/gm, '')
+ .replace(/^\d+\.\s+/gm, '')
+ .replace(/`([^`]+)`/g, '$1')
+ .replace(/\*\*([^*]+)\*\*/g, '$1')
+ .replace(/\*([^*]+)\*/g, '$1')
+ .replace(/\s+/g, '');
+ const characters = plainText.length;
+ const minutes = Math.max(1, Math.ceil(characters /300));
+ return `预计 ${minutes} 分钟读完`;
+};
+
 const parseFrontmatter = (content) => {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) throw new Error('Post missing frontmatter block.');
@@ -54,20 +69,6 @@ const parseFrontmatter = (content) => {
   const [, rawMeta, rawBody] = match;
   const meta = {};
 
-const estimateReadingTime = (content) => {
-  const plainText = content
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^>\s+/gm, '')
-    .replace(/^[-*]\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/\s+/g, '');
-  const characters = plainText.length;
-  const minutes = Math.max(1, Math.ceil(characters / 300));
-  return `预计 ${minutes} 分钟读完`;
-};
 
 
   for (const line of rawMeta.split('\n')) {
