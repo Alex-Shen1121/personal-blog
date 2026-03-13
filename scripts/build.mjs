@@ -648,6 +648,13 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
 
 const renderHomePage = (posts) => {
   const recentPosts = posts.slice(0, 3);
+  const recentUpdates = [...posts]
+    .sort((a, b) => {
+      const dateA = new Date(a.updated || a.date);
+      const dateB = new Date(b.updated || b.date);
+      return dateB - dateA;
+    })
+    .slice(0, 3);
   const [primaryPost, ...secondaryPosts] = recentPosts;
   return `
     <section class="hero">
@@ -809,6 +816,21 @@ const renderHomePage = (posts) => {
             )
             .join('')}
         </div>
+      </div>
+    </section>
+
+    <section class="section reveal" id="updates">
+      <div class="section-heading">
+        <p class="kicker">最近更新</p>
+        <h2>最近有更新的文章。</h2>
+        <p class="section-intro">这几篇是近期做过内容更新的文章，如果有遗漏的想法或新补充的内容，会在这里体现。</p>
+      </div>
+      <div class="post-grid">
+        ${recentUpdates
+          .map(
+            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${post.updated && post.updated !== post.date ? `<span>更新于 ${formatDate(post.updated)}</span>` : ''}<span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="button button-ghost" href="blog/${post.slug}/">阅读详情</a></article>`
+          )
+          .join('')}
       </div>
     </section>
 
@@ -995,6 +1017,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
         <a class="button button-ghost button-small" href="tags/">查看全部标签</a>
         <a class="button button-ghost button-small" href="categories/">查看全部分类</a>
         <a class="button button-ghost button-small" href="series/">查看全部系列</a>
+        <a class="button button-ghost button-small" href="archive/">查看归档</a>
         ${tags.slice(0, 2).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
         ${categories.slice(0, 2).map((category) => `<a class="tag" href="categories/${category.slug}/">${category.name} · ${category.count}</a>`).join('')}
         ${seriesList.slice(0, 2).map((series) => `<a class="tag" href="series/${series.slug}/">系列：${series.name}</a>`).join('')}
@@ -1038,6 +1061,48 @@ const renderCategoryListPage = (categories) => `
         .join('')}
     </div>
   </section>`;
+
+const renderArchivePage = (posts) => {
+  const byYearMonth = posts.reduce((acc, post) => {
+    const date = new Date(`${post.date}T00:00:00+08:00`);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const key = `${year}-${month}`;
+    if (!acc[key]) {
+      acc[key] = { year, month, posts: [], label: `${year}年${month + 1}月` };
+    }
+    acc[key].posts.push(post);
+    return acc;
+  }, {});
+
+  const sortedGroups = Object.values(byYearMonth).sort((a, b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    return b.month - a.month;
+  });
+
+  return `
+  <section class="page-hero reveal">
+    <p class="kicker">文章归档</p>
+    <h1>按时间浏览全部文章。</h1>
+    <p>这里按月份整理了全部已发布文章，适合按时间线索一路看下来。</p>
+    <div class="post-list__filters">
+      <a class="button button-ghost button-small" href="../">返回文章列表</a>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="archive-timeline">
+      ${sortedGroups
+        .map(
+          (group) => `<div class="archive-year"><h2 class="archive-year__label">${group.label}</h2><div class="archive-list">${group.posts
+            .map(
+              (post) => `<article class="archive-item"><div class="archive-item__date">${formatDate(post.date)}</div><div class="archive-item__content"><h3><a href="../${post.slug}/">${post.title}</a></h3><p>${post.summary}</p></div></article>`
+            )
+            .join('')}</div></div>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+};
 
 const renderCategoryPage = (category, posts) => `
   <section class="page-hero reveal">
@@ -1406,6 +1471,18 @@ writeText(
     currentPath: '/blog/categories/',
     outputPath: path.join(outDir, 'blog', 'categories', 'index.html'),
     body: renderCategoryListPage(categories)
+  })
+);
+
+writeText(
+  path.join(outDir, 'blog', 'archive', 'index.html'),
+  renderLayout({
+    title: `文章归档｜${site.shortName}`,
+    description: '按时间归档浏览全部博客文章。',
+    currentPath: '/blog/archive/',
+    outputPath: path.join(outDir, 'blog', 'archive', 'index.html'),
+    body: renderArchivePage(posts),
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
   })
 );
 

@@ -980,6 +980,54 @@ main {
   margin-top: 20px;
 }
 
+.archive-timeline {
+  display: grid;
+  gap: 32px;
+}
+
+.archive-year__label {
+  margin: 0 0 16px;
+  font-size: 1.4rem;
+  color: var(--accent);
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 10px;
+}
+
+.archive-list {
+  display: grid;
+  gap: 16px;
+}
+
+.archive-item {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.archive-item__date {
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.archive-item__content h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.archive-item__content p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 600px) {
+  .archive-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
 [data-post-card][hidden],
 [hidden] {
   display: none !important;
