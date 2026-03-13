@@ -23,6 +23,8 @@ const formatDate = (dateString) =>
     day: 'numeric'
   }).format(new Date(`${dateString}T00:00:00+08:00`));
 
+const formatWordCount = (count) => `${count.toLocaleString('zh-CN')} 字`;
+
 const escapeHtml = (value) =>
   value
     .replaceAll('&', '&amp;')
@@ -527,7 +529,7 @@ const loadPosts = () => {
       const raw = readFileSync(path.join(postsDir, fileName), 'utf8');
       const { meta, body } = parseFrontmatter(raw);
       const slug = slugify(fileName);
-      const words = body.replace(/\s+/g, '').length;
+      const wordCount = body.replace(/\s+/g, '').length;
       const { html, toc } = markdownToHtml(body);
       return {
         slug,
@@ -543,6 +545,7 @@ const loadPosts = () => {
         body,
         html,
         toc,
+        wordCount,
         readingTime: estimateReadingTime(body)
       };
     })
@@ -702,7 +705,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
   <section class="post-header reveal">
     <p class="kicker">文章详情</p>
     <h1>${post.title}</h1>
-    <div class="post-header__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div>
+    <div class="post-header__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span><span>${formatWordCount(post.wordCount)}</span></div>
     <p>${post.summary}</p>
     <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
   </section>
@@ -723,7 +726,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
- <div class="meta-row"><span>阅读时长</span><span>${post.readingTime}</span></div>
+        <div class="meta-row"><span>阅读信息</span><span>${post.readingTime} · ${formatWordCount(post.wordCount)}</span></div>
         <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
         <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
       </div>
