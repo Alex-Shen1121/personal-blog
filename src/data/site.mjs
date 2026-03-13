@@ -122,7 +122,7 @@ export const home = {
       {
         title: '个人内容站升级计划',
         tag: '内容体系 / 静态站',
-        status: '持续迭代中',
+        status: { label: '持续迭代中', tone: 'active' },
         description: '把单页介绍站升级成可持续维护的内容站，补齐文章结构、信息架构与 SEO 基础设施。',
         highlights: ['首页结构重做', '文章系统补齐', '信息架构持续梳理'],
         href: '/projects/'
@@ -130,7 +130,7 @@ export const home = {
       {
         title: '轻量级文档展示系统',
         tag: '前端工程 / 体验打磨',
-        status: '方案沉淀中',
+        status: { label: '方案沉淀中', tone: 'planning' },
         description: '用更低复杂度的技术方案支持多页内容展示，兼顾部署稳定性与长期可维护性。',
         highlights: ['原生技术栈', '低维护成本'],
         href: '/projects/'
@@ -138,7 +138,7 @@ export const home = {
       {
         title: '写作者工作流整理',
         tag: '方法论 / 内容生产',
-        status: '长期维护',
+        status: { label: '长期维护', tone: 'maintained' },
         description: '围绕选题、草稿、归档和复盘，构建一个适合个人长期使用的写作系统。',
         highlights: ['选题到归档', '内容复用机制'],
         href: '/now/'
@@ -236,7 +236,7 @@ export const pages = {
         slug: 'personal-blog-system',
         title: '个人主页与博客系统',
         category: '静态生成 / 内容优先',
-        status: '已上线并持续迭代',
+        status: { label: '已上线并持续迭代', tone: 'live' },
         role: '产品规划 / 信息架构 / 前端实现',
         timeline: '2026.03 - 至今',
         focus: '文章系统、站点结构与长期维护成本控制',
@@ -263,7 +263,7 @@ export const pages = {
         slug: 'narrative-product-pages',
         title: '案例型产品介绍页',
         category: '品牌表达 / 页面叙事',
-        status: '持续打磨方法论',
+        status: { label: '持续打磨方法论', tone: 'active' },
         role: '页面策略 / 文案组织 / 视觉节奏',
         timeline: '长期项目',
         focus: '把复杂信息拆成更顺的阅读路径，并保留品牌气质',
@@ -290,7 +290,7 @@ export const pages = {
         slug: 'writing-workflow-system',
         title: '个人知识与写作工作流',
         category: '方法沉淀 / 长期复利',
-        status: '长期维护',
+        status: { label: '长期维护', tone: 'maintained' },
         role: '选题整理 / 内容归档 / 系统复盘',
         timeline: '持续演进',
         focus: '围绕选题、草稿、归档与再利用建立个人内容系统',

@@ -59,6 +59,29 @@ const renderTagLinks = (tags, basePath = '') =>
     .map((tag) => `<li><a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a></li>`)
     .join('')}</ul>`;
 
+const normalizeProjectStatus = (status) => {
+  if (!status) return null;
+  if (typeof status === 'string') {
+    return { label: status, tone: 'neutral' };
+  }
+
+  const label = status.label?.trim?.();
+  if (!label) return null;
+  return {
+    label,
+    tone: status.tone?.trim?.() || 'neutral'
+  };
+};
+
+const getProjectStatusLabel = (status) => normalizeProjectStatus(status)?.label ?? '';
+
+const renderProjectStatusBadge = (status) => {
+  const normalizedStatus = normalizeProjectStatus(status);
+  if (!normalizedStatus) return '';
+
+  return `<span class="status-badge status-badge--${normalizedStatus.tone}"><span class="status-badge__dot" aria-hidden="true"></span>${normalizedStatus.label}</span>`;
+};
+
 const estimateReadingTime = (content) => {
  const plainText = content
  .replace(/^#{1,6}\s+/gm, '')
@@ -770,7 +793,7 @@ const renderHomePage = (posts) => {
           <span class="feature-label">${home.featuredProjects.primaryLabel}</span>
           <div class="featured-project__meta">
             <span class="tag">${home.featuredProjects.items[0].tag}</span>
-            <span class="tag">${home.featuredProjects.items[0].status}</span>
+            ${renderProjectStatusBadge(home.featuredProjects.items[0].status)}
           </div>
           <div>
             <h3>${home.featuredProjects.items[0].title}</h3>
@@ -785,7 +808,7 @@ const renderHomePage = (posts) => {
           ${home.featuredProjects.items
             .slice(1)
             .map(
-              (project) => `<article class="project-panel featured-project"><span class="feature-label">${home.featuredProjects.secondaryLabel}</span><div class="featured-project__meta"><span class="tag">${project.tag}</span><span class="tag">${project.status}</span></div><div><h3>${project.title}</h3><p>${project.description}</p></div><ul class="tag-list">${project.highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}</ul><a class="text-link" href="${project.href.slice(1)}">继续查看 →</a></article>`
+              (project) => `<article class="project-panel featured-project"><span class="feature-label">${home.featuredProjects.secondaryLabel}</span><div class="featured-project__meta"><span class="tag">${project.tag}</span>${renderProjectStatusBadge(project.status)}</div><div><h3>${project.title}</h3><p>${project.description}</p></div><ul class="tag-list">${project.highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}</ul><a class="text-link" href="${project.href.slice(1)}">继续查看 →</a></article>`
             )
             .join('')}
         </div>
@@ -869,43 +892,50 @@ const renderHomePage = (posts) => {
 };
 
 const renderProjectCard = (item) => {
+  const statusBadge = renderProjectStatusBadge(item.status);
   const facts = [
     ['角色', item.role],
     ['周期', item.timeline],
     ['关注点', item.focus],
-    ['当前阶段', item.status]
+    ['当前阶段', getProjectStatusLabel(item.status)]
   ].filter(([, value]) => value);
 
   const relatedHref = item.href ? (item.href.startsWith('/') ? item.href.slice(1) : item.href) : '';
   const primaryHref = item.slug ? `${item.slug}/` : relatedHref;
   const primaryLabel = item.slug ? '查看项目详情' : item.linkLabel ?? '查看项目';
-
-  return `<article class="project-panel project-card"><div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${facts.length ? `<div class="project-card__meta">${facts
+  const metaItems = facts
     .slice(1)
-    .map(([, value]) => `<span class="tag">${value}</span>`)
-    .join('')}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
+    .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
+    .join('');
+
+  return `<article class="project-panel project-card"><div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
     .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${primaryHref ? `<a class="button button-ghost button-small" href="${primaryHref}">${primaryLabel}</a>` : ''}</article>`;
 };
 
 const renderProjectDetailPage = (item) => {
+  const statusBadge = renderProjectStatusBadge(item.status);
   const facts = [
     ['角色', item.role],
     ['周期', item.timeline],
     ['关注点', item.focus],
-    ['当前阶段', item.status]
+    ['当前阶段', getProjectStatusLabel(item.status)]
   ].filter(([, value]) => value);
   const relatedHref = item.href
     ? item.href.startsWith('/')
       ? `../../${item.href.slice(1)}`
       : item.href
     : null;
+  const metaItems = facts
+    .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
+    .join('');
 
   return `
   <section class="page-hero reveal">
     <p class="kicker">项目详情</p>
     <h1>${item.title}</h1>
     <p>${item.summary ?? item.text ?? ''}</p>
+    ${statusBadge ? `<div class="page-hero__meta">${statusBadge}</div>` : ''}
     <div class="post-list__filters">
       <a class="button button-ghost button-small" href="../">返回项目列表</a>
       ${relatedHref ? `<a class="button button-secondary button-small" href="${relatedHref}">${item.linkLabel ?? '继续查看相关内容'}</a>` : ''}
@@ -916,7 +946,7 @@ const renderProjectDetailPage = (item) => {
       <article class="project-panel project-detail-card">
         <div class="project-card__header">
           <span class="kicker">${item.category ?? '项目'}</span>
-          <div class="project-card__meta">${facts.map(([, value]) => `<span class="tag">${value}</span>`).join('')}</div>
+          <div class="project-card__meta">${metaItems}</div>
         </div>
         ${facts.length ? `<dl class="project-facts">${facts
           .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
