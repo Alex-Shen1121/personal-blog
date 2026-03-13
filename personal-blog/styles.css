@@ -308,6 +308,13 @@ main {
   line-height: 1.8;
 }
 
+.hero-positioning {
+  margin: 18px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--soft);
+}
+
 .kicker {
   margin: 0;
   font-size: 0.82rem;

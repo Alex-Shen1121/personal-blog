@@ -31,6 +31,7 @@ export const home = {
   hero: {
     eyebrow: '个人主页 / 博客 / 长期更新中',
     title: '把想法做成可用、可感知、可持续迭代的产品体验。',
+    positioning: '我是一名聚焦内容产品、品牌表达与前端体验的产品 / 前端实践者。',
     description:
       '这里是沈晨玙的线上据点。我会在这里整理自己的工作方法、记录正在推进的项目，也留一点空间给日常观察与阶段性思考。希望它像一张持续生长的个人名片，而不是一次性的 landing page。',
     primaryCta: { label: '查看文章', href: '/blog/' },

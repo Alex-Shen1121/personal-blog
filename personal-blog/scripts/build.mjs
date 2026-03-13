@@ -246,6 +246,7 @@ const renderHomePage = (posts) => {
       <div class="hero-copy reveal">
         <p class="kicker">${home.hero.eyebrow}</p>
         <h1>${home.hero.title}</h1>
+        ${home.hero.positioning ? `<p class="hero-positioning">${home.hero.positioning}</p>` : ''}
         <p>${home.hero.description}</p>
         <div class="hero-actions">
           <a class="button button-primary" href="blog/">${home.hero.primaryCta.label}</a>
