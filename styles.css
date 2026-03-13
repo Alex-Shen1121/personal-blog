@@ -959,6 +959,7 @@ main {
   padding: 2px 6px;
   border-radius: 8px;
   background: rgba(148, 163, 184, 0.12);
+  font-family: "SFMono-Regular", "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
 }
 
 .prose .code-block {
@@ -970,7 +971,7 @@ main {
   background: rgba(7, 17, 31, 0.78);
 }
 
-.prose .code-block::before {
+.prose .code-block.has-language::before {
   content: attr(data-language);
   display: block;
   margin-bottom: 10px;
@@ -986,7 +987,40 @@ main {
   border-radius: 0;
   background: transparent;
   color: #dbeafe;
+  font-family: "SFMono-Regular", "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", monospace;
+  font-size: 0.95rem;
+  line-height: 1.75;
   white-space: pre;
+}
+
+.prose .token.comment {
+  color: #7f93b3;
+  font-style: italic;
+}
+
+.prose .token.keyword {
+  color: #c4b5fd;
+}
+
+.prose .token.string {
+  color: #86efac;
+}
+
+.prose .token.number,
+.prose .token.boolean {
+  color: #fbbf24;
+}
+
+.prose .token.property {
+  color: #93c5fd;
+}
+
+.prose .token.variable {
+  color: #fca5a5;
+}
+
+.prose .token.punctuation {
+  color: #94a3b8;
 }
 
 .prose-image img {

@@ -110,12 +110,165 @@ const parseFrontmatter = (content) => {
   return { meta, body: rawBody.trim() };
 };
 
+const CODE_LANGUAGE_ALIASES = {
+  js: 'javascript',
+  jsx: 'javascript',
+  mjs: 'javascript',
+  cjs: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  sh: 'bash',
+  shell: 'bash',
+  zsh: 'bash',
+  yml: 'yaml',
+  md: 'markdown',
+  plaintext: 'text',
+  txt: 'text'
+};
+
+const normalizeCodeLanguage = (language = '') => {
+  const normalized = language.trim().toLowerCase();
+  return CODE_LANGUAGE_ALIASES[normalized] ?? normalized;
+};
+
+const highlightCode = (source, language = '') => {
+  const normalizedLanguage = normalizeCodeLanguage(language);
+  const preserve = (input, rules) => {
+    const placeholders = [];
+    let result = input;
+
+    const stash = (className, value) => {
+      const token = `__OPENCLAW_CODE_${placeholders.length}__`;
+      placeholders.push({
+        token,
+        html: `<span class="token ${className}">${escapeHtml(value)}</span>`
+      });
+      return token;
+    };
+
+    for (const rule of rules.filter((item) => item.preserveFirst)) {
+      result = result.replace(rule.pattern, (match) => stash(rule.className, match));
+    }
+
+    result = escapeHtml(result);
+
+    for (const rule of rules.filter((item) => !item.preserveFirst)) {
+      result = result.replace(rule.pattern, (...args) => {
+        const match = args[0];
+        if (typeof rule.replacer === 'function') {
+          return rule.replacer(...args);
+        }
+        return `<span class="token ${rule.className}">${match}</span>`;
+      });
+    }
+
+    for (const { token, html } of placeholders) {
+      result = result.replaceAll(token, html);
+    }
+
+    return result;
+  };
+
+  if (!normalizedLanguage || normalizedLanguage === 'text' || normalizedLanguage === 'plain') {
+    return escapeHtml(source);
+  }
+
+  const javascriptRules = [
+    { pattern: /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, className: 'comment', preserveFirst: true },
+    { pattern: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g, className: 'string', preserveFirst: true },
+    { pattern: /\b(?:import|from|export|default|const|let|var|function|return|if|else|for|while|switch|case|break|continue|new|class|extends|async|await|try|catch|finally|throw|typeof|instanceof|in|of)\b/g, className: 'keyword' },
+    { pattern: /\b(?:true|false|null|undefined)\b/g, className: 'boolean' },
+    {
+      pattern: /(^|[^\w.])(-?\d+(?:\.\d+)?)(?=$|[^\w.])/g,
+      className: 'number',
+      replacer: (match, prefix, number) => `${prefix}<span class="token number">${number}</span>`
+    }
+  ];
+
+  const jsonRules = [
+    { pattern: /"(?:\\.|[^"\\])*"/g, className: 'string', preserveFirst: true },
+    { pattern: /\b(?:true|false|null)\b/g, className: 'boolean' },
+    {
+      pattern: /(^|[^\w.])(-?\d+(?:\.\d+)?)(?=$|[^\w.])/g,
+      className: 'number',
+      replacer: (match, prefix, number) => `${prefix}<span class="token number">${number}</span>`
+    },
+    { pattern: /[{}\[\],:]/g, className: 'punctuation' }
+  ];
+
+  const yamlRules = [
+    { pattern: /#[^\n]*/g, className: 'comment', preserveFirst: true },
+    { pattern: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, className: 'string', preserveFirst: true },
+    {
+      pattern: /(^\s*)([A-Za-z0-9_-]+)(:\s*)/gm,
+      className: 'property',
+      replacer: (match, indent, key, separator) => `${indent}<span class="token property">${key}</span><span class="token punctuation">${separator}</span>`
+    },
+    { pattern: /\b(?:true|false|null)\b/g, className: 'boolean' },
+    {
+      pattern: /(^|[^\w.])(-?\d+(?:\.\d+)?)(?=$|[^\w.])/g,
+      className: 'number',
+      replacer: (match, prefix, number) => `${prefix}<span class="token number">${number}</span>`
+    }
+  ];
+
+  const bashRules = [
+    { pattern: /#[^\n]*/g, className: 'comment', preserveFirst: true },
+    { pattern: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, className: 'string', preserveFirst: true },
+    { pattern: /\$[A-Za-z_][A-Za-z0-9_]*/g, className: 'variable' },
+    { pattern: /\b(?:if|then|fi|for|do|done|case|esac|while|function|in|export|local|sudo|cd|ls|cat|echo|npm|node|git)\b/g, className: 'keyword' }
+  ];
+
+  const markdownRules = [
+    { pattern: /`[^`]+`/g, className: 'string', preserveFirst: true },
+    {
+      pattern: /^(#{1,6})(\s+.+)$/gm,
+      className: 'keyword',
+      replacer: (match, hashes, text) => `<span class="token keyword">${hashes}</span>${text}`
+    },
+    {
+      pattern: /^(\s*)([-*+]\s+)/gm,
+      className: 'punctuation',
+      replacer: (match, indent, marker) => `${indent}<span class="token punctuation">${marker}</span>`
+    },
+    {
+      pattern: /^(\s*)(\d+\.\s+)/gm,
+      className: 'number',
+      replacer: (match, indent, marker) => `${indent}<span class="token number">${marker}</span>`
+    }
+  ];
+
+  if (normalizedLanguage === 'javascript' || normalizedLanguage === 'typescript') {
+    return preserve(source, javascriptRules);
+  }
+
+  if (normalizedLanguage === 'json') {
+    return preserve(source, jsonRules);
+  }
+
+  if (normalizedLanguage === 'yaml') {
+    return preserve(source, yamlRules);
+  }
+
+  if (normalizedLanguage === 'bash') {
+    return preserve(source, bashRules);
+  }
+
+  if (normalizedLanguage === 'markdown') {
+    return preserve(source, markdownRules);
+  }
+
+  return escapeHtml(source);
+};
+
 const renderCodeBlock = (lines, language = '') => {
-  const lang = escapeHtml(language.trim());
-  const content = escapeHtml(lines.join('\n'));
-  const className = lang ? ` class="language-${lang}"` : '';
-  const dataLang = lang ? ` data-language="${lang}"` : '';
-  return `<pre class="code-block"${dataLang}><code${className}>${content}</code></pre>`;
+  const normalizedLanguage = normalizeCodeLanguage(language);
+  const label = normalizedLanguage ? escapeHtml(normalizedLanguage) : '';
+  const content = highlightCode(lines.join('\n'), normalizedLanguage);
+  const className = normalizedLanguage ? ` class="language-${label}"` : '';
+  const dataLang = normalizedLanguage ? ` data-language="${label}"` : '';
+  const preClassName = normalizedLanguage ? 'code-block has-language' : 'code-block';
+  return `<pre class="${preClassName}"${dataLang}><code${className}>${content}</code></pre>`;
 };
 
 const renderImageBlock = ({ alt, src, title }) => {
