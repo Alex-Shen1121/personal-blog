@@ -1040,9 +1040,19 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
         .join('')}
     </div>
     <div class="empty-state search-empty" data-post-search-empty hidden>
+      <div class="search-empty__icon" aria-hidden="true">⌕</div>
       <p class="kicker">暂无结果</p>
       <h2>没有找到匹配的文章。</h2>
-      <p>可以换一个关键词，或者先从标签 / 分类页继续浏览。</p>
+      <p class="search-empty__summary" data-post-search-empty-summary>当前筛选条件下还没有匹配内容。</p>
+      <ul class="search-empty__tips">
+        <li>试试更短的关键词，或者只保留一个筛选条件。</li>
+        <li>也可以先从归档、标签或分类页重新挑一个入口继续浏览。</li>
+      </ul>
+      <div class="search-empty__actions">
+        <button class="button button-secondary button-small" type="button" data-post-search-reset>重置搜索与筛选</button>
+        <a class="button button-ghost button-small" href="archive/">查看归档</a>
+        <a class="button button-ghost button-small" href="tags/">查看标签页</a>
+      </div>
     </div>
   </section>`;
 

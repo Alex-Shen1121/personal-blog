@@ -61,12 +61,15 @@ const initBlogSearch = () => {
     const cards = [...section.querySelectorAll('[data-post-card]')];
     const feedback = section.querySelector('[data-post-search-feedback]');
     const emptyState = section.querySelector('[data-post-search-empty]');
+    const emptySummary = section.querySelector('[data-post-search-empty-summary]');
+    const resetButton = section.querySelector('[data-post-search-reset]');
     const filterButtons = [...section.querySelectorAll('[data-filter-option]')];
     const sortSelect = section.querySelector('[data-post-sort]');
     const total = Number(section.dataset.postSearchTotal || cards.length);
-    const state = { tag: 'all', category: 'all', sort: sortSelect?.value || 'date-desc' };
+    const defaultSort = sortSelect?.value || 'date-desc';
+    const state = { tag: 'all', category: 'all', sort: defaultSort };
 
-    if (!input || !grid || !cards.length || !feedback || !emptyState) return;
+    if (!input || !grid || !cards.length || !feedback || !emptyState || !emptySummary) return;
 
     const sortCards = () => {
       const sorters = {
@@ -101,6 +104,17 @@ const initBlogSearch = () => {
       return `${parts.join(' + ')} 共找到 ${visibleCount} / ${total} 篇文章。`;
     };
 
+    const buildEmptySummary = () => {
+      const parts = [];
+      const rawQuery = input.value.trim();
+      if (rawQuery) parts.push(`关键词 “${rawQuery}”`);
+      if (state.tag !== 'all') parts.push(`标签 “${state.tag}”`);
+      if (state.category !== 'all') parts.push(`分类 “${state.category}”`);
+      return parts.length
+        ? `当前没有符合 ${parts.join(' + ')} 的文章，可以先清空条件再继续浏览。`
+        : '当前筛选条件下还没有匹配内容。';
+    };
+
     const updateResults = () => {
       const query = input.value.trim().toLowerCase();
       let visibleCount = 0;
@@ -119,7 +133,10 @@ const initBlogSearch = () => {
         if (matched) visibleCount += 1;
       });
 
-      emptyState.hidden = visibleCount > 0;
+      const isEmpty = visibleCount === 0;
+      grid.hidden = isEmpty;
+      emptyState.hidden = !isEmpty;
+      emptySummary.textContent = buildEmptySummary();
       feedback.textContent = buildFeedback(query, visibleCount);
       syncFilterButtons();
     };
@@ -138,6 +155,18 @@ const initBlogSearch = () => {
       sortSelect.addEventListener('change', () => {
         state.sort = sortSelect.value;
         updateResults();
+      });
+    }
+
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        input.value = '';
+        state.tag = 'all';
+        state.category = 'all';
+        state.sort = defaultSort;
+        if (sortSelect) sortSelect.value = defaultSort;
+        updateResults();
+        input.focus();
       });
     }
 
