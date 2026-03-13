@@ -882,6 +882,7 @@ main {
 .prose h3 {
   margin: 2.2rem 0 0.9rem;
   letter-spacing: -0.03em;
+  scroll-margin-top: 112px;
 }
 
 .prose p,
@@ -921,6 +922,40 @@ main {
 
 .meta-tags .tag-list {
   gap: 8px;
+}
+
+.toc-card {
+  position: sticky;
+  top: 112px;
+}
+
+.toc-nav {
+  display: grid;
+  gap: 10px;
+}
+
+.toc-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc-item a {
+  display: block;
+  color: var(--muted);
+  line-height: 1.7;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.toc-item a:hover {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+.toc-item--level-3 {
+  padding-left: 14px;
 }
 
 .contact-links a,
@@ -1005,6 +1040,10 @@ main {
   .nav-guide-grid,
   .site-footer__grid {
     grid-template-columns: 1fr;
+  }
+
+  .toc-card {
+    position: static;
   }
 
   .metrics,

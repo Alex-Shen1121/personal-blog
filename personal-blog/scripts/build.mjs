@@ -30,7 +30,15 @@ const escapeHtml = (value) =>
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 
-const slugify = (value) => value.replace(/\.md$/, '');
+const slugify = (value) =>
+  value
+    .replace(/\.md$/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/<[^>]+>/g, '')
+    .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 const slugifyTag = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
 const slugifyCategory = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
 
@@ -60,10 +68,19 @@ const parseFrontmatter = (content) => {
 const markdownToHtml = (markdown) => {
   const lines = markdown.split('\n');
   const blocks = [];
+  const toc = [];
+  const headingSlugCount = new Map();
   let paragraph = [];
   let listItems = [];
   let inQuote = false;
   let quoteLines = [];
+
+  const createHeadingId = (text) => {
+    const baseSlug = slugify(text) || 'section';
+    const count = headingSlugCount.get(baseSlug) ?? 0;
+    headingSlugCount.set(baseSlug, count + 1);
+    return count === 0 ? baseSlug : `${baseSlug}-${count + 1}`;
+  };
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
@@ -99,7 +116,10 @@ const markdownToHtml = (markdown) => {
       flushParagraph();
       flushList();
       flushQuote();
-      blocks.push(`<h2>${inlineMarkdown(trimmed.slice(3))}</h2>`);
+      const text = trimmed.slice(3);
+      const id = createHeadingId(text);
+      toc.push({ level: 2, text, id });
+      blocks.push(`<h2 id="${id}">${inlineMarkdown(text)}</h2>`);
       continue;
     }
 
@@ -107,7 +127,10 @@ const markdownToHtml = (markdown) => {
       flushParagraph();
       flushList();
       flushQuote();
-      blocks.push(`<h3>${inlineMarkdown(trimmed.slice(4))}</h3>`);
+      const text = trimmed.slice(4);
+      const id = createHeadingId(text);
+      toc.push({ level: 3, text, id });
+      blocks.push(`<h3 id="${id}">${inlineMarkdown(text)}</h3>`);
       continue;
     }
 
@@ -142,7 +165,10 @@ const markdownToHtml = (markdown) => {
   flushList();
   flushQuote();
 
-  return blocks.join('\n');
+  return {
+    html: blocks.join('\n'),
+    toc
+  };
 };
 
 const inlineMarkdown = (value) => {
@@ -485,6 +511,7 @@ const loadPosts = () => {
       const { meta, body } = parseFrontmatter(raw);
       const slug = slugify(fileName);
       const words = body.replace(/\s+/g, '').length;
+      const { html, toc } = markdownToHtml(body);
       return {
         slug,
         title: meta.title,
@@ -497,7 +524,8 @@ const loadPosts = () => {
         },
         cover: meta.cover,
         body,
-        html: markdownToHtml(body),
+        html,
+        toc,
         readingTime: `${Math.max(3, Math.round(words / 220))} 分钟阅读`
       };
     })
@@ -630,6 +658,13 @@ const renderPostPage = (post, relatedPosts) => `
       <div class="prose panel">${post.html}</div>
     </article>
     <aside class="post-aside">
+      ${post.toc.length
+        ? `<div class="note-card toc-card"><h3>文章目录</h3><nav class="toc-nav" aria-label="文章目录"><ol class="toc-list">${post.toc
+            .map(
+              (item) => `<li class="toc-item toc-item--level-${item.level}"><a href="#${item.id}">${item.text}</a></li>`
+            )
+            .join('')}</ol></nav></div>`
+        : ''}
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
