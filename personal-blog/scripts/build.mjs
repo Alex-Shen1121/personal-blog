@@ -25,6 +25,16 @@ const formatDate = (dateString) =>
 
 const formatWordCount = (count) => `${count.toLocaleString('zh-CN')} 字`;
 
+const renderPostMeta = (post) => {
+  const items = [formatDate(post.date)];
+  if (post.updated && post.updated !== post.date) {
+    items.push(`更新于 ${formatDate(post.updated)}`);
+  }
+  items.push(post.readingTime);
+  items.push(formatWordCount(post.wordCount));
+  return items.map((item) => `<span>${item}</span>`).join('');
+};
+
 const escapeHtml = (value) =>
   value
     .replaceAll('&', '&amp;')
@@ -458,7 +468,7 @@ const renderHomePage = (posts) => {
       </div>
       <div class="featured-posts">
         ${primaryPost
-          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画" /></div><div class="post-card__body"><span class="feature-label">${home.featuredPosts.primaryLabel}</span><div class="post-card__meta"><span>${formatDate(primaryPost.date)}</span><span>${primaryPost.readingTime}</span></div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
+          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画" /></div><div class="post-card__body"><span class="feature-label">${home.featuredPosts.primaryLabel}</span><div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
           : ''}
         <div class="featured-posts__sidebar">
           <div class="featured-posts__intro panel">
@@ -467,7 +477,7 @@ const renderHomePage = (posts) => {
           </div>
           ${secondaryPosts
             .map(
-              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
+              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta">${renderPostMeta(post)}</div><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
             )
             .join('')}
         </div>
@@ -535,6 +545,7 @@ const loadPosts = () => {
         slug,
         title: meta.title,
         date: meta.date,
+        updated: meta.updated,
         summary: meta.summary,
         tags: meta.tags ?? [],
         category: {
@@ -597,7 +608,7 @@ const renderBlogListPage = (posts, tags, categories) => `
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -705,7 +716,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
   <section class="post-header reveal">
     <p class="kicker">文章详情</p>
     <h1>${post.title}</h1>
-    <div class="post-header__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span><span>${formatWordCount(post.wordCount)}</span></div>
+    <div class="post-header__meta">${renderPostMeta(post)}</div>
     <p>${post.summary}</p>
     <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
   </section>
@@ -726,6 +737,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
+        ${post.updated ? `<div class="meta-row"><span>更新时间</span><span>${formatDate(post.updated)}</span></div>` : ''}
         <div class="meta-row"><span>阅读信息</span><span>${post.readingTime} · ${formatWordCount(post.wordCount)}</span></div>
         <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
         <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
