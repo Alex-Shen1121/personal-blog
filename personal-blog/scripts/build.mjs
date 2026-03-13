@@ -363,20 +363,29 @@ const renderHomePage = (posts) => {
     </section>
 
     <section class="section reveal" id="now">
-      <div class="split-grid">
-        <article class="note-card">
-          <div class="section-heading">
-            <p class="kicker">近况</p>
-            <h2>我近期在推进的事情</h2>
-          </div>
-          <ul class="timeline">
-            ${home.updates.map((item, index) => `<li><strong>0${index + 1}</strong>${item}</li>`).join('')}
-          </ul>
+      <div class="post-list__header">
+        <div class="section-heading">
+          <p class="kicker">${home.updates.eyebrow}</p>
+          <h2>${home.updates.title}</h2>
+          <p class="section-intro">${home.updates.description}</p>
+        </div>
+        <a class="button button-ghost" href="${home.updates.cta.href.slice(1)}">${home.updates.cta.label}</a>
+      </div>
+      <div class="split-grid split-grid--timeline">
+        <article class="note-card timeline-card">
+          <ol class="timeline timeline--detailed">
+            ${home.updates.items
+              .map(
+                (item) => `<li><div class="timeline-marker" aria-hidden="true"></div><div class="timeline-content"><p class="timeline-date">${item.date}</p><h3>${item.label}</h3><p>${item.summary}</p><ul class="tag-list">${item.meta.map((meta) => `<li class="tag">${meta}</li>`).join('')}</ul></div></li>`
+              )
+              .join('')}
+          </ol>
         </article>
         <article class="note-card">
           <div class="section-heading">
-            <p class="kicker">联系方式</p>
+            <p class="kicker">保持联系</p>
             <h2>如果你也在做内容、产品或前端相关的事情，欢迎交流。</h2>
+            <p class="section-intro">我更喜欢基于具体项目、内容想法或正在解决的问题展开对话，这样会更快进入有效交流。</p>
           </div>
           <div class="contact-links">
             ${site.author.links.map((link) => `<a class="button button-secondary" href="${link.url}" target="_blank" rel="noreferrer">${link.label}</a>`).join('')}
