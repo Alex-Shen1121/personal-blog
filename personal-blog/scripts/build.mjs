@@ -644,7 +644,20 @@ const renderTagDetailPage = (tag) => `
     </div>
   </section>`;
 
-const renderPostPage = (post, relatedPosts) => `
+const renderPostNavigation = (navigationPosts) => {
+  const items = [
+    navigationPosts.previous
+      ? `<a class="post-nav-card" href="../${navigationPosts.previous.slug}/"><span class="kicker">上一篇</span><strong>${navigationPosts.previous.title}</strong><small>${navigationPosts.previous.summary}</small></a>`
+      : '<div class="post-nav-card post-nav-card--empty"><span class="kicker">上一篇</span><strong>已经是第一篇</strong><small>你可以回到文章列表继续浏览其他内容。</small></div>',
+    navigationPosts.next
+      ? `<a class="post-nav-card" href="../${navigationPosts.next.slug}/"><span class="kicker">下一篇</span><strong>${navigationPosts.next.title}</strong><small>${navigationPosts.next.summary}</small></a>`
+      : '<div class="post-nav-card post-nav-card--empty"><span class="kicker">下一篇</span><strong>已经是最后一篇</strong><small>当前已经没有更后面的文章了。</small></div>'
+  ];
+
+  return `<nav class="post-pagination reveal" aria-label="文章上一篇和下一篇导航">${items.join('')}</nav>`;
+};
+
+const renderPostPage = (post, relatedPosts, navigationPosts) => `
   <section class="post-header reveal">
     <p class="kicker">文章详情</p>
     <h1>${post.title}</h1>
@@ -656,6 +669,7 @@ const renderPostPage = (post, relatedPosts) => `
     <article>
       <div class="post-cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的配图" /></div>
       <div class="prose panel">${post.html}</div>
+      ${renderPostNavigation(navigationPosts)}
     </article>
     <aside class="post-aside">
       ${post.toc.length
@@ -835,8 +849,13 @@ for (const category of categories) {
   );
 }
 
-for (const post of posts) {
+for (const [index, post] of posts.entries()) {
   const relatedPosts = posts.filter((item) => item.slug !== post.slug).slice(0, 2);
+  const navigationPosts = {
+    previous: posts[index - 1] ?? null,
+    next: posts[index + 1] ?? null
+  };
+
   writeText(
     path.join(outDir, 'blog', post.slug, 'index.html'),
     renderLayout({
@@ -844,7 +863,7 @@ for (const post of posts) {
       description: post.summary,
       currentPath: `/blog/${post.slug}/`,
       outputPath: path.join(outDir, 'blog', post.slug, 'index.html'),
-      body: renderPostPage(post, relatedPosts),
+      body: renderPostPage(post, relatedPosts, navigationPosts),
       image: post.cover
     })
   );

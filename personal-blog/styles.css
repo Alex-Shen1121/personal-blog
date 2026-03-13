@@ -958,6 +958,43 @@ main {
   padding-left: 14px;
 }
 
+.post-pagination {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.post-nav-card {
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: var(--panel);
+  color: inherit;
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.post-nav-card strong,
+.post-nav-card small {
+  line-height: 1.7;
+}
+
+.post-nav-card small {
+  color: var(--muted);
+}
+
+.post-nav-card:hover {
+  border-color: rgba(125, 211, 252, 0.24);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.post-nav-card--empty {
+  opacity: 0.78;
+}
+
 .contact-links a,
 .footer-links a,
 .text-link {
@@ -1038,7 +1075,8 @@ main {
   .post-card--featured,
   .skills-stack,
   .nav-guide-grid,
-  .site-footer__grid {
+  .site-footer__grid,
+  .post-pagination {
     grid-template-columns: 1fr;
   }
 
