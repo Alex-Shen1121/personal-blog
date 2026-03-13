@@ -749,6 +749,10 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
       <main>
         ${body}
       </main>
+      <button class="back-to-top" type="button" data-back-to-top aria-label="返回顶部" aria-hidden="true" tabindex="-1">
+        <span class="back-to-top__icon" aria-hidden="true">↑</span>
+        <span>返回顶部</span>
+      </button>
       <footer class="site-footer">
         <div class="site-footer__grid">
           <section class="site-footer__section site-footer__section--brand" aria-label="站点信息">

@@ -67,6 +67,29 @@ if (navToggle && nav) {
   });
 }
 
+const prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+const initBackToTop = () => {
+  const backToTopButton = document.querySelector('[data-back-to-top]');
+  if (!backToTopButton) return;
+
+  const updateVisibility = () => {
+    const shouldShow = window.scrollY > Math.max(320, window.innerHeight * 0.75);
+    backToTopButton.classList.toggle('is-visible', shouldShow);
+    backToTopButton.setAttribute('aria-hidden', String(!shouldShow));
+    backToTopButton.tabIndex = shouldShow ? 0 : -1;
+  };
+
+  backToTopButton.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: prefersReducedMotionQuery.matches ? 'auto' : 'smooth' });
+  });
+
+  updateVisibility();
+  window.addEventListener('scroll', updateVisibility, { passive: true });
+};
+
+initBackToTop();
+
 const initBlogSearch = () => {
   const searchSections = document.querySelectorAll('[data-post-search]');
   if (!searchSections.length) return;
@@ -294,7 +317,7 @@ const initProjectFilters = () => {
 
 initProjectFilters();
 
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const prefersReducedMotion = prefersReducedMotionQuery.matches;
 const revealItems = document.querySelectorAll('.reveal');
 const revealStepSelectors = [
   '.card-grid > *',

@@ -309,6 +309,7 @@ textarea {
 .nav-toggle:focus-visible,
 .theme-toggle:focus-visible,
 .button:focus-visible,
+.back-to-top:focus-visible,
 .site-nav a:focus-visible,
 .tag-link:focus-visible,
 .filter-chip:focus-visible,
@@ -528,6 +529,56 @@ main {
   min-height: 38px;
   padding: 0 14px;
   font-size: 0.9rem;
+}
+
+.back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 24;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 16px 0 14px;
+  border: 1px solid var(--accent-border-strong);
+  border-radius: 999px;
+  background: var(--panel-strong);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition:
+    opacity var(--motion-medium) var(--motion-ease),
+    transform var(--motion-medium) var(--motion-ease-soft),
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.back-to-top:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.back-to-top__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.92rem;
+  line-height: 1;
 }
 
 .cta-band {
@@ -1931,6 +1982,7 @@ main {
   .reveal.is-visible,
   .reveal-step,
   .button,
+  .back-to-top,
   .site-nav a,
   .card-grid > *,
   .project-grid > *,
@@ -2048,6 +2100,14 @@ main {
 
   .header-actions {
     gap: 8px;
+  }
+
+  .back-to-top {
+    right: 16px;
+    bottom: 16px;
+    min-height: 42px;
+    padding: 0 14px 0 12px;
+    font-size: 0.88rem;
   }
 
   .hero-copy,
