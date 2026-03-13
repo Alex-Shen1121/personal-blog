@@ -67,6 +67,32 @@ export const home = {
       }
     ]
   },
+  navigationGuide: {
+    eyebrow: '导航导览',
+    title: '先看首页，再按主题进入对应页面，会更容易理解这个站点。',
+    description: '我把首页保留为总览层，把独立页面作为展开层。这样第一次访问时可以先扫一遍结构，再决定往哪个方向深入。',
+    groups: [
+      {
+        title: '先在首页快速浏览',
+        items: [
+          { label: '关于我', href: '#about', note: '快速理解我的工作方式与关注点。' },
+          { label: '技能 / 技术栈', href: '#skills', note: '看我擅长的问题类型与常用能力组合。' },
+          { label: '精选项目', href: '#projects', note: '先看当前重点与长期投入的项目方向。' },
+          { label: '精选文章', href: '#blog', note: '通过写作判断我的表达方式与思考路径。' },
+          { label: '时间线近况', href: '#now', note: '快速了解我最近在推进什么。' }
+        ]
+      },
+      {
+        title: '再进入独立页面展开看',
+        items: [
+          { label: '关于', href: '/about/', note: '看完整介绍、工作偏好与关注领域。' },
+          { label: '项目', href: '/projects/', note: '集中浏览项目主题与案例方向。' },
+          { label: '文章', href: '/blog/', note: '查看全部文章与详细内容。' },
+          { label: '近况', href: '/now/', note: '查看更完整的阶段性记录。' }
+        ]
+      }
+    ]
+  },
   highlights: [
     {
       title: '我擅长的事',

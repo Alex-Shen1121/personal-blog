@@ -288,6 +288,25 @@ const renderHomePage = (posts) => {
       </article>
     </section>
 
+    <section class="section reveal" id="guide">
+      <div class="section-heading">
+        <p class="kicker">${home.navigationGuide.eyebrow}</p>
+        <h2>${home.navigationGuide.title}</h2>
+        <p class="section-intro">${home.navigationGuide.description}</p>
+      </div>
+      <div class="nav-guide-grid">
+        ${home.navigationGuide.groups
+          .map(
+            (group) => `<article class="panel nav-guide-card"><h3>${group.title}</h3><ul class="nav-guide-list">${group.items
+              .map(
+                (item) => `<li><a class="nav-guide-link" href="${item.href.startsWith('/') ? item.href.slice(1) : item.href}"><strong>${item.label}</strong><span>${item.note}</span></a></li>`
+              )
+              .join('')}</ul></article>`
+          )
+          .join('')}
+      </div>
+    </section>
+
     <section class="section reveal" id="about">
       <div class="section-heading">
         <p class="kicker">关于我</p>

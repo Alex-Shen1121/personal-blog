@@ -424,7 +424,8 @@ main {
 .post-grid,
 .split-grid,
 .contact-grid,
-.skills-grid {
+.skills-grid,
+.nav-guide-grid {
   display: grid;
   gap: 20px;
 }
@@ -498,6 +499,10 @@ main {
 .contact-grid,
 .skills-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nav-guide-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .featured-posts,
@@ -648,9 +653,43 @@ main {
 }
 
 .note-card,
-.contact-card {
+.contact-card,
+.nav-guide-card {
   display: grid;
   gap: 16px;
+}
+
+.nav-guide-card {
+  align-content: start;
+}
+
+.nav-guide-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-guide-link {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.nav-guide-link span {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.nav-guide-link:hover {
+  border-color: rgba(125, 211, 252, 0.22);
+  background: rgba(125, 211, 252, 0.08);
+  transform: translateY(-1px);
 }
 
 .list-card,
@@ -898,7 +937,8 @@ main {
   .cta-band,
   .featured-posts,
   .post-card--featured,
-  .skills-stack {
+  .skills-stack,
+  .nav-guide-grid {
     grid-template-columns: 1fr;
   }
 
