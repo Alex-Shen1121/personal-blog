@@ -868,13 +868,29 @@ const renderHomePage = (posts) => {
     </section>`;
 };
 
+const renderProjectCard = (item) => {
+  const facts = [
+    ['角色', item.role],
+    ['周期', item.timeline],
+    ['关注点', item.focus],
+    ['当前阶段', item.status]
+  ].filter(([, value]) => value);
+
+  const href = item.href ? (item.href.startsWith('/') ? item.href.slice(1) : item.href) : '';
+
+  return `<article class="project-panel project-card"><div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${facts.length ? `<div class="project-card__meta">${facts
+    .slice(1)
+    .map(([, value]) => `<span class="tag">${value}</span>`)
+    .join('')}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
+    .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
+    .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${href ? `<a class="button button-ghost button-small" href="${href}">${item.linkLabel ?? '查看项目'}</a>` : ''}</article>`;
+};
+
 const renderInfoPage = (pageKey) => {
   const page = pages[pageKey];
   const body = page.items
     ? `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
-       <section class="section reveal"><div class="project-grid">${page.items
-         .map((item) => `<article class="project-panel"><span class="kicker">${item.meta ?? '更新中'}</span><h3>${item.title ?? '阶段记录'}</h3><p>${item.text ?? item}</p></article>`)
-         .join('')}</div></section>`
+       <section class="section reveal"><div class="project-grid">${page.items.map((item) => renderProjectCard(item)).join('')}</div></section>`
     : `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
        <section class="section reveal"><div class="card-grid">${page.sections
          .map((section) => `<article class="panel"><h3>${section.title}</h3><p>${section.text}</p></article>`)
