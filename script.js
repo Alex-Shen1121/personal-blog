@@ -296,6 +296,44 @@ initProjectFilters();
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const revealItems = document.querySelectorAll('.reveal');
+const revealStepSelectors = [
+  '.card-grid > *',
+  '.project-grid > *',
+  '.post-grid > *',
+  '.skills-grid > *',
+  '.nav-guide-grid > *',
+  '.featured-posts__sidebar > *',
+  '.featured-projects__sidebar > *',
+  '.metrics > *',
+  '.stats-grid > *',
+  '.contact-grid > *',
+  '.split-grid > *',
+  '.project-media-grid > *',
+  '.archive-list > *',
+  '.tag-directory > *',
+  '.timeline > *',
+  '.post-pagination > *',
+  '.project-facts > *'
+];
+const revealDirectContainers = ['.hero-copy', '.hero-visual', '.page-hero', '.post-header'];
+const revealNestedGroups = ['.card-grid', '.project-grid', '.post-grid', '.skills-grid', '.nav-guide-grid', '.featured-posts__sidebar', '.featured-projects__sidebar', '.metrics', '.stats-grid', '.contact-grid', '.split-grid', '.project-media-grid', '.archive-list', '.tag-directory', '.timeline', '.post-pagination', '.project-facts'];
+
+revealItems.forEach((item) => {
+  const revealSteps = new Set();
+
+  if (revealDirectContainers.some((selector) => item.matches(selector))) {
+    [...item.children]
+      .filter((child) => !revealNestedGroups.some((selector) => child.matches(selector)))
+      .forEach((child) => revealSteps.add(child));
+  }
+
+  item.querySelectorAll(revealStepSelectors.join(',')).forEach((child) => revealSteps.add(child));
+
+  [...revealSteps].forEach((child, index) => {
+    child.classList.add('reveal-step');
+    child.style.setProperty('--reveal-delay', `${Math.min(index, 7) * 70}ms`);
+  });
+});
 
 if (prefersReducedMotion) {
   revealItems.forEach((item) => item.classList.add('is-visible'));
@@ -309,7 +347,10 @@ if (prefersReducedMotion) {
         }
       });
     },
-    { threshold: 0.16 }
+    {
+      threshold: 0.14,
+      rootMargin: '0px 0px -8% 0px'
+    }
   );
 
   revealItems.forEach((item) => observer.observe(item));
