@@ -32,19 +32,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Validate site
-        working-directory: ./personal-blog
         run: npm run validate
-
       - name: Build site
-        working-directory: ./personal-blog
         run: npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./personal-blog/dist
+          path: ./dist
 
   deploy:
     needs: validate-and-build

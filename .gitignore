@@ -7,8 +7,9 @@ TOOLS.md
 HEARTBEAT.md
 .openclaw/
 skills/
+memory/
 node_modules/
+dist/
 personal-blog/node_modules/
 personal-blog/dist/
-dist/
 .DS_Store
