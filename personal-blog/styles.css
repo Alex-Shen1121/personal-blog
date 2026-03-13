@@ -365,6 +365,57 @@ main {
   color: var(--text);
 }
 
+.cta-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 24px;
+  padding: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(135deg, rgba(125, 211, 252, 0.12), transparent 44%),
+    linear-gradient(225deg, rgba(167, 139, 250, 0.14), transparent 42%),
+    var(--panel-strong);
+  box-shadow: var(--shadow);
+}
+
+.cta-band__intro {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.cta-band__intro h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+  letter-spacing: -0.04em;
+}
+
+.cta-band__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cta-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-height: 100%;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--panel-border);
+}
+
+.cta-card strong {
+  font-size: 1.02rem;
+}
+
+.cta-card span {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .metrics,
 .stats-grid,
 .card-grid,
@@ -673,11 +724,13 @@ main {
   .post-grid,
   .contact-grid,
   .split-grid,
-  .post-layout {
+  .post-layout,
+  .cta-band {
     grid-template-columns: 1fr;
   }
 
-  .metrics {
+  .metrics,
+  .cta-band__actions {
     grid-template-columns: 1fr;
   }
 
@@ -727,7 +780,8 @@ main {
   .post-card,
   .project-panel,
   .empty-state,
-  .prose {
+  .prose,
+  .cta-band {
     padding: 22px;
     border-radius: 24px;
   }

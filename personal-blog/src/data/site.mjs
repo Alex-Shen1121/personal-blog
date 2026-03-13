@@ -42,6 +42,31 @@ export const home = {
       { value: '长期', label: '写作与内容整理习惯' }
     ]
   },
+  coreCta: {
+    eyebrow: '接下来可以直接去看',
+    title: '如果你想快速了解我，建议从这三个入口开始。',
+    description: '我把首页保留得尽量克制，所以把最常用的去向集中在这里：先看文章判断我的思考方式，再看项目理解做事方法，最后决定要不要继续联系。',
+    actions: [
+      {
+        label: '先看文章',
+        href: '/blog/',
+        note: '从写作判断我的关注点与表达方式。',
+        variant: 'primary'
+      },
+      {
+        label: '看项目方向',
+        href: '/projects/',
+        note: '快速浏览我正在持续打磨的主题。',
+        variant: 'secondary'
+      },
+      {
+        label: '直接联系',
+        href: 'mailto:alex@example.com',
+        note: '适合合作、交流或简单打个招呼。',
+        variant: 'ghost'
+      }
+    ]
+  },
   highlights: [
     {
       title: '我擅长的事',

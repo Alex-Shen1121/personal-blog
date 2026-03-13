@@ -270,6 +270,23 @@ const renderHomePage = (posts) => {
       </aside>
     </section>
 
+    <section class="section reveal" id="cta">
+      <article class="cta-band">
+        <div class="cta-band__intro">
+          <p class="kicker">${home.coreCta.eyebrow}</p>
+          <h2>${home.coreCta.title}</h2>
+          <p class="section-intro">${home.coreCta.description}</p>
+        </div>
+        <div class="cta-band__actions">
+          ${home.coreCta.actions
+            .map(
+              (action) => `<a class="cta-card button-${action.variant ?? 'secondary'}" href="${action.href.startsWith('/') ? action.href.slice(1) : action.href}"${action.href.startsWith('http') || action.href.startsWith('mailto:') ? ' target="_blank" rel="noreferrer"' : ''}><strong>${action.label}</strong><span>${action.note}</span></a>`
+            )
+            .join('')}
+        </div>
+      </article>
+    </section>
+
     <section class="section reveal" id="about">
       <div class="section-heading">
         <p class="kicker">关于我</p>
