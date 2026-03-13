@@ -116,7 +116,7 @@ npm run preview    # 启动本地静态预览服务
 title: 文章标题
 date: 2026-03-13
 updated: 2026-03-15 # 可选，文章有修改时再补充
-summary: 一句话摘要
+summary: 一句话摘要 # 可选；不写时会自动从正文生成摘要
 tags: 标签一, 标签二
 cover: /assets/illustration-wave.svg
 ---

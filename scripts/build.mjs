@@ -74,6 +74,46 @@ const estimateReadingTime = (content) => {
  return `预计 ${minutes} 分钟读完`;
 };
 
+const stripMarkdownForExcerpt = (content) =>
+  content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s?/gm, '')
+    .replace(/^[-*]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const createSummaryFallback = (content, maxLength = 90) => {
+  const paragraphs = content
+    .split(/\n\s*\n/)
+    .map((block) => stripMarkdownForExcerpt(block))
+    .filter(Boolean);
+
+  const source = paragraphs[0] ?? stripMarkdownForExcerpt(content);
+  if (!source) {
+    return '这篇文章正在整理中。';
+  }
+
+  if (source.length <= maxLength) {
+    return source;
+  }
+
+  return `${source.slice(0, maxLength).trim()}…`;
+};
+
+const resolvePostSummary = (summary, content) => {
+  const normalizedSummary = summary?.trim();
+  return normalizedSummary || createSummaryFallback(content);
+};
+
 const parseFrontmatter = (content) => {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) throw new Error('Post missing frontmatter block.');
@@ -834,7 +874,7 @@ const loadPosts = () => {
         title: meta.title,
         date: meta.date,
         updated: meta.updated,
-        summary: meta.summary,
+        summary: resolvePostSummary(meta.summary, body),
         tags: meta.tags ?? [],
         category: {
           name: meta.category,

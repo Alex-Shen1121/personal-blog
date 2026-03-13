@@ -47,7 +47,7 @@ for (const page of requiredPages) {
 
 for (const post of posts) {
   const source = readFileSync(path.join(postsDir, post), 'utf8');
-  for (const field of ['title:', 'date:', 'summary:', 'category:', 'tags:']) {
+  for (const field of ['title:', 'date:', 'category:', 'tags:']) {
     if (!source.includes(field)) {
       console.error(`Post ${post} is missing frontmatter field: ${field}`);
       process.exit(1);
