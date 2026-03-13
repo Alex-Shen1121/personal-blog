@@ -31,6 +31,12 @@ const escapeHtml = (value) =>
     .replaceAll('"', '&quot;');
 
 const slugify = (value) => value.replace(/\.md$/, '');
+const slugifyTag = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
+
+const renderTagLinks = (tags, basePath = '') =>
+  `<ul class="tag-list">${tags
+    .map((tag) => `<li><a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a></li>` )
+    .join('')}</ul>`;
 
 const parseFrontmatter = (content) => {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -415,7 +421,7 @@ const renderHomePage = (posts) => {
           </div>
           ${secondaryPosts
             .map(
-              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h3>${post.title}</h3><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
+              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
             )
             .join('')}
         </div>
@@ -493,7 +499,7 @@ const loadPosts = () => {
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
-const renderBlogListPage = (posts) => `
+const renderBlogListPage = (posts, tags) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
     <h1>写下来的内容，会慢慢变成自己的方法库。</h1>
@@ -505,15 +511,59 @@ const renderBlogListPage = (posts) => `
         <strong class="post-list__count">共 ${posts.length} 篇文章</strong>
       </div>
       <div class="post-list__filters">
-        <span class="tag">内容站</span>
-        <span class="tag">设计思考</span>
-        <span class="tag">前端体验</span>
+        <a class="button button-ghost button-small" href="tags/">查看全部标签</a>
+        ${tags.slice(0, 3).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
       </div>
     </div>
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+
+const renderTagListPage = (tags) => `
+  <section class="page-hero reveal">
+    <p class="kicker">文章标签</p>
+    <h1>按标签浏览文章。</h1>
+    <p>这里把当前文章里已经使用的标签集中起来，适合从主题切入继续阅读。</p>
+  </section>
+  <section class="section reveal">
+    <div class="post-list__header">
+      <div>
+        <strong class="post-list__count">共 ${tags.length} 个标签</strong>
+      </div>
+      <div class="post-list__filters">
+        <a class="button button-ghost button-small" href="../">返回文章列表</a>
+      </div>
+    </div>
+    <div class="tag-directory">
+      ${tags
+        .map(
+          (tag) => `<article class="panel tag-directory__card"><div><h2><a class="text-link" href="${tag.slug}/">${tag.name}</a></h2><p>${tag.posts.length} 篇文章</p></div><ul class="tag-list"><li><a class="tag tag-link" href="${tag.slug}/">${tag.name}</a></li></ul><ul class="list-card">${tag.posts.map((post) => `<li><a class="text-link" href="../${post.slug}/">${post.title}</a><br /><span class="muted">${formatDate(post.date)}</span></li>`).join('')}</ul></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+const renderTagDetailPage = (tag) => `
+  <section class="page-hero reveal">
+    <p class="kicker">标签归档</p>
+    <h1>${tag.name}</h1>
+    <p>当前共有 ${tag.posts.length} 篇文章使用了这个标签，可以从这里继续按主题阅读。</p>
+    <div class="post-list__filters">
+      <a class="button button-ghost button-small" href="../">返回标签页</a>
+      <a class="button button-secondary button-small" href="../../">返回文章列表</a>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="post-grid">
+      ${tag.posts
+        .map(
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -525,7 +575,7 @@ const renderPostPage = (post, relatedPosts) => `
     <h1>${post.title}</h1>
     <div class="post-header__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div>
     <p>${post.summary}</p>
-    <ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul>
+    ${renderTagLinks(post.tags, '../')}
   </section>
   <section class="post-layout reveal">
     <article>
@@ -536,7 +586,7 @@ const renderPostPage = (post, relatedPosts) => `
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
-        <div class="meta-row"><span>标签</span><span>${post.tags.join(' / ')}</span></div>
+        <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
       </div>
       <div class="note-card">
         <h3>继续阅读</h3>
@@ -586,6 +636,13 @@ for (const file of readdirSync(publicDir)) {
 }
 
 const posts = loadPosts();
+const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [tag, tag]))).values())
+  .sort((a, b) => a.localeCompare(b, 'zh-CN'))
+  .map((tag) => ({
+    name: tag,
+    slug: slugifyTag(tag),
+    posts: posts.filter((post) => post.tags.includes(tag))
+  }));
 
 writeText(
   path.join(outDir, 'index.html'),
@@ -618,10 +675,36 @@ writeText(
     description: '沈晨玙的文章列表，记录产品、设计、前端体验与个人工作方式。',
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
-    body: renderBlogListPage(posts),
+    body: renderBlogListPage(posts, tags),
     image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
   })
 );
+
+writeText(
+  path.join(outDir, 'blog', 'tags', 'index.html'),
+  renderLayout({
+    title: `文章标签｜${site.shortName}`,
+    description: '按标签浏览文章归档。',
+    currentPath: '/blog/tags/',
+    outputPath: path.join(outDir, 'blog', 'tags', 'index.html'),
+    body: renderTagListPage(tags),
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
+  })
+);
+
+for (const tag of tags) {
+  writeText(
+    path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
+    renderLayout({
+      title: `${tag.name}｜标签｜${site.shortName}`,
+      description: `浏览标签“${tag.name}”下的文章。`,
+      currentPath: `/blog/tags/${tag.slug}/`,
+      outputPath: path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
+      body: renderTagDetailPage(tag),
+      image: tag.posts[0]?.cover ?? '/assets/illustration-wave.svg'
+    })
+  );
+}
 
 for (const post of posts) {
   const relatedPosts = posts.filter((item) => item.slug !== post.slug).slice(0, 2);
@@ -649,7 +732,16 @@ writeText(
   })
 );
 
-const urls = ['/', '/about/', '/projects/', '/blog/', '/now/', ...posts.map((post) => `/blog/${post.slug}/`)];
+const urls = [
+  '/',
+  '/about/',
+  '/projects/',
+  '/blog/',
+  '/blog/tags/',
+  '/now/',
+  ...tags.map((tag) => `/blog/tags/${tag.slug}/`),
+  ...posts.map((post) => `/blog/${post.slug}/`)
+];
 writeText(
   path.join(outDir, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls

@@ -365,6 +365,12 @@ main {
   color: var(--text);
 }
 
+.button-small {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+}
+
 .cta-band {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -652,6 +658,20 @@ main {
   color: var(--soft);
 }
 
+.tag-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease;
+}
+
+.tag-link:hover {
+  color: var(--accent);
+  border-color: rgba(125, 211, 252, 0.32);
+  background: rgba(125, 211, 252, 0.08);
+}
+
 .note-card,
 .contact-card,
 .nav-guide-card {
@@ -819,6 +839,18 @@ main {
   color: var(--muted);
 }
 
+.tag-directory {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.tag-directory__card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
 .post-header {
   display: grid;
   gap: 18px;
@@ -881,6 +913,14 @@ main {
   display: grid;
   gap: 18px;
   align-content: start;
+}
+
+.meta-row--stack {
+  align-items: start;
+}
+
+.meta-tags .tag-list {
+  gap: 8px;
 }
 
 .contact-links a,
