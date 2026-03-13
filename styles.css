@@ -888,6 +888,52 @@ main {
   color: var(--muted);
 }
 
+.filter-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.filter-group {
+  display: grid;
+  gap: 10px;
+}
+
+.filter-group__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.filter-group__header span,
+.filter-group__header small {
+  color: var(--muted);
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-chip {
+  padding: 10px 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: transform 180ms ease, color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.filter-chip:hover,
+.filter-chip.is-active {
+  color: var(--text);
+  border-color: rgba(125, 211, 252, 0.28);
+  background: rgba(125, 211, 252, 0.12);
+  transform: translateY(-1px);
+}
+
 .post-list__header {
   display: flex;
   justify-content: space-between;

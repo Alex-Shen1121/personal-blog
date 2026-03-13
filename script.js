@@ -60,9 +60,34 @@ const initBlogSearch = () => {
     const cards = [...section.querySelectorAll('[data-post-card]')];
     const feedback = section.querySelector('[data-post-search-feedback]');
     const emptyState = section.querySelector('[data-post-search-empty]');
+    const filterButtons = [...section.querySelectorAll('[data-filter-option]')];
     const total = Number(section.dataset.postSearchTotal || cards.length);
+    const state = { tag: 'all', category: 'all' };
 
     if (!input || !cards.length || !feedback || !emptyState) return;
+
+    const syncFilterButtons = () => {
+      filterButtons.forEach((button) => {
+        const isActive = state[button.dataset.filterGroup] === button.dataset.filterValue;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+    };
+
+    const buildFeedback = (query, visibleCount) => {
+      const activeFilters = [];
+      if (state.tag !== 'all') activeFilters.push(`标签 “${state.tag}”`);
+      if (state.category !== 'all') activeFilters.push(`分类 “${state.category}”`);
+
+      if (!query && !activeFilters.length) {
+        return `当前共 ${total} 篇文章。`;
+      }
+
+      const parts = [];
+      if (query) parts.push(`关键词 “${input.value.trim()}”`);
+      if (activeFilters.length) parts.push(activeFilters.join('，'));
+      return `${parts.join(' + ')} 共找到 ${visibleCount} / ${total} 篇文章。`;
+    };
 
     const updateResults = () => {
       const query = input.value.trim().toLowerCase();
@@ -70,19 +95,31 @@ const initBlogSearch = () => {
 
       cards.forEach((card) => {
         const searchIndex = card.dataset.searchIndex || '';
-        const matched = !query || searchIndex.includes(query);
+        const cardCategory = card.dataset.category || '';
+        const cardTags = (card.dataset.tags || '').split('|').filter(Boolean);
+        const matchesQuery = !query || searchIndex.includes(query);
+        const matchesTag = state.tag === 'all' || cardTags.includes(state.tag);
+        const matchesCategory = state.category === 'all' || cardCategory === state.category;
+        const matched = matchesQuery && matchesTag && matchesCategory;
         card.hidden = !matched;
         if (matched) visibleCount += 1;
       });
 
       emptyState.hidden = visibleCount > 0;
-      feedback.textContent = query
-        ? `关键词 “${input.value.trim()}” 共找到 ${visibleCount} / ${total} 篇文章。`
-        : `当前共 ${total} 篇文章。`;
+      feedback.textContent = buildFeedback(query, visibleCount);
+      syncFilterButtons();
     };
 
     input.addEventListener('input', updateResults);
     input.addEventListener('search', updateResults);
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        state[button.dataset.filterGroup] = button.dataset.filterValue;
+        updateResults();
+      });
+    });
+
     updateResults();
   });
 };
