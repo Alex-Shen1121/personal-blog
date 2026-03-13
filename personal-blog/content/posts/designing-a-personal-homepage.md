@@ -2,6 +2,7 @@
 title: 个人主页不只是自我介绍，它其实是一种取舍
 date: 2026-03-05
 summary: 做个人主页时，真正难的不是把信息放上去，而是判断什么该出现、什么该省略，以及整体想传达怎样的气质。
+category: 个人表达
 tags: 个人网站, 产品思维, 设计
 cover: /assets/illustration-wave.svg
 ---

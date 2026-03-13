@@ -2,6 +2,7 @@
 title: 为什么我越来越喜欢克制、安静的界面
 date: 2026-01-30
 summary: 在信息越来越拥挤的环境里，克制不是无聊，而是一种更难也更高级的表达能力。
+category: 设计体验
 tags: UI, 视觉设计, 体验
 cover: /assets/illustration-orbit.svg
 ---

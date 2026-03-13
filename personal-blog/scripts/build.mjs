@@ -32,10 +32,11 @@ const escapeHtml = (value) =>
 
 const slugify = (value) => value.replace(/\.md$/, '');
 const slugifyTag = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
+const slugifyCategory = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
 
 const renderTagLinks = (tags, basePath = '') =>
   `<ul class="tag-list">${tags
-    .map((tag) => `<li><a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a></li>` )
+    .map((tag) => `<li><a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a></li>`)
     .join('')}</ul>`;
 
 const parseFrontmatter = (content) => {
@@ -490,6 +491,10 @@ const loadPosts = () => {
         date: meta.date,
         summary: meta.summary,
         tags: meta.tags ?? [],
+        category: {
+          name: meta.category,
+          slug: slugifyCategory(meta.category)
+        },
         cover: meta.cover,
         body,
         html: markdownToHtml(body),
@@ -499,11 +504,11 @@ const loadPosts = () => {
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
-const renderBlogListPage = (posts, tags) => `
+const renderBlogListPage = (posts, tags, categories) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
     <h1>写下来的内容，会慢慢变成自己的方法库。</h1>
-    <p>目前放的是三篇中文示例文章，结构已支持标题、日期、摘要、标签与详情页，后续只需要新增 Markdown 文件即可继续扩展。</p>
+    <p>目前已支持文章标签与分类系统：文章列表、标签/分类索引页与详情页都会基于 Markdown frontmatter 自动生成。</p>
   </section>
   <section class="section reveal">
     <div class="post-list__header">
@@ -512,18 +517,60 @@ const renderBlogListPage = (posts, tags) => `
       </div>
       <div class="post-list__filters">
         <a class="button button-ghost button-small" href="tags/">查看全部标签</a>
+        <a class="button button-ghost button-small" href="categories/">查看全部分类</a>
         ${tags.slice(0, 3).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
+        ${categories.slice(0, 3).map((category) => `<a class="tag" href="categories/${category.slug}/">${category.name} · ${category.count}</a>`).join('')}
       </div>
     </div>
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
   </section>`;
 
+const renderCategoryListPage = (categories) => `
+  <section class="page-hero reveal">
+    <p class="kicker">文章分类</p>
+    <h1>按主题浏览文章。</h1>
+    <p>每篇文章都归属于一个主分类，方便从更稳定的主题维度查看内容。</p>
+  </section>
+  <section class="section reveal">
+    <div class="card-grid">
+      ${categories
+        .map(
+          (category) => `<article class="panel"><p class="kicker">${category.count} 篇文章</p><h2>${category.name}</h2><p>${category.latestPost ? `最近更新：${category.latestPost.title}` : '正在整理中。'}</p><a class="button button-ghost" href="${category.slug}/">查看该分类</a></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+const renderCategoryPage = (category, posts) => `
+  <section class="page-hero reveal">
+    <p class="kicker">文章分类</p>
+    <h1>${category.name}</h1>
+    <p>当前分类下共 ${posts.length} 篇文章，可从这里集中浏览这一主题。</p>
+  </section>
+  <section class="section reveal">
+    <div class="post-list__header">
+      <div>
+        <strong class="post-list__count">${category.name} · ${posts.length} 篇</strong>
+      </div>
+      <div class="post-list__filters">
+        <a class="tag" href="../">全部分类</a>
+        <a class="tag" href="../../">全部文章</a>
+      </div>
+    </div>
+    <div class="post-grid">
+      ${posts
+        .map(
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
 
 const renderTagListPage = (tags) => `
   <section class="page-hero reveal">
@@ -575,7 +622,7 @@ const renderPostPage = (post, relatedPosts) => `
     <h1>${post.title}</h1>
     <div class="post-header__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div>
     <p>${post.summary}</p>
-    ${renderTagLinks(post.tags, '../')}
+    <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
   </section>
   <section class="post-layout reveal">
     <article>
@@ -586,6 +633,7 @@ const renderPostPage = (post, relatedPosts) => `
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
+        <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
         <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
       </div>
       <div class="note-card">
@@ -606,6 +654,26 @@ const renderPostPage = (post, relatedPosts) => `
       </div>
     </aside>
   </section>`;
+
+const collectCategories = (posts) =>
+  Array.from(
+    posts.reduce((map, post) => {
+      const existing = map.get(post.category.slug) ?? {
+        ...post.category,
+        count: 0,
+        posts: []
+      };
+      existing.count += 1;
+      existing.posts.push(post);
+      map.set(post.category.slug, existing);
+      return map;
+    }, new Map()).values()
+  )
+    .map((category) => ({
+      ...category,
+      latestPost: category.posts[0]
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 
 const render404 = () => `
   <section class="page-hero reveal">
@@ -643,6 +711,7 @@ const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [
     slug: slugifyTag(tag),
     posts: posts.filter((post) => post.tags.includes(tag))
   }));
+const categories = collectCategories(posts);
 
 writeText(
   path.join(outDir, 'index.html'),
@@ -675,7 +744,7 @@ writeText(
     description: '沈晨玙的文章列表，记录产品、设计、前端体验与个人工作方式。',
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
-    body: renderBlogListPage(posts, tags),
+    body: renderBlogListPage(posts, tags, categories),
     image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
   })
 );
@@ -702,6 +771,31 @@ for (const tag of tags) {
       outputPath: path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
       body: renderTagDetailPage(tag),
       image: tag.posts[0]?.cover ?? '/assets/illustration-wave.svg'
+    })
+  );
+}
+
+writeText(
+  path.join(outDir, 'blog', 'categories', 'index.html'),
+  renderLayout({
+    title: `文章分类｜${site.shortName}`,
+    description: '按分类浏览博客文章。',
+    currentPath: '/blog/categories/',
+    outputPath: path.join(outDir, 'blog', 'categories', 'index.html'),
+    body: renderCategoryListPage(categories)
+  })
+);
+
+for (const category of categories) {
+  writeText(
+    path.join(outDir, 'blog', 'categories', category.slug, 'index.html'),
+    renderLayout({
+      title: `${category.name}｜文章分类｜${site.shortName}`,
+      description: `${category.name} 分类下的文章列表。`,
+      currentPath: `/blog/categories/${category.slug}/`,
+      outputPath: path.join(outDir, 'blog', 'categories', category.slug, 'index.html'),
+      body: renderCategoryPage(category, category.posts),
+      image: category.latestPost?.cover ?? '/assets/illustration-wave.svg'
     })
   );
 }
@@ -738,8 +832,10 @@ const urls = [
   '/projects/',
   '/blog/',
   '/blog/tags/',
+  '/blog/categories/',
   '/now/',
   ...tags.map((tag) => `/blog/tags/${tag.slug}/`),
+  ...categories.map((category) => `/blog/categories/${category.slug}/`),
   ...posts.map((post) => `/blog/${post.slug}/`)
 ];
 writeText(
