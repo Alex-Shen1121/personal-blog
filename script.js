@@ -57,14 +57,26 @@ const initBlogSearch = () => {
 
   searchSections.forEach((section) => {
     const input = section.querySelector('[data-post-search-input]');
+    const grid = section.querySelector('[data-post-search-grid]');
     const cards = [...section.querySelectorAll('[data-post-card]')];
     const feedback = section.querySelector('[data-post-search-feedback]');
     const emptyState = section.querySelector('[data-post-search-empty]');
     const filterButtons = [...section.querySelectorAll('[data-filter-option]')];
+    const sortSelect = section.querySelector('[data-post-sort]');
     const total = Number(section.dataset.postSearchTotal || cards.length);
-    const state = { tag: 'all', category: 'all' };
+    const state = { tag: 'all', category: 'all', sort: sortSelect?.value || 'date-desc' };
 
-    if (!input || !cards.length || !feedback || !emptyState) return;
+    if (!input || !grid || !cards.length || !feedback || !emptyState) return;
+
+    const sortCards = () => {
+      const sorters = {
+        'date-desc': (a, b) => Number(b.dataset.date || 0) - Number(a.dataset.date || 0),
+        'date-asc': (a, b) => Number(a.dataset.date || 0) - Number(b.dataset.date || 0),
+        'updated-desc': (a, b) => Number(b.dataset.updated || 0) - Number(a.dataset.updated || 0)
+      };
+      const sorter = sorters[state.sort] || sorters['date-desc'];
+      cards.sort(sorter).forEach((card) => grid.appendChild(card));
+    };
 
     const syncFilterButtons = () => {
       filterButtons.forEach((button) => {
@@ -93,6 +105,8 @@ const initBlogSearch = () => {
       const query = input.value.trim().toLowerCase();
       let visibleCount = 0;
 
+      sortCards();
+
       cards.forEach((card) => {
         const searchIndex = card.dataset.searchIndex || '';
         const cardCategory = card.dataset.category || '';
@@ -119,6 +133,13 @@ const initBlogSearch = () => {
         updateResults();
       });
     });
+
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => {
+        state.sort = sortSelect.value;
+        updateResults();
+      });
+    }
 
     updateResults();
   });

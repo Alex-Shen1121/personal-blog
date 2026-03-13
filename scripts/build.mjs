@@ -953,27 +953,37 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
         <span>搜索文章</span>
         <input id="post-search-input" type="search" placeholder="搜索标题、摘要、分类或标签" autocomplete="off" data-post-search-input />
       </label>
-      <div class="filter-groups">
-        <section class="filter-group" aria-label="按标签筛选">
-          <div class="filter-group__header">
-            <span>标签</span>
-            <small>快速按主题收窄文章列表</small>
-          </div>
-          <div class="filter-chips" data-filter-group="tag">
-            <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="tag" data-filter-value="all" aria-pressed="true">全部标签</button>
-            ${tags.map((tag) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="tag" data-filter-value="${escapeHtml(tag.name.toLowerCase())}" aria-pressed="false">${tag.name}</button>`).join('')}
-          </div>
-        </section>
-        <section class="filter-group" aria-label="按分类筛选">
-          <div class="filter-group__header">
-            <span>分类</span>
-            <small>先按内容大类筛一轮</small>
-          </div>
-          <div class="filter-chips" data-filter-group="category">
-            <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="category" data-filter-value="all" aria-pressed="true">全部分类</button>
-            ${categories.map((category) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="category" data-filter-value="${escapeHtml(category.name.toLowerCase())}" aria-pressed="false">${category.name}</button>`).join('')}
-          </div>
-        </section>
+      <div class="discovery-toolbar">
+        <div class="filter-groups">
+          <section class="filter-group" aria-label="按标签筛选">
+            <div class="filter-group__header">
+              <span>标签</span>
+              <small>快速按主题收窄文章列表</small>
+            </div>
+            <div class="filter-chips" data-filter-group="tag">
+              <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="tag" data-filter-value="all" aria-pressed="true">全部标签</button>
+              ${tags.map((tag) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="tag" data-filter-value="${escapeHtml(tag.name.toLowerCase())}" aria-pressed="false">${tag.name}</button>`).join('')}
+            </div>
+          </section>
+          <section class="filter-group" aria-label="按分类筛选">
+            <div class="filter-group__header">
+              <span>分类</span>
+              <small>先按内容大类筛一轮</small>
+            </div>
+            <div class="filter-chips" data-filter-group="category">
+              <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="category" data-filter-value="all" aria-pressed="true">全部分类</button>
+              ${categories.map((category) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="category" data-filter-value="${escapeHtml(category.name.toLowerCase())}" aria-pressed="false">${category.name}</button>`).join('')}
+            </div>
+          </section>
+        </div>
+        <label class="sort-field" for="post-sort-select">
+          <span>排序方式</span>
+          <select id="post-sort-select" data-post-sort>
+            <option value="date-desc">最新发布</option>
+            <option value="date-asc">最早发布</option>
+            <option value="updated-desc">最近更新</option>
+          </select>
+        </label>
       </div>
       <p class="search-feedback" data-post-search-feedback>当前共 ${posts.length} 篇文章。</p>
     </div>
@@ -1000,7 +1010,9 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
             ...(post.tags ?? []),
             post.series?.name ?? ''
           ].join(' ').toLowerCase());
-          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
+          const dateValue = new Date(`${post.date}T00:00:00+08:00`).getTime();
+          const updatedValue = new Date(`${(post.updated ?? post.date)}T00:00:00+08:00`).getTime();
+          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
         })
         .join('')}
     </div>

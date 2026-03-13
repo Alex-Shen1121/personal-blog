@@ -888,6 +888,15 @@ main {
   color: var(--muted);
 }
 
+.discovery-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
 .filter-groups {
   display: grid;
   gap: 16px;
@@ -896,6 +905,27 @@ main {
 .filter-group {
   display: grid;
   gap: 10px;
+}
+
+.sort-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;
+}
+
+.sort-field span {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.sort-field select {
+  padding: 10px 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
 }
 
 .filter-group__header {
