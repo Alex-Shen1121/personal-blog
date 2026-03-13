@@ -90,6 +90,50 @@ const initBackToTop = () => {
 
 initBackToTop();
 
+const initReadingProgress = () => {
+  const progressTrack = document.querySelector('[data-reading-progress]');
+  const progressBar = document.querySelector('[data-reading-progress-bar]');
+  const target = document.querySelector('[data-reading-progress-target]');
+
+  if (!progressTrack || !progressBar || !target) return;
+
+  document.body.classList.add('has-reading-progress');
+
+  const clamp = (value) => Math.min(1, Math.max(0, value));
+  let frameId = null;
+
+  const syncProgress = () => {
+    const targetRect = target.getBoundingClientRect();
+    const headerOffset = (document.querySelector('.site-header__inner')?.offsetHeight || 0) + 36;
+    const start = window.scrollY + targetRect.top - headerOffset;
+    const end = start + target.offsetHeight - window.innerHeight;
+    const nextProgress = end <= start ? (window.scrollY > start ? 1 : 0) : clamp((window.scrollY - start) / (end - start));
+
+    progressTrack.style.setProperty('--reading-progress-value', String(nextProgress));
+    progressTrack.setAttribute('aria-valuenow', String(Math.round(nextProgress * 100)));
+  };
+
+  const requestSync = () => {
+    if (frameId !== null) return;
+    frameId = window.requestAnimationFrame(() => {
+      frameId = null;
+      syncProgress();
+    });
+  };
+
+  progressTrack.setAttribute('role', 'progressbar');
+  progressTrack.setAttribute('aria-label', '阅读进度');
+  progressTrack.setAttribute('aria-valuemin', '0');
+  progressTrack.setAttribute('aria-valuemax', '100');
+
+  syncProgress();
+  window.addEventListener('scroll', requestSync, { passive: true });
+  window.addEventListener('resize', requestSync);
+  window.addEventListener('load', requestSync, { once: true });
+};
+
+initReadingProgress();
+
 const initBlogSearch = () => {
   const searchSections = document.querySelectorAll('[data-post-search]');
   if (!searchSections.length) return;

@@ -531,6 +531,33 @@ main {
   font-size: 0.9rem;
 }
 
+.reading-progress {
+  --reading-progress-value: 0;
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  height: 4px;
+  background: rgba(148, 163, 184, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+body.has-reading-progress .reading-progress {
+  opacity: 1;
+}
+
+.reading-progress__bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 18px rgba(125, 211, 252, 0.24);
+  transform-origin: left center;
+  transform: scaleX(var(--reading-progress-value));
+  transition: transform 90ms linear;
+}
+
 .back-to-top {
   position: fixed;
   right: 24px;

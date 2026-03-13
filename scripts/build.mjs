@@ -725,6 +725,9 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     <link rel="stylesheet" href="${stylesheetHref}" />
   </head>
   <body>
+    <div class="reading-progress" data-reading-progress>
+      <span class="reading-progress__bar" data-reading-progress-bar></span>
+    </div>
     <div class="site-shell">
       <header class="site-header">
         <div class="site-header__inner">
@@ -1586,57 +1589,59 @@ const renderPostNavigation = (navigationPosts) => {
 };
 
 const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
-  <section class="post-header reveal">
-    <p class="kicker">文章详情</p>
-    ${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}
-    <h1>${post.title}</h1>
-    <div class="post-header__meta">${renderPostMeta(post)}</div>
-    <p>${post.summary}</p>
-    <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.series ? `<li class="tag"><a href="../series/${post.series.slug}/">系列 · ${post.series.name}</a></li>` : ''}${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
-  </section>
-  <section class="post-layout reveal">
-    <article>
-      <div class="post-cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的配图" /></div>
-      <div class="prose panel">${post.html}</div>
-      ${renderPostNavigation(navigationPosts)}
-    </article>
-    <aside class="post-aside">
-      ${post.toc.length
-        ? `<div class="note-card toc-card"><h3>文章目录</h3><nav class="toc-nav" aria-label="文章目录"><ol class="toc-list">${post.toc
-            .map(
-              (item) => `<li class="toc-item toc-item--level-${item.level}"><a href="#${item.id}">${item.text}</a></li>`
-            )
-            .join('')}</ol></nav></div>`
-        : ''}
-      ${renderSeriesBlock(post, series)}
-      <div class="note-card">
-        <h3>文章信息</h3>
-        <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
-        ${post.updated ? `<div class="meta-row"><span>更新时间</span><span>${formatDate(post.updated)}</span></div>` : ''}
-        <div class="meta-row"><span>阅读信息</span><span>${post.readingTime} · ${formatWordCount(post.wordCount)}</span></div>
-        <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
-        <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
-      </div>
-      <div class="note-card">
-        <h3>继续阅读</h3>
-        <p>想看更多内容，可以回到文章列表，或者去看看我近期在做的项目与近况。</p>
-        <div class="contact-links">
-          <a class="button button-secondary" href="../">返回文章列表</a>
-          <a class="button button-ghost" href="../../projects/">查看项目</a>
+  <article class="post-detail" data-reading-progress-target>
+    <section class="post-header reveal">
+      <p class="kicker">文章详情</p>
+      ${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}
+      <h1>${post.title}</h1>
+      <div class="post-header__meta">${renderPostMeta(post)}</div>
+      <p>${post.summary}</p>
+      <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.series ? `<li class="tag"><a href="../series/${post.series.slug}/">系列 · ${post.series.name}</a></li>` : ''}${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
+    </section>
+    <section class="post-layout reveal">
+      <article>
+        <div class="post-cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的配图" /></div>
+        <div class="prose panel">${post.html}</div>
+        ${renderPostNavigation(navigationPosts)}
+      </article>
+      <aside class="post-aside">
+        ${post.toc.length
+          ? `<div class="note-card toc-card"><h3>文章目录</h3><nav class="toc-nav" aria-label="文章目录"><ol class="toc-list">${post.toc
+              .map(
+                (item) => `<li class="toc-item toc-item--level-${item.level}"><a href="#${item.id}">${item.text}</a></li>`
+              )
+              .join('')}</ol></nav></div>`
+          : ''}
+        ${renderSeriesBlock(post, series)}
+        <div class="note-card">
+          <h3>文章信息</h3>
+          <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
+          ${post.updated ? `<div class="meta-row"><span>更新时间</span><span>${formatDate(post.updated)}</span></div>` : ''}
+          <div class="meta-row"><span>阅读信息</span><span>${post.readingTime} · ${formatWordCount(post.wordCount)}</span></div>
+          <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
+          <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
         </div>
-      </div>
-      <div class="note-card">
-        <h3>相关文章</h3>
-        <ul class="list-card">
-          ${relatedPosts
-            .map(
-              (item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.recommendationReason}</span><br /><span class="muted">${item.summary}</span></li>`
-            )
-            .join('')}
-        </ul>
-      </div>
-    </aside>
-  </section>`;
+        <div class="note-card">
+          <h3>继续阅读</h3>
+          <p>想看更多内容，可以回到文章列表，或者去看看我近期在做的项目与近况。</p>
+          <div class="contact-links">
+            <a class="button button-secondary" href="../">返回文章列表</a>
+            <a class="button button-ghost" href="../../projects/">查看项目</a>
+          </div>
+        </div>
+        <div class="note-card">
+          <h3>相关文章</h3>
+          <ul class="list-card">
+            ${relatedPosts
+              .map(
+                (item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.recommendationReason}</span><br /><span class="muted">${item.summary}</span></li>`
+              )
+              .join('')}
+          </ul>
+        </div>
+      </aside>
+    </section>
+  </article>`;
 
 
 const collectSeries = (posts) =>
