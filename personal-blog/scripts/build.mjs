@@ -227,11 +227,28 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
         ${body}
       </main>
       <footer class="site-footer">
-        <strong>${site.shortName}</strong>
-        <div class="footer-links">
-          ${site.author.links.map((link) => `<a href="${link.url}" target="_blank" rel="noreferrer">${link.label}</a>`).join('')}
+        <div class="site-footer__grid">
+          <section class="site-footer__section site-footer__section--brand" aria-label="站点信息">
+            <strong>${site.shortName}</strong>
+            <p>${site.author.role} · ${site.author.city}</p>
+            <p>${site.description}</p>
+          </section>
+          <section class="site-footer__section" aria-label="站内导航">
+            <span class="site-footer__heading">站内导航</span>
+            <div class="footer-links">
+              ${site.navigation
+                .map(({ label, href }) => `<a href="${href === '/' ? trimLocalPrefix(`${prefix}/index.html`) : trimLocalPrefix(`${prefix}/${href.replace(/^\//, '')}`)}">${label}</a>`)
+                .join('')}
+            </div>
+          </section>
+          <section class="site-footer__section" aria-label="联系与链接">
+            <span class="site-footer__heading">联系与链接</span>
+            <div class="footer-links">
+              ${site.author.links.map((link) => `<a href="${link.url}"${link.url.startsWith('http') ? ' target="_blank" rel="noreferrer"' : ''}>${link.label}</a>`).join('')}
+            </div>
+          </section>
         </div>
-        <span>© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。</span>
+        <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。</span>
       </footer>
     </div>
     <script src="${scriptHref}"></script>
