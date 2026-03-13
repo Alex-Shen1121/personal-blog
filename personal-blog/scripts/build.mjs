@@ -841,7 +841,6 @@ writeText(
   })
 );
 
-<<<<<<< HEAD
 writeText(
   path.join(outDir, 'blog', 'tags', 'index.html'),
   renderLayout({
