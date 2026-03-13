@@ -368,6 +368,34 @@ main {
   padding: 28px;
 }
 
+.panel,
+.note-card,
+.contact-card,
+.post-card,
+.project-panel,
+.empty-state,
+.cta-card,
+.nav-guide-card,
+.tag-directory__card,
+.post-nav-card {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.panel :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.note-card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.contact-card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.post-card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.project-panel :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.empty-state :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.cta-card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.nav-guide-card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.tag-directory__card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure),
+.post-nav-card :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, figure) {
+  margin: 0;
+}
+
 .hero-copy::before,
 .panel::before,
 .note-card::before,
@@ -517,9 +545,6 @@ main {
 }
 
 .cta-card {
-  display: grid;
-  gap: 10px;
-  align-content: start;
   min-height: 100%;
   padding: 20px;
   border-radius: var(--radius-lg);
@@ -701,6 +726,16 @@ main {
   align-content: start;
 }
 
+.post-grid > *,
+.project-grid > *,
+.card-grid > *,
+.skills-grid > *,
+.nav-guide-grid > *,
+.featured-posts__sidebar > *,
+.featured-projects__sidebar > * {
+  min-height: 100%;
+}
+
 .project-actions {
   display: flex;
   flex-wrap: wrap;
@@ -732,6 +767,15 @@ main {
 
 .project-action--external {
   border-color: var(--accent-border);
+}
+
+.project-card .project-actions,
+.featured-project > .text-link,
+.post-card > .button,
+.post-card > .text-link,
+.post-card__body > .text-link,
+.post-nav-card > *:last-child {
+  margin-top: auto;
 }
 
 .project-card__cover,
@@ -951,12 +995,7 @@ main {
 .note-card,
 .contact-card,
 .nav-guide-card {
-  display: grid;
-  gap: 16px;
-}
-
-.nav-guide-card {
-  align-content: start;
+  gap: 18px;
 }
 
 .nav-guide-list {
@@ -1703,8 +1742,6 @@ main {
 }
 
 .post-nav-card {
-  display: grid;
-  gap: 10px;
   padding: 22px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--surface-border);
