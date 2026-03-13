@@ -618,6 +618,12 @@ main {
   font-weight: 600;
 }
 
+.feature-label--pinned {
+  border-color: rgba(110, 231, 183, 0.26);
+  background: rgba(110, 231, 183, 0.12);
+  color: #d7fff0;
+}
+
 .post-card__cover {
   overflow: hidden;
   border-radius: 20px;

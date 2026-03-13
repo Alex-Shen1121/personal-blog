@@ -59,6 +59,12 @@ for (const post of posts) {
     console.error(`Post ${post} has invalid draft field. Use draft: true or draft: false.`);
     process.exit(1);
   }
+
+  const pinnedMatch = source.match(/^pinned:\s*(.+)\s*$/m);
+  if (pinnedMatch && !['true', 'false'].includes(pinnedMatch[1].trim())) {
+    console.error(`Post ${post} has invalid pinned field. Use pinned: true or pinned: false.`);
+    process.exit(1);
+  }
 }
 
 console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected and required site files exist.`);

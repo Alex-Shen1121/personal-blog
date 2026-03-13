@@ -94,7 +94,7 @@ const parseFrontmatter = (content) => {
       continue;
     }
 
-    if (key === 'draft') {
+    if (key === 'draft' || key === 'pinned') {
       meta[key] = value.toLowerCase() === 'true';
       continue;
     }
@@ -479,7 +479,7 @@ const renderHomePage = (posts) => {
       </div>
       <div class="featured-posts">
         ${primaryPost
-          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画" /></div><div class="post-card__body"><span class="feature-label">${home.featuredPosts.primaryLabel}</span><div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
+          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画" /></div><div class="post-card__body">${primaryPost.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : `<span class="feature-label">${home.featuredPosts.primaryLabel}</span>`}<div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
           : ''}
         <div class="featured-posts__sidebar">
           <div class="featured-posts__intro panel">
@@ -488,7 +488,7 @@ const renderHomePage = (posts) => {
           </div>
           ${secondaryPosts
             .map(
-              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta">${renderPostMeta(post)}</div><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
+              (post) => `<article class="post-card post-card--compact">${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="text-link" href="blog/${post.slug}/">继续阅读 →</a></article>`
             )
             .join('')}
         </div>
@@ -565,6 +565,7 @@ const loadPosts = () => {
         },
         cover: meta.cover,
         draft: meta.draft ?? false,
+        pinned: meta.pinned ?? false,
         body,
         html,
         toc,
@@ -573,7 +574,13 @@ const loadPosts = () => {
       };
     })
     .filter((post) => !post.draft)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) {
+        return Number(b.pinned) - Number(a.pinned);
+      }
+
+      return new Date(b.date) - new Date(a.date);
+    });
 };
 
 const getRelatedPosts = (currentPost, posts, limit = 2) => {
@@ -621,7 +628,7 @@ const renderBlogListPage = (posts, tags, categories) => `
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -662,7 +669,7 @@ const renderCategoryPage = (category, posts) => `
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -706,7 +713,7 @@ const renderTagDetailPage = (tag) => `
     <div class="post-grid">
       ${tag.posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -728,6 +735,7 @@ const renderPostNavigation = (navigationPosts) => {
 const renderPostPage = (post, relatedPosts, navigationPosts) => `
   <section class="post-header reveal">
     <p class="kicker">文章详情</p>
+    ${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}
     <h1>${post.title}</h1>
     <div class="post-header__meta">${renderPostMeta(post)}</div>
     <p>${post.summary}</p>
