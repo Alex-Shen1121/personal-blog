@@ -54,6 +54,22 @@ const parseFrontmatter = (content) => {
   const [, rawMeta, rawBody] = match;
   const meta = {};
 
+const estimateReadingTime = (content) => {
+  const plainText = content
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/^[-*]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\s+/g, '');
+  const characters = plainText.length;
+  const minutes = Math.max(1, Math.ceil(characters / 300));
+  return `预计 ${minutes} 分钟读完`;
+};
+
+
   for (const line of rawMeta.split('\n')) {
     const [rawKey, ...rest] = line.split(':');
     const key = rawKey.trim();
@@ -526,7 +542,7 @@ const loadPosts = () => {
         body,
         html,
         toc,
-        readingTime: `${Math.max(3, Math.round(words / 220))} 分钟阅读`
+        readingTime: estimateReadingTime(body)
       };
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -706,6 +722,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
+ <div class="meta-row"><span>阅读时长</span><span>${post.readingTime}</span></div>
         <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
         <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
       </div>
