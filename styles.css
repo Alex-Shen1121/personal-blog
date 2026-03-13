@@ -878,6 +878,19 @@ main {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.project-detail-grid {
+  align-items: start;
+}
+
+.project-detail-card {
+  position: sticky;
+  top: 108px;
+}
+
+.project-detail-sections {
+  grid-template-columns: 1fr;
+}
+
 .split-grid--timeline {
   align-items: start;
 }

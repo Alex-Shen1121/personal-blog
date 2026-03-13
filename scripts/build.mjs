@@ -876,14 +876,60 @@ const renderProjectCard = (item) => {
     ['当前阶段', item.status]
   ].filter(([, value]) => value);
 
-  const href = item.href ? (item.href.startsWith('/') ? item.href.slice(1) : item.href) : '';
+  const relatedHref = item.href ? (item.href.startsWith('/') ? item.href.slice(1) : item.href) : '';
+  const primaryHref = item.slug ? `${item.slug}/` : relatedHref;
+  const primaryLabel = item.slug ? '查看项目详情' : item.linkLabel ?? '查看项目';
 
   return `<article class="project-panel project-card"><div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${facts.length ? `<div class="project-card__meta">${facts
     .slice(1)
     .map(([, value]) => `<span class="tag">${value}</span>`)
     .join('')}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
-    .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${href ? `<a class="button button-ghost button-small" href="${href}">${item.linkLabel ?? '查看项目'}</a>` : ''}</article>`;
+    .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${primaryHref ? `<a class="button button-ghost button-small" href="${primaryHref}">${primaryLabel}</a>` : ''}</article>`;
+};
+
+const renderProjectDetailPage = (item) => {
+  const facts = [
+    ['角色', item.role],
+    ['周期', item.timeline],
+    ['关注点', item.focus],
+    ['当前阶段', item.status]
+  ].filter(([, value]) => value);
+  const relatedHref = item.href
+    ? item.href.startsWith('/')
+      ? `../../${item.href.slice(1)}`
+      : item.href
+    : null;
+
+  return `
+  <section class="page-hero reveal">
+    <p class="kicker">项目详情</p>
+    <h1>${item.title}</h1>
+    <p>${item.summary ?? item.text ?? ''}</p>
+    <div class="post-list__filters">
+      <a class="button button-ghost button-small" href="../">返回项目列表</a>
+      ${relatedHref ? `<a class="button button-secondary button-small" href="${relatedHref}">${item.linkLabel ?? '继续查看相关内容'}</a>` : ''}
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="split-grid project-detail-grid">
+      <article class="project-panel project-detail-card">
+        <div class="project-card__header">
+          <span class="kicker">${item.category ?? '项目'}</span>
+          <div class="project-card__meta">${facts.map(([, value]) => `<span class="tag">${value}</span>`).join('')}</div>
+        </div>
+        ${facts.length ? `<dl class="project-facts">${facts
+          .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
+          .join('')}</dl>` : ''}
+        ${item.stack?.length ? `<div><p class="kicker">相关能力</p><ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul></div>` : ''}
+      </article>
+      <div class="card-grid project-detail-sections">
+        ${(item.sections ?? [])
+          .map((section) => `<article class="panel"><p class="kicker">${item.title}</p><h2>${section.title}</h2><p>${section.text}</p></article>`)
+          .join('')}
+      </div>
+    </div>
+  </section>`;
 };
 
 const renderInfoPage = (pageKey) => {
@@ -1425,6 +1471,20 @@ for (const [key, page] of Object.entries(pages).filter(([key]) => key !== 'blog'
   );
 }
 
+for (const project of pages.projects.items ?? []) {
+  if (!project.slug) continue;
+  writeText(
+    path.join(outDir, 'projects', project.slug, 'index.html'),
+    renderLayout({
+      title: `${project.title}｜项目详情｜${site.shortName}`,
+      description: project.summary ?? pages.projects.description,
+      currentPath: `/projects/${project.slug}/`,
+      outputPath: path.join(outDir, 'projects', project.slug, 'index.html'),
+      body: renderProjectDetailPage(project)
+    })
+  );
+}
+
 writeText(
   path.join(outDir, 'blog', 'index.html'),
   renderLayout({
@@ -1562,6 +1622,7 @@ const urls = [
   '/',
   '/about/',
   '/projects/',
+  ...((pages.projects.items ?? []).filter((project) => project.slug).map((project) => `/projects/${project.slug}/`)),
   '/blog/',
   '/blog/tags/',
   '/blog/categories/',
