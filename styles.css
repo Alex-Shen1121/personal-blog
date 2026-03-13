@@ -932,12 +932,39 @@ main {
 }
 
 .prose blockquote {
+  position: relative;
   display: grid;
-  gap: 0.9rem;
-  padding: 18px 20px;
-  border-left: 3px solid rgba(125, 211, 252, 0.5);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  background: rgba(125, 211, 252, 0.08);
+  gap: 0.85rem;
+  margin-inline: 0;
+  padding: 24px 24px 24px 32px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-left: 4px solid rgba(125, 211, 252, 0.48);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  background:
+    linear-gradient(135deg, rgba(125, 211, 252, 0.14), rgba(167, 139, 250, 0.08)),
+    rgba(12, 24, 43, 0.48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.prose blockquote::before {
+  content: '“';
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 3rem;
+  line-height: 1;
+  color: rgba(125, 211, 252, 0.22);
+}
+
+.prose blockquote > * {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+}
+
+.prose blockquote p {
+  color: var(--soft);
 }
 
 .prose hr {
@@ -1325,5 +1352,15 @@ main {
   .post-list__header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .prose blockquote {
+    padding: 22px 18px 22px 26px;
+  }
+
+  .prose blockquote::before {
+    top: 12px;
+    left: 10px;
+    font-size: 2.6rem;
   }
 }
