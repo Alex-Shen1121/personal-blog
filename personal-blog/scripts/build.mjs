@@ -300,16 +300,38 @@ const renderHomePage = (posts) => {
     </section>
 
     <section class="section reveal" id="projects">
-      <div class="section-heading">
-        <p class="kicker">项目精选</p>
-        <h2>这些方向，构成了我现在最想继续做深的工作。</h2>
+      <div class="post-list__header">
+        <div class="section-heading">
+          <p class="kicker">${home.featuredProjects.eyebrow}</p>
+          <h2>${home.featuredProjects.title}</h2>
+          <p class="section-intro">${home.featuredProjects.description}</p>
+        </div>
+        <a class="button button-ghost" href="${home.featuredProjects.cta.href.slice(1)}">${home.featuredProjects.cta.label}</a>
       </div>
-      <div class="project-grid">
-        ${home.featuredProjects
-          .map(
-            (project) => `<article class="project-panel"><span class="kicker">${project.tag}</span><h3>${project.title}</h3><p>${project.description}</p><a class="text-link" href="${project.href.slice(1)}">继续查看 →</a></article>`
-          )
-          .join('')}
+      <div class="featured-projects">
+        <article class="project-panel featured-project featured-project--primary">
+          <span class="feature-label">${home.featuredProjects.primaryLabel}</span>
+          <div class="featured-project__meta">
+            <span class="tag">${home.featuredProjects.items[0].tag}</span>
+            <span class="tag">${home.featuredProjects.items[0].status}</span>
+          </div>
+          <div>
+            <h3>${home.featuredProjects.items[0].title}</h3>
+            <p>${home.featuredProjects.items[0].description}</p>
+          </div>
+          <ul class="tag-list">
+            ${home.featuredProjects.items[0].highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}
+          </ul>
+          <a class="text-link" href="${home.featuredProjects.items[0].href.slice(1)}">继续查看 →</a>
+        </article>
+        <div class="featured-projects__sidebar">
+          ${home.featuredProjects.items
+            .slice(1)
+            .map(
+              (project) => `<article class="project-panel featured-project"><span class="feature-label">${home.featuredProjects.secondaryLabel}</span><div class="featured-project__meta"><span class="tag">${project.tag}</span><span class="tag">${project.status}</span></div><div><h3>${project.title}</h3><p>${project.description}</p></div><ul class="tag-list">${project.highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}</ul><a class="text-link" href="${project.href.slice(1)}">继续查看 →</a></article>`
+            )
+            .join('')}
+        </div>
       </div>
     </section>
 

@@ -498,19 +498,38 @@ main {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.featured-posts {
+.featured-posts,
+.featured-projects {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
   gap: 20px;
 }
 
-.featured-posts__sidebar {
+.featured-posts__sidebar,
+.featured-projects__sidebar {
   display: grid;
   gap: 20px;
 }
 
 .featured-posts__intro {
   min-height: 100%;
+}
+
+.featured-project {
+  align-content: start;
+}
+
+.featured-project--primary {
+  background:
+    linear-gradient(160deg, rgba(125, 211, 252, 0.1), transparent 52%),
+    linear-gradient(220deg, rgba(167, 139, 250, 0.1), transparent 44%),
+    var(--panel);
+}
+
+.featured-project__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .panel h3,
