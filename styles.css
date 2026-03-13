@@ -624,6 +624,17 @@ main {
   color: #d7fff0;
 }
 
+.feature-label--series {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.14);
+  color: #efe7ff;
+}
+
+.feature-label--series a {
+  color: inherit;
+}
+
+
 .post-card__cover {
   overflow: hidden;
   border-radius: 20px;
@@ -962,6 +973,53 @@ main {
 
 .toc-item--level-3 {
   padding-left: 14px;
+}
+
+
+.series-outline,
+.series-list {
+  display: grid;
+  gap: 14px;
+}
+
+.series-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.series-list li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.series-list li.is-current {
+  border-color: rgba(125, 211, 252, 0.28);
+  background: rgba(125, 211, 252, 0.08);
+}
+
+.series-list__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--soft);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.series-list li p {
+  margin: 6px 0 0;
 }
 
 .post-pagination {

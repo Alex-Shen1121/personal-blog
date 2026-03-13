@@ -7,6 +7,8 @@ category: 个人表达
 tags: 个人网站, 产品思维, 设计
 cover: /assets/illustration-wave.svg
 pinned: true
+series: 个人内容站升级记录
+seriesOrder: 1
 ---
 
 很多人做个人主页，第一反应是把所有经历都塞进去：做过的项目、会的技术、写过的文章、联系方式、平台账号，最好一屏塞满。

@@ -99,6 +99,11 @@ const parseFrontmatter = (content) => {
       continue;
     }
 
+    if (key === 'seriesOrder') {
+      meta[key] = Number(value);
+      continue;
+    }
+
     meta[key] = value;
   }
 
@@ -566,6 +571,13 @@ const loadPosts = () => {
         cover: meta.cover,
         draft: meta.draft ?? false,
         pinned: meta.pinned ?? false,
+        series: meta.series
+          ? {
+              name: meta.series,
+              slug: slugify(meta.series),
+              order: Number.isFinite(meta.seriesOrder) ? meta.seriesOrder : Number.MAX_SAFE_INTEGER
+            }
+          : null,
         body,
         html,
         toc,
@@ -607,7 +619,7 @@ const getRelatedPosts = (currentPost, posts, limit = 2) => {
     .slice(0, limit);
 };
 
-const renderBlogListPage = (posts, tags, categories) => `
+const renderBlogListPage = (posts, tags, categories, seriesList) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
     <h1>写下来的内容，会慢慢变成自己的方法库。</h1>
@@ -621,14 +633,16 @@ const renderBlogListPage = (posts, tags, categories) => `
       <div class="post-list__filters">
         <a class="button button-ghost button-small" href="tags/">查看全部标签</a>
         <a class="button button-ghost button-small" href="categories/">查看全部分类</a>
-        ${tags.slice(0, 3).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
-        ${categories.slice(0, 3).map((category) => `<a class="tag" href="categories/${category.slug}/">${category.name} · ${category.count}</a>`).join('')}
+        <a class="button button-ghost button-small" href="series/">查看全部系列</a>
+        ${tags.slice(0, 2).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
+        ${categories.slice(0, 2).map((category) => `<a class="tag" href="categories/${category.slug}/">${category.name} · ${category.count}</a>`).join('')}
+        ${seriesList.slice(0, 2).map((series) => `<a class="tag" href="series/${series.slug}/">系列：${series.name}</a>`).join('')}
       </div>
     </div>
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -674,6 +688,62 @@ const renderCategoryPage = (category, posts) => `
         .join('')}
     </div>
   </section>`;
+
+
+const renderSeriesListPage = (seriesList) => `
+  <section class="page-hero reveal">
+    <p class="kicker">文章系列</p>
+    <h1>按系列连续阅读。</h1>
+    <p>适合查看同一主题下按顺序组织的文章。每个系列都包含明确顺序，方便从起点一路读到末尾。</p>
+  </section>
+  <section class="section reveal">
+    <div class="post-list__header">
+      <div>
+        <strong class="post-list__count">共 ${seriesList.length} 个系列</strong>
+      </div>
+      <div class="post-list__filters">
+        <a class="button button-ghost button-small" href="../">返回文章列表</a>
+      </div>
+    </div>
+    <div class="card-grid">
+      ${seriesList
+        .map(
+          (series) => `<article class="panel"><p class="kicker">${series.posts.length} 篇文章</p><h2>${series.name}</h2><p>${series.description}</p><ul class="list-card">${series.posts.map((post) => `<li><span class="muted">第 ${post.series.order} 篇</span><br /><a class="text-link" href="../${post.slug}/">${post.title}</a></li>`).join('')}</ul><a class="button button-ghost" href="${series.slug}/">查看系列</a></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+const renderSeriesDetailPage = (series) => `
+  <section class="page-hero reveal">
+    <p class="kicker">文章系列</p>
+    <h1>${series.name}</h1>
+    <p>${series.description}</p>
+    <div class="post-list__filters">
+      <a class="button button-ghost button-small" href="../">返回系列页</a>
+      <a class="button button-secondary button-small" href="../../">返回文章列表</a>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="series-outline">
+      ${series.posts
+        .map(
+          (post, index) => `<article class="panel series-outline__item"><p class="kicker">第 ${index + 1} 篇</p><h2>${post.title}</h2><p>${post.summary}</p><div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><a class="button button-ghost" href="../../${post.slug}/">阅读本篇</a></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+const renderSeriesBlock = (post, series) => {
+  if (!series) return '';
+
+  const currentIndex = series.posts.findIndex((item) => item.slug === post.slug);
+  return `<div class="note-card"><h3>所在系列</h3><p><a class="text-link" href="../series/${series.slug}/">${series.name}</a> · 共 ${series.posts.length} 篇，当前第 ${currentIndex + 1} 篇。</p><ol class="series-list">${series.posts
+    .map(
+      (item, index) => `<li class="${item.slug === post.slug ? 'is-current' : ''}"><span class="series-list__index">${index + 1}</span><div><a class="text-link" href="../${item.slug}/">${item.title}</a><p class="muted">${item.summary}</p></div></li>`
+    )
+    .join('')}</ol></div>`;
+};
 
 const renderTagListPage = (tags) => `
   <section class="page-hero reveal">
@@ -732,14 +802,14 @@ const renderPostNavigation = (navigationPosts) => {
   return `<nav class="post-pagination reveal" aria-label="文章上一篇和下一篇导航">${items.join('')}</nav>`;
 };
 
-const renderPostPage = (post, relatedPosts, navigationPosts) => `
+const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
   <section class="post-header reveal">
     <p class="kicker">文章详情</p>
     ${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}
     <h1>${post.title}</h1>
     <div class="post-header__meta">${renderPostMeta(post)}</div>
     <p>${post.summary}</p>
-    <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
+    <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.series ? `<li class="tag"><a href="../series/${post.series.slug}/">系列 · ${post.series.name}</a></li>` : ''}${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
   </section>
   <section class="post-layout reveal">
     <article>
@@ -755,6 +825,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
             )
             .join('')}</ol></nav></div>`
         : ''}
+      ${renderSeriesBlock(post, series)}
       <div class="note-card">
         <h3>文章信息</h3>
         <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
@@ -783,6 +854,27 @@ const renderPostPage = (post, relatedPosts, navigationPosts) => `
       </div>
     </aside>
   </section>`;
+
+
+const collectSeries = (posts) =>
+  Array.from(
+    posts.reduce((map, post) => {
+      if (!post.series) return map;
+      const existing = map.get(post.series.slug) ?? {
+        ...post.series,
+        posts: []
+      };
+      existing.posts.push(post);
+      map.set(post.series.slug, existing);
+      return map;
+    }, new Map()).values()
+  )
+    .map((series) => ({
+      ...series,
+      posts: series.posts.sort((a, b) => a.series.order - b.series.order || new Date(a.date) - new Date(b.date)),
+      description: `按顺序阅读 “${series.name}” 主题下的 ${series.posts.length} 篇文章。`
+    }))
+    .sort((a, b) => b.posts.length - a.posts.length || a.name.localeCompare(b.name, 'zh-CN'));
 
 const collectCategories = (posts) =>
   Array.from(
@@ -841,6 +933,7 @@ const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [
     posts: posts.filter((post) => post.tags.includes(tag))
   }));
 const categories = collectCategories(posts);
+const seriesList = collectSeries(posts);
 
 writeText(
   path.join(outDir, 'index.html'),
@@ -873,7 +966,7 @@ writeText(
     description: '沈晨玙的文章列表，记录产品、设计、前端体验与个人工作方式。',
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
-    body: renderBlogListPage(posts, tags, categories),
+    body: renderBlogListPage(posts, tags, categories, seriesList),
     image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
   })
 );
@@ -900,6 +993,32 @@ for (const tag of tags) {
       outputPath: path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
       body: renderTagDetailPage(tag),
       image: tag.posts[0]?.cover ?? '/assets/illustration-wave.svg'
+    })
+  );
+}
+
+
+writeText(
+  path.join(outDir, 'blog', 'series', 'index.html'),
+  renderLayout({
+    title: `文章系列｜${site.shortName}`,
+    description: '按系列浏览博客文章。',
+    currentPath: '/blog/series/',
+    outputPath: path.join(outDir, 'blog', 'series', 'index.html'),
+    body: renderSeriesListPage(seriesList)
+  })
+);
+
+for (const series of seriesList) {
+  writeText(
+    path.join(outDir, 'blog', 'series', series.slug, 'index.html'),
+    renderLayout({
+      title: `${series.name}｜文章系列｜${site.shortName}`,
+      description: series.description,
+      currentPath: `/blog/series/${series.slug}/`,
+      outputPath: path.join(outDir, 'blog', 'series', series.slug, 'index.html'),
+      body: renderSeriesDetailPage(series),
+      image: series.posts[0]?.cover ?? '/assets/illustration-wave.svg'
     })
   );
 }
@@ -931,6 +1050,7 @@ for (const category of categories) {
 
 for (const [index, post] of posts.entries()) {
   const relatedPosts = getRelatedPosts(post, posts);
+  const series = post.series ? seriesList.find((item) => item.slug === post.series.slug) ?? null : null;
   const navigationPosts = {
     previous: posts[index - 1] ?? null,
     next: posts[index + 1] ?? null
@@ -943,7 +1063,7 @@ for (const [index, post] of posts.entries()) {
       description: post.summary,
       currentPath: `/blog/${post.slug}/`,
       outputPath: path.join(outDir, 'blog', post.slug, 'index.html'),
-      body: renderPostPage(post, relatedPosts, navigationPosts),
+      body: renderPostPage(post, relatedPosts, navigationPosts, series),
       image: post.cover
     })
   );
@@ -967,9 +1087,11 @@ const urls = [
   '/blog/',
   '/blog/tags/',
   '/blog/categories/',
+  '/blog/series/',
   '/now/',
   ...tags.map((tag) => `/blog/tags/${tag.slug}/`),
   ...categories.map((category) => `/blog/categories/${category.slug}/`),
+  ...seriesList.map((series) => `/blog/series/${series.slug}/`),
   ...posts.map((post) => `/blog/${post.slug}/`)
 ];
 writeText(

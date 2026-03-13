@@ -65,6 +65,19 @@ for (const post of posts) {
     console.error(`Post ${post} has invalid pinned field. Use pinned: true or pinned: false.`);
     process.exit(1);
   }
+
+  const hasSeries = /^series:\s*.+$/m.test(source);
+  const hasSeriesOrder = /^seriesOrder:\s*.+$/m.test(source);
+  if (hasSeries !== hasSeriesOrder) {
+    console.error(`Post ${post} must provide both series and seriesOrder together.`);
+    process.exit(1);
+  }
+
+  const seriesOrderMatch = source.match(/^seriesOrder:\s*(.+)\s*$/m);
+  if (seriesOrderMatch && !/^\d+$/.test(seriesOrderMatch[1].trim())) {
+    console.error(`Post ${post} has invalid seriesOrder field. Use a positive integer.`);
+    process.exit(1);
+  }
 }
 
 console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected and required site files exist.`);
