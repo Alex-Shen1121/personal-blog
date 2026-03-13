@@ -586,6 +586,39 @@ main {
   align-content: start;
 }
 
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.project-actions--detail {
+  margin-top: 4px;
+}
+
+.project-action {
+  justify-content: flex-start;
+}
+
+.project-action__meta {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.project-action__arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.project-action--external {
+  border-color: rgba(125, 211, 252, 0.26);
+}
+
 .project-card__cover,
 .project-media-card {
   overflow: hidden;

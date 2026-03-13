@@ -256,6 +256,16 @@ export const pages = {
         ],
         href: '/blog/',
         linkLabel: '查看文章系统',
+        externalLinks: [
+          {
+            label: '在线预览',
+            href: 'https://alex-shen1121.github.io/personal-blog/'
+          },
+          {
+            label: 'GitHub 仓库',
+            href: 'https://github.com/Alex-Shen1121/personal-blog'
+          }
+        ],
         sections: [
           {
             title: '项目背景',

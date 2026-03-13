@@ -113,6 +113,43 @@ const resolveStaticAssetPath = (assetPath, prefix = '') => {
   return `${prefix}${assetPath}`;
 };
 
+const resolveLinkHref = (href, prefix = '') => {
+  if (!href) return '';
+  if (/^(?:[a-z]+:)?\/\//i.test(href) || href.startsWith('mailto:') || href.startsWith('tel:')) {
+    return href;
+  }
+
+  if (href.startsWith('/')) {
+    return `${prefix}${href.slice(1)}`;
+  }
+
+  return `${prefix}${href}`;
+};
+
+const isExternalLink = (href = '') => /^(?:[a-z]+:)?\/\//i.test(href);
+
+const normalizeProjectExternalLinks = (links) => {
+  if (!Array.isArray(links)) return [];
+
+  return links
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const label = item.label?.trim?.();
+      const href = item.href?.trim?.();
+      if (!label || !href) return null;
+      return { label, href };
+    })
+    .filter(Boolean);
+};
+
+const renderProjectActionLink = ({ href, label, prefix = '', variant = 'ghost', externalLabel = '外链' }) => {
+  const resolvedHref = resolveLinkHref(href, prefix);
+  if (!resolvedHref || !label) return '';
+
+  const external = isExternalLink(resolvedHref);
+  return `<a class="button button-${variant} button-small project-action${external ? ' project-action--external' : ''}" href="${resolvedHref}"${external ? ' target="_blank" rel="noreferrer"' : ''}><span>${escapeHtml(label)}</span>${external ? `<span class="project-action__meta">${externalLabel}</span><span class="project-action__arrow" aria-hidden="true">↗</span>` : ''}</a>`;
+};
+
 const getProjectMedia = (item) => normalizeProjectMedia(item?.gallery ?? item?.media);
 const getProjectPrimaryMedia = (item) => getProjectMedia(item)[0] ?? null;
 
@@ -943,18 +980,36 @@ const renderProjectCard = (item, { assetPrefix = '' } = {}) => {
     ['当前阶段', getProjectStatusLabel(item.status)]
   ].filter(([, value]) => value);
   const previewMedia = getProjectPrimaryMedia(item);
+  const externalLinks = normalizeProjectExternalLinks(item.externalLinks);
 
-  const relatedHref = item.href ? (item.href.startsWith('/') ? item.href.slice(1) : item.href) : '';
+  const relatedHref = item.href ? resolveLinkHref(item.href, assetPrefix) : '';
   const primaryHref = item.slug ? `${item.slug}/` : relatedHref;
-  const primaryLabel = item.slug ? '查看项目详情' : item.linkLabel ?? '查看项目';
+  const primaryVariant = item.slug ? 'ghost' : isExternalLink(primaryHref) ? 'secondary' : 'ghost';
+  const primaryLabel = item.slug ? '查看项目详情' : item.linkLabel ?? (isExternalLink(primaryHref) ? '访问项目' : '查看项目');
   const metaItems = facts
     .slice(1)
     .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
     .join('');
+  const actionLinks = [
+    primaryHref
+      ? renderProjectActionLink({
+          href: primaryHref,
+          label: primaryLabel,
+          variant: primaryVariant
+        })
+      : '',
+    ...externalLinks.map((link) =>
+      renderProjectActionLink({
+        href: link.href,
+        label: link.label,
+        variant: 'secondary'
+      })
+    )
+  ].filter(Boolean);
 
   return `<article class="project-panel project-card">${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}" loading="lazy" /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
-    .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${primaryHref ? `<a class="button button-ghost button-small" href="${primaryHref}">${primaryLabel}</a>` : ''}</article>`;
+    .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${actionLinks.length ? `<div class="project-actions">${actionLinks.join('')}</div>` : ''}</article>`;
 };
 
 const renderProjectDetailPage = (item) => {
@@ -965,11 +1020,25 @@ const renderProjectDetailPage = (item) => {
     ['关注点', item.focus],
     ['当前阶段', getProjectStatusLabel(item.status)]
   ].filter(([, value]) => value);
-  const relatedHref = item.href
-    ? item.href.startsWith('/')
-      ? `../../${item.href.slice(1)}`
-      : item.href
-    : null;
+  const relatedHref = item.href ? resolveLinkHref(item.href, '../../') : null;
+  const externalLinks = normalizeProjectExternalLinks(item.externalLinks);
+  const detailActions = [
+    '<a class="button button-ghost button-small" href="../">返回项目列表</a>',
+    relatedHref
+      ? renderProjectActionLink({
+          href: relatedHref,
+          label: item.linkLabel ?? (isExternalLink(relatedHref) ? '访问项目' : '继续查看相关内容'),
+          variant: isExternalLink(relatedHref) ? 'secondary' : 'secondary'
+        })
+      : '',
+    ...externalLinks.map((link) =>
+      renderProjectActionLink({
+        href: link.href,
+        label: link.label,
+        variant: 'secondary'
+      })
+    )
+  ].filter(Boolean);
   const metaItems = facts
     .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
     .join('');
@@ -981,9 +1050,8 @@ const renderProjectDetailPage = (item) => {
     <h1>${item.title}</h1>
     <p>${item.summary ?? item.text ?? ''}</p>
     ${statusBadge ? `<div class="page-hero__meta">${statusBadge}</div>` : ''}
-    <div class="post-list__filters">
-      <a class="button button-ghost button-small" href="../">返回项目列表</a>
-      ${relatedHref ? `<a class="button button-secondary button-small" href="${relatedHref}">${item.linkLabel ?? '继续查看相关内容'}</a>` : ''}
+    <div class="project-actions project-actions--detail">
+      ${detailActions.join('')}
     </div>
   </section>
   <section class="section reveal">
