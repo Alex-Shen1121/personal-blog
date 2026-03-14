@@ -40,8 +40,17 @@ jobs:
 
       - name: Validate site
         run: npm run validate
+
       - name: Build site
         run: npm run build
+
+      - name: Generate sitemap
+        run: |
+          node scripts/sitemap.mjs
+
+      - name: Check for dead links
+        run: |
+          node scripts/dead-link-check.mjs || true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -61,3 +70,55 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  web-vitals:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Run Web Vitals check
+        run: |
+          if [ -n "${{ secrets.PSI_API_KEY }}" ]; then
+            node scripts/web-vitals.mjs \
+              --url "${{ steps.deployment.outputs.page_url }}" \
+              --key "${{ secrets.PSI_API_KEY }}"
+          else
+            echo "Skipping Web Vitals check - PSI_API_KEY not set"
+          fi
+
+  notify-failure:
+    needs: validate-and-build
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Notify build failure
+        run: |
+          if [ -n "${{ secrets.DINGTALK_WEBHOOK }}" ]; then
+            node scripts/notify-build-failure.mjs \
+              --type dingtalk \
+              --webhook "${{ secrets.DINGTALK_WEBHOOK }}" \
+              --message "构建失败: ${{ needs.validate-and-build.outputs.error || 'Unknown error' }}" \
+              --commit "${{ github.sha }}" \
+              --branch "${{ github.ref_name }}" \
+              --url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          
+          if [ -n "${{ secrets.LARK_WEBHOOK }}" ]; then
+            node scripts/notify-build-failure.mjs \
+              --type lark \
+              --webhook "${{ secrets.LARK_WEBHOOK }}" \
+              --message "构建失败: ${{ needs.validate-and-build.outputs.error || 'Unknown error' }}" \
+              --commit "${{ github.sha }}" \
+              --branch "${{ github.ref_name }}" \
+              --url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          
+          if [ -n "${{ secrets.SLACK_WEBHOOK }}" ]; then
+            node scripts/notify-build-failure.mjs \
+              --type slack \
+              --webhook "${{ secrets.SLACK_WEBHOOK }}" \
+              --message "构建失败: ${{ needs.validate-and-build.outputs.error || 'Unknown error' }}" \
+              --commit "${{ github.sha }}" \
+              --branch "${{ github.ref_name }}" \
+              --url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi

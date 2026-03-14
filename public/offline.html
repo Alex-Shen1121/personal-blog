@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>离线状态 - 沈晨玙</title>
+  <meta name="description" content="网络连接已断开，你访问的页面已缓存到本地">
+  <meta name="theme-color" content="#07111f">
+  <link rel="canonical" href="/offline.html">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f4f7fb 0%, #e2e8f0 100%);
+      color: #1e293b;
+      padding: 2rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(135deg, #07111f 0%, #1e293b 100%);
+        color: #f1f5f9;
+      }
+    }
+    .offline-card {
+      max-width: 480px;
+      text-align: center;
+      padding: 3rem 2rem;
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      .offline-card {
+        background: rgba(30,41,59,0.9);
+      }
+    }
+    .icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    p {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      p { color: #94a3b8; }
+    }
+    .button {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: #0ea5e9;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .button:hover { background: #0284c7; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">跳到正文</a>
+  <header role="banner">
+    <nav aria-label="主导航" style="position:absolute;left:-9999px;">
+      <a href="/">首页</a>
+    </nav>
+  </header>
+  <main id="main-content" tabindex="-1">
+    <div class="offline-card">
+      <div class="icon" aria-hidden="true">📡</div>
+      <h1>你当前处于离线状态</h1>
+      <p>网络连接似乎已断开。部分内容可能无法加载，不过之前浏览过的页面已缓存到本地，可以继续阅读。</p>
+      <a href="/" class="button">返回首页</a>
+    </div>
+  </main>
+  <footer role="contentinfo" style="position:absolute;left:-9999px;">
+    <p>© 2024 沈晨玙</p>
+  </footer>
+</body>
+</html>

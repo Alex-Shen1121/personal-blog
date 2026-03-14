@@ -2046,6 +2046,7 @@ const renderLayout = ({
     ${alternateLinkTags}
     ${structuredDataScripts}
     <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
+    <link rel="manifest" href="${trimLocalPrefix(resolveStaticAssetPath('/manifest.json', assetPrefix))}" />
     ${rssHref ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(documentLang.startsWith('en') ? `${siteConfig.shortName} RSS` : site.rss?.title ?? `${siteConfig.shortName} RSS`)}" href="${escapeHtml(rssHref)}" />` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -2154,6 +2155,15 @@ const renderLayout = ({
       </footer>
     </div>
     <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}"${analyticsScriptHref ? ` data-analytics-src="${escapeHtml(analyticsScriptHref)}"` : ''} defer></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('${trimLocalPrefix(resolveStaticAssetPath('/sw.js', assetPrefix))}')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>`;
 };
