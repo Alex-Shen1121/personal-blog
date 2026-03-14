@@ -43,6 +43,10 @@ export const site = {
     favicon: '/favicon.svg',
     ogImage: '/og-cover.svg'
   },
+  license: {
+    name: 'MIT License',
+    url: 'https://github.com/Alex-Shen1121/personal-blog/blob/main/LICENSE'
+  },
   author: {
     name: '沈晨玙',
     role: '产品与前端体验设计实践者',

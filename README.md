@@ -218,6 +218,6 @@ cover: /assets/illustration-wave.svg
 
 ## License
 
-当前仓库未声明开源许可证。
+本项目采用 [MIT License](./LICENSE)。
 
-如果计划公开开源，建议补充一个明确的 LICENSE 文件，例如 MIT、Apache-2.0 或 GPL-3.0。
+如果你基于本项目继续修改、分发或二次开发，请保留原始许可证文本。
