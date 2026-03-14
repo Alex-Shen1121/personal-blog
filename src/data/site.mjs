@@ -24,6 +24,10 @@ export const site = {
       title: '文章系列导航｜沈晨玙',
       description: '按系列顺序浏览博客文章，适合连续阅读同一主题。'
     },
+    templates: {
+      title: '内容模板导航｜沈晨玙',
+      description: '查看站点支持的内容模板，以及每种模板对应的文章入口。'
+    },
     archive: {
       title: '文章归档｜时间线浏览｜沈晨玙',
       description: '按发布时间归档浏览全部博客文章。'

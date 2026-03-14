@@ -7,6 +7,7 @@ slug: personal-homepage-tradeoffs
 category: 个人表达
 tags: 个人网站, 产品思维, 设计
 cover: /assets/illustration-wave.svg
+template: insight
 pinned: true
 series: 个人内容站升级记录
 seriesOrder: 1

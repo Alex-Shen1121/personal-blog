@@ -7,6 +7,7 @@ slug: personal-homepage-tradeoffs
 category: Personal expression
 tags: Personal site, Product thinking, Design
 cover: /assets/illustration-wave.svg
+template: insight
 pinned: true
 series: Building a personal content site
 seriesOrder: 1

@@ -5,6 +5,7 @@ summary: The longer I design pages, the more I believe that the interfaces peopl
 category: Design experience
 tags: UI, Visual design, Experience
 cover: /assets/illustration-orbit.svg
+template: insight
 series: Building a personal content site
 seriesOrder: 2
 ---

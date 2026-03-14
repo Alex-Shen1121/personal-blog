@@ -4,6 +4,7 @@ date: 2026-01-30
 category: 设计体验
 tags: UI, 视觉设计, 体验
 cover: /assets/illustration-orbit.svg
+template: insight
 series: 个人内容站升级记录
 seriesOrder: 2
 ---

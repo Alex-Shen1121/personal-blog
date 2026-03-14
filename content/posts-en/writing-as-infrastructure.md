@@ -4,6 +4,7 @@ date: 2026-02-18
 summary: For independent creators, writing is not just expression. It also helps organize judgment, preserve experience, and compound over time.
 category: Writing workflow
 tags: Writing, Knowledge management, Content systems
+template: playbook
 series: Building a personal content site
 seriesOrder: 3
 ---

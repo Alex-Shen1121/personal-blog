@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { contentTemplates, getContentTemplate } from '../src/data/content-templates.mjs';
 import { home, pages, site } from '../src/data/site.mjs';
 import { siteEn } from '../src/data/site.en.mjs';
 import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
@@ -575,6 +576,29 @@ const renderTagLinks = (tags, basePath = '') =>
   `<ul class="tag-list">${tags
     .map((tag) => `<li><a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a></li>`)
     .join('')}</ul>`;
+
+const getTemplateDisplayName = (template, locale = 'zh') => {
+  if (!template) return '';
+  return locale === 'en' ? template.nameEn || template.name : template.name;
+};
+
+const renderTemplateBadge = ({ template, basePath = '', locale = 'zh' } = {}) => {
+  if (!template) return '';
+  const label = locale === 'en' ? 'Template' : '模板';
+  return `<span class="feature-label feature-label--template"><a href="${basePath}templates/${template.slug}/">${label} · ${getTemplateDisplayName(template, locale)}</a></span>`;
+};
+
+const renderTemplateNoteCard = ({ template, locale = 'zh' } = {}) => {
+  if (!template) return '';
+
+  const title = locale === 'en' ? 'Content template' : '内容模板';
+  const description = template.description;
+  const summaryLabel = locale === 'en' ? 'How this template is usually used' : '这个模板通常怎么用';
+  const outlineLabel = locale === 'en' ? 'Suggested structure' : '推荐结构';
+  const recommendedLabel = locale === 'en' ? 'Good for' : '适合场景';
+
+  return `<div class="note-card template-note-card"><h3>${title}</h3><p><strong>${getTemplateDisplayName(template, locale)}</strong> · ${description}</p><div class="template-note-card__summary"><span>${summaryLabel}</span><p>${template.summary}</p></div><div class="template-note-card__summary"><span>${recommendedLabel}</span><p>${template.recommendedFor.join(' / ')}</p></div><div class="template-outline"><span>${outlineLabel}</span><ol>${template.outline.map((item) => `<li>${item}</li>`).join('')}</ol></div></div>`;
+};
 
 const normalizeProjectStatus = (status) => {
   if (!status) return null;
@@ -2557,6 +2581,7 @@ const loadPosts = (directoryPath = postsDir) => {
         cover: meta.cover,
         draft: meta.draft ?? false,
         pinned: meta.pinned ?? false,
+        template: meta.template ? getContentTemplate(meta.template) : null,
         series: meta.series
           ? {
               name: meta.series,
@@ -2656,14 +2681,15 @@ ${itemXml}
 </rss>`;
 };
 
-const renderBlogListPage = (posts, tags, categories, seriesList) => `
+const renderBlogListPage = (posts, tags, categories, seriesList, templates) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
     <h1>写下来的内容，会慢慢变成自己的方法库。</h1>
-    <p>目前已支持文章标签与分类系统：文章列表、标签/分类索引页与详情页都会基于 Markdown frontmatter 自动生成。</p>
+    <p>现在除了标签、分类与系列，也支持通过 Markdown frontmatter 选择内容模板，让每篇文章从摘要、结构到详情页信息都更稳定。</p>
     <div class="post-list__filters">
       <a class="button button-secondary button-small" href="../rss.xml">RSS 订阅</a>
       ${renderEmailSubscriptionLink({ small: true })}
+      <a class="button button-ghost button-small" href="templates/">查看模板</a>
       <a class="button button-ghost button-small" href="archive/">查看归档</a>
     </div>
   </section>
@@ -2715,6 +2741,21 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
               ${categories.map((category) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="category" data-filter-value="${escapeHtml(category.name.toLowerCase())}" aria-pressed="false">${category.name}</button>`).join('')}
             </div>
           </section>
+          <section class="filter-group" aria-label="按模板筛选">
+            <div class="filter-group__header">
+              <span>模板</span>
+              <small>从内容结构角度快速切换浏览方式</small>
+            </div>
+            <div class="filter-chips" data-filter-group="template">
+              <button class="filter-chip is-active" type="button" data-filter-option data-filter-group="template" data-filter-value="all" aria-pressed="true">全部模板</button>
+              ${templates
+                .filter((template) => template.count > 0)
+                .map(
+                  (template) => `<button class="filter-chip" type="button" data-filter-option data-filter-group="template" data-filter-value="${escapeHtml(template.key)}" aria-pressed="false">${template.name}</button>`
+                )
+                .join('')}
+            </div>
+          </section>
         </div>
         <label class="sort-field" for="post-sort-select">
           <span>排序方式</span>
@@ -2735,10 +2776,16 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
         <a class="button button-ghost button-small" href="tags/">查看全部标签</a>
         <a class="button button-ghost button-small" href="categories/">查看全部分类</a>
         <a class="button button-ghost button-small" href="series/">查看全部系列</a>
+        <a class="button button-ghost button-small" href="templates/">查看全部模板</a>
         <a class="button button-ghost button-small" href="archive/">查看归档</a>
         ${tags.slice(0, 2).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
         ${categories.slice(0, 2).map((category) => `<a class="tag" href="categories/${category.slug}/">${category.name} · ${category.count}</a>`).join('')}
         ${seriesList.slice(0, 2).map((series) => `<a class="tag" href="series/${series.slug}/">系列：${series.name}</a>`).join('')}
+        ${templates
+          .filter((template) => template.count > 0)
+          .slice(0, 2)
+          .map((template) => `<a class="tag" href="templates/${template.slug}/">模板：${template.name} · ${template.count}</a>`)
+          .join('')}
       </div>
     </div>
     <div class="post-grid" data-post-search-grid>
@@ -2749,11 +2796,12 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
             post.summary,
             post.category.name,
             ...(post.tags ?? []),
-            post.series?.name ?? ''
+            post.series?.name ?? '',
+            post.template?.name ?? ''
           ].join(' ').toLowerCase());
           const dateValue = new Date(`${post.date}T00:00:00+08:00`).getTime();
           const updatedValue = new Date(`${(post.updated ?? post.date)}T00:00:00+08:00`).getTime();
-          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover, '../')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
+          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-template="${escapeHtml(post.template?.key ?? '')}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover, '../')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}${renderTemplateBadge({ template: post.template })}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
         })
         .join('')}
     </div>
@@ -2858,6 +2906,67 @@ const renderCategoryPage = (category, posts) => `
     </div>
   </section>`;
 
+const renderTemplateListPage = (templates) => `
+  <section class="page-hero reveal">
+    <p class="kicker">内容模板</p>
+    <h1>让每篇内容先有稳定骨架，再继续长出自己的语气。</h1>
+    <p>模板不是为了把文章写得一样，而是为了让写作起点、结构节奏和复用方式更稳定。这里列出当前站点支持的内容模板，以及它们各自适合承载的内容类型。</p>
+    <div class="post-list__filters">
+      <a class="button button-secondary button-small" href="../">返回文章列表</a>
+      <a class="button button-ghost button-small" href="../archive/">查看归档</a>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="tag-directory template-directory">
+      ${templates
+        .map(
+          (template) => `<article class="panel tag-directory__card template-directory__card"><div class="template-directory__header"><div><p class="kicker">${template.count > 0 ? `已使用 ${template.count} 篇` : '模板已就绪'}</p><h2>${template.name}</h2></div><span class="status-badge"><span class="status-badge__dot" aria-hidden="true"></span>${template.count > 0 ? '可直接使用' : '等待内容接入'}</span></div><p>${template.description}</p><div class="template-directory__meta"><div><strong>适合场景</strong><p>${template.recommendedFor.join(' / ')}</p></div><div><strong>建议结构</strong><ol class="template-outline-list">${template.outline.map((item) => `<li>${item}</li>`).join('')}</ol></div><div><strong>模板说明</strong><p>${template.summary}</p></div></div><div class="post-list__filters">${template.count > 0 ? `<a class="button button-ghost button-small" href="${template.slug}/">查看模板下的文章</a>` : ''}${template.latestPost ? `<a class="tag" href="../${template.latestPost.slug}/">最近一篇：${template.latestPost.title}</a>` : '<span class="tag">还没有文章使用这个模板</span>'}</div></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+const renderTemplateDetailPage = (template) => `
+  <section class="page-hero reveal">
+    <p class="kicker">内容模板</p>
+    <h1>${template.name}</h1>
+    <p>${template.description} 当前已有 ${template.count} 篇文章在使用这个模板。</p>
+    <div class="post-list__filters">
+      <a class="button button-ghost button-small" href="../">返回模板页</a>
+      <a class="button button-secondary button-small" href="../../">返回文章列表</a>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="split-grid split-grid--template">
+      <article class="panel template-detail-card">
+        <h2>适合场景</h2>
+        <p>${template.recommendedFor.join(' / ')}</p>
+        <h2>推荐结构</h2>
+        <ol class="template-outline-list">
+          ${template.outline.map((item) => `<li>${item}</li>`).join('')}
+        </ol>
+        <h2>模板说明</h2>
+        <p>${template.summary}</p>
+      </article>
+      <article class="panel template-detail-card">
+        <h2>当前模板下的文章</h2>
+        ${template.posts.length
+          ? `<div class="post-grid">${template.posts
+              .map(
+                (post) => `<article class="post-card"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover, '../../')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="../../series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><p class="kicker"><a href="../../categories/${post.category.slug}/">${post.category.name}</a></p><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+              )
+              .join('')}</div>`
+          : renderStateCard({
+              tone: 'quiet',
+              icon: '△',
+              kicker: '还没有内容',
+              title: '这个模板已经就绪，但还没有文章使用。',
+              summary: '后续只要在 Markdown frontmatter 里声明对应 template，就会自动进入这里。',
+              compact: true
+            })}
+      </article>
+    </div>
+  </section>`;
 
 const renderSeriesListPage = (seriesList) => `
   <section class="page-hero reveal">
@@ -3022,7 +3131,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
       <h1>${post.title}</h1>
       <div class="post-header__meta">${renderPostMeta(post)}</div>
       <p>${post.summary}</p>
-      <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.series ? `<li class="tag"><a href="../series/${post.series.slug}/">系列 · ${post.series.name}</a></li>` : ''}${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
+      <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.series ? `<li class="tag"><a href="../series/${post.series.slug}/">系列 · ${post.series.name}</a></li>` : ''}${post.template ? `<li class="tag"><a href="../templates/${post.template.slug}/">模板 · ${post.template.name}</a></li>` : ''}${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
     </section>
     <section class="post-layout reveal">
       <article>
@@ -3039,6 +3148,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
               .join('')}</ol></nav></div>`
           : ''}
         ${renderSeriesBlock(post, series)}
+        ${renderTemplateNoteCard({ template: post.template })}
         <div class="note-card">
           <h3>文章信息</h3>
           <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
@@ -3046,6 +3156,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
           <div class="meta-row"><span>阅读信息</span><span>${post.readingTime} · ${formatWordCount(post.wordCount)}</span></div>
           ${renderPostPageAnalytics()}
           <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
+          ${post.template ? `<div class="meta-row"><span>模板</span><span><a class="text-link" href="../templates/${post.template.slug}/">${post.template.name}</a></span></div>` : ''}
           <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
         </div>
         ${renderPostShareCard(post)}
@@ -3116,6 +3227,19 @@ const collectCategories = (posts) =>
     .map((category) => ({
       ...category,
       latestPost: category.posts[0]
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
+
+const collectTemplates = (posts) =>
+  contentTemplates
+    .map((template) => ({
+      ...template,
+      posts: posts.filter((post) => post.template?.key === template.key),
+      count: posts.filter((post) => post.template?.key === template.key).length
+    }))
+    .map((template) => ({
+      ...template,
+      latestPost: template.posts[0] ?? null
     }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 
@@ -3244,6 +3368,7 @@ const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [
   }));
 const categories = collectCategories(posts);
 const seriesList = collectSeries(posts);
+const templates = collectTemplates(posts);
 
 writeText(
   path.join(outDir, 'index.html'),
@@ -3326,7 +3451,7 @@ writeText(
       `沈晨玙的博客文章列表，当前收录 ${posts.length} 篇文章，覆盖产品、设计、前端体验与内容系统。`,
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
-    body: renderBlogListPage(posts, tags, categories, seriesList),
+    body: renderBlogListPage(posts, tags, categories, seriesList, templates),
     image: posts[0]?.cover ?? '/assets/illustration-wave.svg',
     pageType: 'CollectionPage',
     breadcrumbs: createBreadcrumbs([
@@ -3430,6 +3555,54 @@ for (const series of seriesList) {
         { name: series.name, path: `/blog/series/${series.slug}/` }
       ]),
       structuredData: [buildPostListStructuredData(`/blog/series/${series.slug}/`, series.posts)]
+    })
+  );
+}
+
+writeText(
+  path.join(outDir, 'blog', 'templates', 'index.html'),
+  renderLayout({
+    title: site.seo?.templates?.title ?? formatMetaTitle('内容模板', site.shortName),
+    description: site.seo?.templates?.description ?? `查看当前站点支持的 ${templates.length} 个内容模板，以及每种模板对应的文章入口。`,
+    currentPath: '/blog/templates/',
+    outputPath: path.join(outDir, 'blog', 'templates', 'index.html'),
+    body: renderTemplateListPage(templates),
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg',
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' },
+      { name: '模板', path: '/blog/templates/' }
+    ]),
+    structuredData: [
+      buildCollectionListStructuredData('/blog/templates/', templates, (template) => ({
+        type: 'CollectionPage',
+        name: template.name,
+        url: buildCanonicalUrl(site, `/blog/templates/${template.slug}/`),
+        description: template.description
+      }))
+    ]
+  })
+);
+
+for (const template of templates) {
+  writeText(
+    path.join(outDir, 'blog', 'templates', template.slug, 'index.html'),
+    renderLayout({
+      title: formatMetaTitle(`模板：${template.name}`, '博客文章', site.shortName),
+      description: `${template.description} 当前已有 ${template.count} 篇文章使用这个模板。`,
+      currentPath: `/blog/templates/${template.slug}/`,
+      outputPath: path.join(outDir, 'blog', 'templates', template.slug, 'index.html'),
+      body: renderTemplateDetailPage(template),
+      image: template.latestPost?.cover ?? '/assets/illustration-wave.svg',
+      pageType: 'CollectionPage',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '文章', path: '/blog/' },
+        { name: '模板', path: '/blog/templates/' },
+        { name: template.name, path: `/blog/templates/${template.slug}/` }
+      ]),
+      structuredData: [buildPostListStructuredData(`/blog/templates/${template.slug}/`, template.posts)]
     })
   );
 }
@@ -3663,6 +3836,7 @@ const sitemapEntries = [
   { path: '/blog/tags/' },
   { path: '/blog/categories/' },
   { path: '/blog/series/' },
+  { path: '/blog/templates/' },
   { path: '/blog/archive/' },
   { path: '/now/' },
   { path: '/en/' },
@@ -3673,6 +3847,7 @@ const sitemapEntries = [
   ...tags.map((tag) => ({ path: `/blog/tags/${tag.slug}/` })),
   ...categories.map((category) => ({ path: `/blog/categories/${category.slug}/` })),
   ...seriesList.map((series) => ({ path: `/blog/series/${series.slug}/` })),
+  ...templates.map((template) => ({ path: `/blog/templates/${template.slug}/` })),
   ...posts.map((post) => ({
     path: `/blog/${post.slug}/`,
     lastModified: formatSitemapLastModified(post.updated ?? post.date)

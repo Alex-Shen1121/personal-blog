@@ -203,12 +203,22 @@ title: 文章标题
 date: 2026-03-13
 updated: 2026-03-15 # 可选，文章有修改时再补充
 summary: 一句话摘要 # 可选；不写时会自动从正文生成摘要
+category: 写作方法
 tags: 标签一, 标签二
 cover: /assets/illustration-wave.svg
+template: insight # 可选；支持 insight / playbook / field-note
 ---
 
 正文内容……
 ```
+
+如果你想从统一骨架开始写，也可以直接复制 `content/templates/` 下的模板文件。目前内置三种模板：
+
+- `insight`：观点文章，适合先给出判断、再展开论证
+- `playbook`：方法清单，适合步骤、原则和工作流内容
+- `field-note`：阶段记录，适合项目迭代、复盘和近况类内容
+
+站点构建时会读取 frontmatter 中的 `template` 字段，并自动生成模板索引页、模板详情页，以及博客列表里的模板筛选入口。
 
 如果需要给图片增加可见标题与注释，可使用独占一行的图片语法，并在 title 位置通过 `标题 | 注释` 传入：
 

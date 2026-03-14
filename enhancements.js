@@ -77,9 +77,12 @@ const initBlogSearch = () => {
     const sortSelect = section.querySelector('[data-post-sort]');
     const total = Number(section.dataset.postSearchTotal || cards.length);
     const defaultSort = sortSelect?.value || 'date-desc';
-    const state = { tag: 'all', category: 'all', sort: defaultSort };
+    const state = { tag: 'all', category: 'all', template: 'all', sort: defaultSort };
 
     if (!input || !grid || !cards.length || !feedback || !emptyState || !emptySummary) return;
+
+    const getFilterLabel = (group, value) =>
+      filterButtons.find((button) => button.dataset.filterGroup === group && button.dataset.filterValue === value)?.textContent?.trim() || value;
 
     const sortCards = () => {
       const sorters = {
@@ -101,8 +104,9 @@ const initBlogSearch = () => {
 
     const buildFeedback = (query, visibleCount) => {
       const activeFilters = [];
-      if (state.tag !== 'all') activeFilters.push(`标签 “${state.tag}”`);
-      if (state.category !== 'all') activeFilters.push(`分类 “${state.category}”`);
+      if (state.tag !== 'all') activeFilters.push(`标签 “${getFilterLabel('tag', state.tag)}”`);
+      if (state.category !== 'all') activeFilters.push(`分类 “${getFilterLabel('category', state.category)}”`);
+      if (state.template !== 'all') activeFilters.push(`模板 “${getFilterLabel('template', state.template)}”`);
 
       if (!query && !activeFilters.length) {
         return `当前共 ${total} 篇文章。`;
@@ -118,8 +122,9 @@ const initBlogSearch = () => {
       const parts = [];
       const rawQuery = input.value.trim();
       if (rawQuery) parts.push(`关键词 “${rawQuery}”`);
-      if (state.tag !== 'all') parts.push(`标签 “${state.tag}”`);
-      if (state.category !== 'all') parts.push(`分类 “${state.category}”`);
+      if (state.tag !== 'all') parts.push(`标签 “${getFilterLabel('tag', state.tag)}”`);
+      if (state.category !== 'all') parts.push(`分类 “${getFilterLabel('category', state.category)}”`);
+      if (state.template !== 'all') parts.push(`模板 “${getFilterLabel('template', state.template)}”`);
       return parts.length
         ? `当前没有符合 ${parts.join(' + ')} 的文章，可以先清空条件再继续浏览。`
         : '当前筛选条件下还没有匹配内容。';
@@ -135,10 +140,12 @@ const initBlogSearch = () => {
         const searchIndex = card.dataset.searchIndex || '';
         const cardCategory = card.dataset.category || '';
         const cardTags = (card.dataset.tags || '').split('|').filter(Boolean);
+        const cardTemplate = card.dataset.template || '';
         const matchesQuery = !query || searchIndex.includes(query);
         const matchesTag = state.tag === 'all' || cardTags.includes(state.tag);
         const matchesCategory = state.category === 'all' || cardCategory === state.category;
-        const matched = matchesQuery && matchesTag && matchesCategory;
+        const matchesTemplate = state.template === 'all' || cardTemplate === state.template;
+        const matched = matchesQuery && matchesTag && matchesCategory && matchesTemplate;
         card.hidden = !matched;
         if (matched) visibleCount += 1;
       });
@@ -173,6 +180,7 @@ const initBlogSearch = () => {
         input.value = '';
         state.tag = 'all';
         state.category = 'all';
+        state.template = 'all';
         state.sort = defaultSort;
         if (sortSelect) sortSelect.value = defaultSort;
         updateResults();

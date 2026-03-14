@@ -1,3 +1,5 @@
+import { contentTemplateKeys } from '../src/data/content-templates.mjs';
+
 const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -10,6 +12,7 @@ const FIELD_SCHEMA = {
   category: { required: true, type: 'string' },
   tags: { required: true, type: 'tags' },
   cover: { required: false, type: 'string' },
+  template: { required: false, type: 'contentTemplate' },
   ogTitle: { required: false, type: 'string' },
   ogDescription: { required: false, type: 'string' },
   ogImage: { required: false, type: 'string' },
@@ -111,6 +114,21 @@ const normalizeFieldValue = ({ key, value, fileName }) => {
     }
 
     return tags;
+  }
+
+  if (rule.type === 'contentTemplate') {
+    if (!value) {
+      throw createError(fileName, 'has empty template field.');
+    }
+
+    if (!contentTemplateKeys.has(value)) {
+      throw createError(
+        fileName,
+        `uses unsupported template "${value}". Supported templates: ${Array.from(contentTemplateKeys).join(', ')}.`
+      );
+    }
+
+    return value;
   }
 
   return value;

@@ -16,6 +16,7 @@ const requiredSourceFiles = [
   'scripts/markdown-quality.mjs',
   'scripts/setup-git-hooks.mjs',
   'src/data/site.mjs',
+  'src/data/content-templates.mjs',
   'src/utils/canonical.mjs',
   'public/favicon.svg'
 ];
@@ -98,7 +99,7 @@ if (canonicalConfig.errors.length > 0) {
   process.exit(1);
 }
 
-const requiredCanonicalPaths = ['/', '/about/', '/projects/', '/blog/', '/blog/tags/', '/blog/categories/', '/blog/series/', '/blog/archive/', '/now/', '/404.html'];
+const requiredCanonicalPaths = ['/', '/about/', '/projects/', '/blog/', '/blog/tags/', '/blog/categories/', '/blog/series/', '/blog/archive/', '/blog/templates/', '/now/', '/404.html'];
 for (const canonicalPath of requiredCanonicalPaths) {
   const errors = validateCanonicalPath(canonicalPath, { repoBasePath: canonicalConfig.normalizedRepoBasePath });
   if (errors.length > 0) {
