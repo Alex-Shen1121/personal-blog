@@ -73,9 +73,27 @@ export const site = {
     intro:
       '我在做的事情，通常都落在产品理解、交互体验与前端实现的交叉点。喜欢把复杂问题拆到足够清晰，再把细节打磨到足够顺手。',
     links: [
-      { label: 'GitHub', url: 'https://github.com/Alex-Shen1121' },
-      { label: '即刻', url: 'https://okjk.co/' },
-      { label: '邮箱', url: 'mailto:alex@example.com' }
+      {
+        label: 'GitHub',
+        url: 'https://github.com/Alex-Shen1121',
+        kind: 'social',
+        meta: '@Alex-Shen1121',
+        description: '看项目代码、提交记录和站点迭代。'
+      },
+      {
+        label: '即刻',
+        url: 'https://okjk.co/',
+        kind: 'social',
+        meta: '轻量更新',
+        description: '更轻量地同步近况、观察和正在做的事。'
+      },
+      {
+        label: '邮箱',
+        url: 'mailto:alex@example.com',
+        kind: 'contact',
+        meta: '直接联系',
+        description: '合作、交流或想打个招呼，都可以直接发邮件。'
+      }
     ]
   },
   navigation: [

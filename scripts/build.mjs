@@ -463,6 +463,36 @@ const resolveLinkHref = (href, prefix = '') => {
 };
 
 const isExternalLink = (href = '') => /^(?:[a-z]+:)?\/\//i.test(href);
+const getLinkTargetAttributes = (href = '') => (isExternalLink(href) ? ' target="_blank" rel="noreferrer"' : '');
+
+const normalizeAuthorLinks = (links = []) =>
+  links
+    .map((link) => {
+      if (!link || typeof link !== 'object') return null;
+      const label = link.label?.trim?.();
+      const url = link.url?.trim?.();
+      if (!label || !url) return null;
+
+      return {
+        label,
+        url,
+        kind: link.kind?.trim?.() || 'link',
+        meta: link.meta?.trim?.() || '',
+        description: link.description?.trim?.() || ''
+      };
+    })
+    .filter(Boolean);
+
+const getAuthorLinks = () => normalizeAuthorLinks(site.author.links ?? []);
+const getAuthorLinksByKind = (kind) => getAuthorLinks().filter((link) => link.kind === kind);
+
+const renderAuthorLinkCards = (links) =>
+  `<ul class="nav-guide-list">${links
+    .map((link) => {
+      const detail = [link.meta, link.description].filter(Boolean).join(' · ');
+      return `<li><a class="nav-guide-link" href="${link.url}"${getLinkTargetAttributes(link.url)}><strong>${escapeHtml(link.label)}</strong>${detail ? `<span>${escapeHtml(detail)}</span>` : ''}</a></li>`;
+    })
+    .join('')}</ul>`;
 
 const getEmailSubscriptionHref = () => {
   const email = site.author.email?.trim?.();
@@ -1509,7 +1539,7 @@ const renderLayout = ({
           <section class="site-footer__section" aria-label="联系与链接">
             <span class="site-footer__heading">联系与链接</span>
             <div class="footer-links">
-              ${site.author.links.map((link) => `<a href="${link.url}"${link.url.startsWith('http') ? ' target="_blank" rel="noreferrer"' : ''}>${link.label}</a>`).join('')}
+              ${getAuthorLinks().map((link) => `<a href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
               ${rssHref ? `<a href="${rssHref}">RSS 订阅</a>` : ''}
               ${getEmailSubscriptionHref() ? `<a href="${escapeHtml(getEmailSubscriptionHref())}">邮件订阅</a>` : ''}
             </div>
@@ -1737,8 +1767,11 @@ const renderHomePage = (posts) => {
             <p class="section-intro">我更喜欢基于具体项目、内容想法或正在解决的问题展开对话，这样会更快进入有效交流。</p>
           </div>
           <div class="contact-links">
-            ${site.author.links.map((link) => `<a class="button button-secondary" href="${link.url}" target="_blank" rel="noreferrer">${link.label}</a>`).join('')}
+            ${getAuthorLinks().map((link) => `<a class="button button-secondary" href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
           </div>
+          ${getAuthorLinksByKind('social').length
+            ? `<div class="social-links-group"><div class="section-heading"><p class="kicker">社交媒体</p><p class="section-intro">除了站内文章，我也会在这些平台同步代码更新、轻量近况和阶段性想法。</p></div>${renderAuthorLinkCards(getAuthorLinksByKind('social'))}</div>`
+            : ''}
           <p>${site.author.city}</p>
         </article>
       </div>

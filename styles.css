@@ -1231,6 +1231,15 @@ body.has-reading-progress .reading-progress {
   transform: translateY(0);
 }
 
+.social-links-group {
+  display: grid;
+  gap: 14px;
+}
+
+.social-links-group .section-heading {
+  margin-bottom: 0;
+}
+
 .list-card,
 .timeline {
   margin: 0;
