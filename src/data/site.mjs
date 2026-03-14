@@ -60,6 +60,22 @@ export const site = {
     readyText: '统计已更新，数据可能有短暂延迟。',
     unavailableText: '统计服务暂时不可用。'
   },
+  announcement: {
+    eyebrow: '站点公告',
+    badge: '2026 春季更新',
+    title: '个人站已补齐热门文章、RSS、邮件订阅与访问统计，接下来会继续补完反馈入口和内容迭代说明。',
+    description:
+      '如果你是第一次来到这里，建议先从文章列表和热门文章开始；如果想持续跟进后续更新，也可以直接查看变更记录或订阅最新内容。',
+    meta: ['持续迭代中', 'GitHub Pages 已部署', '欢迎回访'],
+    primaryAction: {
+      label: '查看变更记录',
+      href: 'https://github.com/Alex-Shen1121/personal-blog/blob/main/CHANGELOG.md'
+    },
+    secondaryAction: {
+      label: '浏览文章列表',
+      href: '/blog/'
+    }
+  },
   emailSubscription: {
     title: '邮件订阅',
     description:

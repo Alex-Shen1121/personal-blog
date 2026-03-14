@@ -1481,6 +1481,25 @@ const renderPostPageAnalytics = () => {
   return `<div class="meta-row" data-analytics-card data-analytics-loading="${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span>${escapeHtml(site.analytics.pageMetric.label ?? '访问统计')}</span><span><strong class="page-analytics__value" id="busuanzi_value_${escapeHtml(site.analytics.pageMetric.key)}" data-busuanzi-value="${escapeHtml(site.analytics.pageMetric.key)}">--</strong> 次阅读</span><span class="meta-row__hint" data-analytics-status>${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}</span></div>`;
 };
 
+const renderAnnouncementBanner = () => {
+  const announcement = site.announcement;
+  if (!announcement?.title?.trim?.()) {
+    return '';
+  }
+
+  const metaItems = Array.isArray(announcement.meta) ? announcement.meta.filter(Boolean) : [];
+  const actions = [announcement.primaryAction, announcement.secondaryAction]
+    .filter((action) => action?.label?.trim?.() && action?.href?.trim?.())
+    .map((action, index) => {
+      const resolvedHref = resolveLinkHref(action.href.trim());
+      const variant = index === 0 ? 'primary' : 'ghost';
+      return `<a class="button button-${variant} button-small" href="${escapeHtml(resolvedHref)}"${getLinkTargetAttributes(resolvedHref)}>${escapeHtml(action.label.trim())}</a>`;
+    })
+    .join('');
+
+  return `<section class="site-announcement reveal" aria-label="站点公告"><div class="site-announcement__inner"><div class="site-announcement__copy"><div class="site-announcement__eyebrow"><p class="kicker">${escapeHtml(announcement.eyebrow?.trim?.() || '站点公告')}</p>${announcement.badge?.trim?.() ? `<span class="site-announcement__badge">${escapeHtml(announcement.badge.trim())}</span>` : ''}</div><h2>${escapeHtml(announcement.title.trim())}</h2>${announcement.description?.trim?.() ? `<p class="site-announcement__description">${escapeHtml(announcement.description.trim())}</p>` : ''}${metaItems.length ? `<ul class="site-announcement__meta">${metaItems.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}</div>${actions ? `<div class="site-announcement__actions">${actions}</div>` : ''}</div></section>`;
+};
+
 const renderLayout = ({
   title,
   description,
@@ -1638,6 +1657,7 @@ const renderLayout = ({
           </nav>
         </div>
       </header>
+      ${renderAnnouncementBanner()}
       <main id="main-content" tabindex="-1">
         ${body}
       </main>
