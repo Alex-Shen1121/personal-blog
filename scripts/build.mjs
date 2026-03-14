@@ -2188,10 +2188,12 @@ const renderEnglishPostPage = (post, relatedPosts = [], navigationPosts = {}) =>
   <article class="post-detail" data-reading-progress-target>
     <section class="post-header reveal">
       <p class="kicker">Post</p>
+      ${post.draft ? '<span class="feature-label feature-label--draft">Draft preview</span>' : ''}
       ${post.pinned ? '<span class="feature-label feature-label--pinned">Featured</span>' : ''}
       <h1>${post.title}</h1>
       <div class="post-header__meta"><span>${formatDateEn(post.date)}</span>${post.updated && post.updated !== post.date ? `<span>Updated ${formatDateEn(post.updated)}</span>` : ''}<span>${post.readingTime}</span><span>${formatWordCountEn(post.wordCount)}</span></div>
       <p>${post.summary}</p>
+      ${post.draft ? '<div class="note-card draft-preview-banner"><h3>This is a draft preview</h3><p>This article is still marked as a draft, so it stays out of the public blog index, RSS feed, sitemap, and search results while remaining directly accessible for review.</p><p class="muted">Switch <code>draft: true</code> to <code>draft: false</code> in frontmatter when you are ready to publish it at this same URL.</p></div>' : ''}
       <ul class="tag-list"><li class="tag">${post.category.name}</li>${post.series ? `<li class="tag">Series · ${post.series.name}</li>` : ''}${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul>
     </section>
     <section class="post-layout reveal">
@@ -2207,7 +2209,7 @@ const renderEnglishPostPage = (post, relatedPosts = [], navigationPosts = {}) =>
         ${post.toc?.length ? `<div class="note-card toc-card"><h3>Contents</h3><nav class="toc-nav" aria-label="Table of contents"><ol class="toc-list">${post.toc
           .map((item) => `<li class="toc-item toc-item--level-${item.level}"><a href="#${item.id}">${item.text}</a></li>`)
           .join('')}</ol></nav></div>` : ''}
-        <div class="note-card"><h3>Post information</h3><div class="meta-row"><span>Published</span><span>${formatDateEn(post.date)}</span></div>${post.updated && post.updated !== post.date ? `<div class="meta-row"><span>Updated</span><span>${formatDateEn(post.updated)}</span></div>` : ''}<div class="meta-row"><span>Reading</span><span>${post.readingTime} · ${formatWordCountEn(post.wordCount)}</span></div><div class="meta-row"><span>Category</span><span>${post.category.name}</span></div></div>
+        <div class="note-card"><h3>Post information</h3><div class="meta-row"><span>Published</span><span>${formatDateEn(post.date)}</span></div>${post.updated && post.updated !== post.date ? `<div class="meta-row"><span>Updated</span><span>${formatDateEn(post.updated)}</span></div>` : ''}<div class="meta-row"><span>Reading</span><span>${post.readingTime} · ${formatWordCountEn(post.wordCount)}</span></div><div class="meta-row"><span>Category</span><span>${post.category.name}</span></div>${post.draft ? '<div class="meta-row"><span>Status</span><span>Draft preview (noindex)</span></div>' : ''}</div>
         <div class="note-card"><h3>Feedback</h3><p>${siteEn.feedback.description}</p><div class="contact-links"><a class="button button-primary" href="${escapeHtml(
           getFeedbackEmailHref({
             siteConfig: siteEn,
@@ -2728,6 +2730,15 @@ const renderInfoPage = (pageKey) => {
   return body;
 };
 
+const sortPosts = (posts) =>
+  [...posts].sort((a, b) => {
+    if (a.pinned !== b.pinned) {
+      return Number(b.pinned) - Number(a.pinned);
+    }
+
+    return new Date(b.date) - new Date(a.date);
+  });
+
 const loadPosts = (directoryPath = postsDir) => {
   if (!existsSync(directoryPath)) {
     return [];
@@ -2787,15 +2798,7 @@ const loadPosts = (directoryPath = postsDir) => {
 
   assertUniquePostSlugs(posts);
 
-  return posts
-    .filter((post) => !post.draft)
-    .sort((a, b) => {
-      if (a.pinned !== b.pinned) {
-        return Number(b.pinned) - Number(a.pinned);
-      }
-
-      return new Date(b.date) - new Date(a.date);
-    });
+  return sortPosts(posts);
 };
 
 const getRelatedPosts = (currentPost, posts, limit = 2) => {
@@ -3310,10 +3313,14 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
   <article class="post-detail" data-reading-progress-target>
     <section class="post-header reveal">
       <p class="kicker">文章详情</p>
+      ${post.draft ? '<span class="feature-label feature-label--draft">草稿预览</span>' : ''}
       ${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}
       <h1>${post.title}</h1>
       <div class="post-header__meta">${renderPostMeta(post)}</div>
       <p>${post.summary}</p>
+      ${post.draft
+        ? `<div class="note-card draft-preview-banner"><h3>这是一个草稿预览页</h3><p>当前文章仍处于草稿状态：不会出现在文章列表、RSS、站点地图和搜索引擎结果里，但你可以直接把当前链接发给协作者预览。</p><p class="muted">后续只需要把 frontmatter 里的 <code>draft: true</code> 改成 <code>draft: false</code>，这篇文章就会直接以当前地址正式发布。</p></div>`
+        : ''}
       <ul class="tag-list"><li class="tag"><a href="../categories/${post.category.slug}/">${post.category.name}</a></li>${post.series ? `<li class="tag"><a href="../series/${post.series.slug}/">系列 · ${post.series.name}</a></li>` : ''}${post.template ? `<li class="tag"><a href="../templates/${post.template.slug}/">模板 · ${post.template.name}</a></li>` : ''}${post.tags.map((tag) => `<li><a class="tag tag-link" href="../tags/${slugifyTag(tag)}/">${tag}</a></li>`).join('')}</ul>
     </section>
     <section class="post-layout reveal">
@@ -3341,18 +3348,23 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
           <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
           ${post.template ? `<div class="meta-row"><span>模板</span><span><a class="text-link" href="../templates/${post.template.slug}/">${post.template.name}</a></span></div>` : ''}
           <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
+          ${post.draft ? '<div class="meta-row"><span>发布状态</span><span>草稿预览（noindex）</span></div>' : ''}
         </div>
         ${renderPostShareCard(post)}
         ${renderFeedbackEntry({
-          title: '对这篇文章有想法？',
-          description: '如果你发现勘误、想继续追问某个细节，或者希望我展开写某个相关主题，可以直接从这里留言。',
-          note: '邮件会自动带上当前文章标题和链接，方便我回看上下文。',
+          title: post.draft ? '想给这篇草稿提意见？' : '对这篇文章有想法？',
+          description: post.draft
+            ? '如果你在预览时发现表达、结构或信息取舍还有可改的地方，可以直接从这里把意见发给我。'
+            : '如果你发现勘误、想继续追问某个细节，或者希望我展开写某个相关主题，可以直接从这里留言。',
+          note: post.draft
+            ? '邮件会自动带上当前草稿标题和链接，方便我集中处理反馈。'
+            : '邮件会自动带上当前文章标题和链接，方便我回看上下文。',
           pageTitle: post.title,
           pageUrl: buildCanonicalUrl(site, `/blog/${post.slug}/`)
         })}
         <div class="note-card">
           <h3>继续阅读</h3>
-          <p>想看更多内容，可以回到文章列表，或者去看看我近期在做的项目与近况。</p>
+          <p>${post.draft ? '这篇内容还没正式进入公开列表；如果想继续看已发布内容，可以回到文章列表或项目页。' : '想看更多内容，可以回到文章列表，或者去看看我近期在做的项目与近况。'}</p>
           <div class="contact-links">
             <a class="button button-secondary" href="../">返回文章列表</a>
             <a class="button button-ghost" href="../../projects/">查看项目</a>
@@ -3539,8 +3551,12 @@ for (const file of readdirSync(publicDir)) {
   emitStaticAsset(path.join(publicDir, file), outDir);
 }
 
-const posts = await attachPopularityMetrics(loadPosts());
-const postsEn = loadPosts(postsEnDir).map(normalizeEnglishPost);
+const allPosts = loadPosts();
+const posts = await attachPopularityMetrics(allPosts.filter((post) => !post.draft));
+const draftPosts = sortPosts(allPosts.filter((post) => post.draft));
+const allPostsEn = loadPosts(postsEnDir).map(normalizeEnglishPost);
+const postsEn = allPostsEn.filter((post) => !post.draft);
+const draftPostsEn = sortPosts(allPostsEn.filter((post) => post.draft));
 postsEn.forEach((post) => registerLanguagePair(`/blog/${post.slug}/`, `/en/blog/${post.slug}/`));
 const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [tag, tag]))).values())
   .sort((a, b) => a.localeCompare(b, 'zh-CN'))
@@ -3901,6 +3917,43 @@ for (const [index, post] of posts.entries()) {
   );
 }
 
+for (const draftPost of draftPosts) {
+  const relatedPosts = getRelatedPosts(draftPost, posts);
+
+  writeText(
+    path.join(outDir, 'blog', draftPost.slug, 'index.html'),
+    renderLayout({
+      title: formatMetaTitle(`${draftPost.title}（草稿预览）`, '博客文章', site.shortName),
+      description: draftPost.summary,
+      currentPath: `/blog/${draftPost.slug}/`,
+      outputPath: path.join(outDir, 'blog', draftPost.slug, 'index.html'),
+      body: renderPostPage(draftPost, relatedPosts, { previous: null, next: null }, null),
+      image: draftPost.cover,
+      robots: 'noindex,nofollow',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '文章', path: '/blog/' },
+        { name: `${draftPost.title}（草稿预览）`, path: `/blog/${draftPost.slug}/` }
+      ]),
+      structuredData: [buildBlogPostingStructuredData({ post: draftPost, canonical: buildCanonicalUrl(site, `/blog/${draftPost.slug}/`) })],
+      mainEntityId: `${buildCanonicalUrl(site, `/blog/${draftPost.slug}/`)}#article`,
+      openGraph: {
+        title: draftPost.ogTitle ?? `${draftPost.title}（草稿预览）`,
+        description: draftPost.ogDescription ?? draftPost.summary,
+        image: draftPost.ogImage ?? draftPost.cover,
+        imageAlt: `${draftPost.title} 的文章封面图`,
+        type: 'article',
+        article: {
+          publishedTime: toIsoDateTime(draftPost.date),
+          modifiedTime: toIsoDateTime(draftPost.updated ?? draftPost.date),
+          section: draftPost.category.name,
+          tags: draftPost.tags
+        }
+      }
+    })
+  );
+}
+
 writeText(
   path.join(outDir, 'en', 'index.html'),
   renderLayout({
@@ -3996,6 +4049,40 @@ for (const [index, post] of postsEn.entries()) {
   );
 }
 
+for (const draftPost of draftPostsEn) {
+  const relatedPosts = getRelatedPosts(draftPost, postsEn);
+
+  writeText(
+    path.join(outDir, 'en', 'blog', draftPost.slug, 'index.html'),
+    renderLayout({
+      title: formatMetaTitle(`${draftPost.title} (Draft preview)`, 'Blog', siteEn.shortName),
+      description: draftPost.summary,
+      currentPath: `/en/blog/${draftPost.slug}/`,
+      outputPath: path.join(outDir, 'en', 'blog', draftPost.slug, 'index.html'),
+      body: renderEnglishPostPage(draftPost, relatedPosts, { previous: null, next: null }),
+      image: draftPost.cover,
+      robots: 'noindex,nofollow',
+      siteConfig: siteEn,
+      uiText: enUi,
+      documentLang: 'en',
+      includeDefaultStructuredData: false,
+      openGraph: {
+        title: `${draftPost.title} (Draft preview)`,
+        description: draftPost.summary,
+        image: draftPost.cover,
+        imageAlt: `${draftPost.title} cover illustration`,
+        type: 'article',
+        article: {
+          publishedTime: toIsoDateTime(draftPost.date),
+          modifiedTime: toIsoDateTime(draftPost.updated ?? draftPost.date),
+          section: draftPost.category.name,
+          tags: draftPost.tags
+        }
+      }
+    })
+  );
+}
+
 writeText(
   path.join(outDir, '404.html'),
   renderLayout({
@@ -4076,5 +4163,5 @@ if (htmlAudit.issues.length > 0) {
 }
 
 console.log(
-  `Build complete. Generated ${posts.length} posts, ${sitemapEntries.length} sitemap entries, ${emittedAssetEntries.length} fingerprinted assets, and audited ${htmlAudit.htmlFileCount} HTML files.`
+  `Build complete. Generated ${posts.length} published posts, ${draftPosts.length + draftPostsEn.length} draft preview pages, ${sitemapEntries.length} sitemap entries, ${emittedAssetEntries.length} fingerprinted assets, and audited ${htmlAudit.htmlFileCount} HTML files.`
 );

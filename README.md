@@ -27,6 +27,7 @@
 - 项目页、关于页、近况页展示
 - 深浅色主题切换
 - 支持通过 `src/data/site.mjs` 自定义主题默认模式、主题色与 CSS 变量令牌
+- 支持文章草稿预览：`draft: true` 的文章可直接通过正式 URL 预览，但不会进入公开列表、RSS 与 sitemap
 - `prefers-reduced-motion` 兼容处理
 - 基础 SEO 元信息支持
 - 支持 RSS 订阅、邮件订阅与社交媒体跳转入口，并自动生成 `rss.xml`
@@ -231,6 +232,7 @@ category: 写作方法
 tags: 标签一, 标签二
 cover: /assets/illustration-wave.svg
 template: insight # 可选；支持 insight / playbook / field-note
+draft: true # 可选；为 true 时生成 noindex 草稿预览页，但不会进入公开文章列表
 ---
 
 正文内容……
@@ -243,6 +245,21 @@ template: insight # 可选；支持 insight / playbook / field-note
 - `field-note`：阶段记录，适合项目迭代、复盘和近况类内容
 
 站点构建时会读取 frontmatter 中的 `template` 字段，并自动生成模板索引页、模板详情页，以及博客列表里的模板筛选入口。
+
+### 草稿预览流程
+
+如果文章还没准备正式发布，但想先给自己或协作者预览，可以在 frontmatter 中加上：
+
+```md
+draft: true
+```
+
+此时构建结果会遵循下面的规则：
+
+- 文章仍会生成静态详情页，访问地址就是它未来正式发布时的 URL，例如 `/blog/my-post/`
+- 页面会显示“草稿预览”提示，并输出 `noindex,nofollow`，避免被搜索引擎收录
+- 草稿不会进入博客列表、标签 / 分类聚合页、RSS、sitemap，也不会参与首页精选文章
+- 当你准备正式发布时，只需要把 `draft: true` 改成 `draft: false`（或删除该字段），原地址会直接切换成正式文章
 
 如果需要给图片增加可见标题与注释，可使用独占一行的图片语法，并在 title 位置通过 `标题 | 注释` 传入：
 
