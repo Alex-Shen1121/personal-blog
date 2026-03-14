@@ -24,6 +24,22 @@ const slugify = (value) =>
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 
+const resolvePostSlug = ({ fileName = '', customSlug = '', hasCustomSlug = false } = {}) => {
+  const normalizedCustomSlug = customSlug.trim();
+  if (hasCustomSlug && !normalizedCustomSlug) {
+    throw new Error(`Post ${fileName} has an empty slug field.`);
+  }
+
+  const resolvedSlug = slugify(normalizedCustomSlug || fileName);
+  if (!resolvedSlug) {
+    throw new Error(
+      `Post ${fileName} resolved to an empty slug${hasCustomSlug ? ` from custom slug "${customSlug}"` : ''}.`
+    );
+  }
+
+  return resolvedSlug;
+};
+
 for (const file of requiredSourceFiles) {
   const filePath = path.join(rootDir, file);
   if (!existsSync(filePath)) {
@@ -72,6 +88,8 @@ for (const canonicalPath of requiredCanonicalPaths) {
   }
 }
 
+const resolvedPostSlugs = new Map();
+
 for (const post of posts) {
   const source = readFileSync(path.join(postsDir, post), 'utf8');
   for (const field of ['title:', 'date:', 'category:', 'tags:']) {
@@ -80,6 +98,27 @@ for (const post of posts) {
       process.exit(1);
     }
   }
+
+  const slugMatch = source.match(/^slug:\s*(.*)$/m);
+  const hasCustomSlug = Boolean(slugMatch);
+  let resolvedSlug = '';
+  try {
+    resolvedSlug = resolvePostSlug({
+      fileName: post,
+      customSlug: slugMatch?.[1] ?? '',
+      hasCustomSlug
+    });
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+
+  const existingSlugSource = resolvedPostSlugs.get(resolvedSlug);
+  if (existingSlugSource) {
+    console.error(`Duplicate post slug detected: "${resolvedSlug}" (${existingSlugSource} and ${post}).`);
+    process.exit(1);
+  }
+  resolvedPostSlugs.set(resolvedSlug, post);
 
   const draftMatch = source.match(/^draft:\s*(.+)\s*$/m);
   if (draftMatch && !['true', 'false'].includes(draftMatch[1].trim())) {
@@ -106,7 +145,7 @@ for (const post of posts) {
     process.exit(1);
   }
 
-  const canonicalPath = `/blog/${slugify(post)}/`;
+  const canonicalPath = `/blog/${resolvedSlug}/`;
   const canonicalPathErrors = validateCanonicalPath(canonicalPath, {
     repoBasePath: canonicalConfig.normalizedRepoBasePath
   });

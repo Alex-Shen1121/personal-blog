@@ -57,6 +57,35 @@ const slugify = (value) =>
     .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
+
+const resolvePostSlug = ({ fileName = '', customSlug = '', hasCustomSlug = false } = {}) => {
+  const normalizedCustomSlug = customSlug.trim();
+  if (hasCustomSlug && !normalizedCustomSlug) {
+    throw new Error(`Post ${fileName} has an empty slug field.`);
+  }
+
+  const resolvedSlug = slugify(normalizedCustomSlug || fileName);
+  if (!resolvedSlug) {
+    throw new Error(
+      `Post ${fileName} resolved to an empty slug${hasCustomSlug ? ` from custom slug "${customSlug}"` : ''}.`
+    );
+  }
+
+  return resolvedSlug;
+};
+
+const assertUniquePostSlugs = (posts) => {
+  const slugMap = new Map();
+
+  for (const post of posts) {
+    const existingSource = slugMap.get(post.slug);
+    if (existingSource) {
+      throw new Error(`Duplicate post slug detected: "${post.slug}" (${existingSource} and ${post.sourceFile}).`);
+    }
+    slugMap.set(post.slug, post.sourceFile);
+  }
+};
+
 const slugifyTag = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
 const slugifyCategory = (value) => encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
 
@@ -1625,15 +1654,20 @@ const renderInfoPage = (pageKey) => {
 };
 
 const loadPosts = () => {
-  return readdirSync(postsDir)
+  const posts = readdirSync(postsDir)
     .filter((file) => file.endsWith('.md'))
     .map((fileName) => {
       const raw = readFileSync(path.join(postsDir, fileName), 'utf8');
       const { meta, body } = parseFrontmatter(raw);
-      const slug = slugify(fileName);
+      const slug = resolvePostSlug({
+        fileName,
+        customSlug: meta.slug ?? '',
+        hasCustomSlug: Object.prototype.hasOwnProperty.call(meta, 'slug')
+      });
       const wordCount = body.replace(/\s+/g, '').length;
       const { html, toc } = markdownToHtml(body);
       const post = {
+        sourceFile: fileName,
         slug,
         title: meta.title,
         date: meta.date,
@@ -1668,7 +1702,11 @@ const loadPosts = () => {
         ...post,
         cover: resolvePostCover(post)
       };
-    })
+    });
+
+  assertUniquePostSlugs(posts);
+
+  return posts
     .filter((post) => !post.draft)
     .sort((a, b) => {
       if (a.pinned !== b.pinned) {
