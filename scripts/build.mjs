@@ -2934,6 +2934,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList, templates) => `
     <div class="post-list__filters">
       <a class="button button-secondary button-small" href="../rss.xml">RSS 订阅</a>
       ${renderEmailSubscriptionLink({ small: true })}
+      <a class="button button-ghost button-small" href="stats/">查看内容统计</a>
       <a class="button button-ghost button-small" href="templates/">查看模板</a>
       <a class="button button-ghost button-small" href="archive/">查看归档</a>
     </div>
@@ -3022,6 +3023,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList, templates) => `
         <a class="button button-ghost button-small" href="categories/">查看全部分类</a>
         <a class="button button-ghost button-small" href="series/">查看全部系列</a>
         <a class="button button-ghost button-small" href="templates/">查看全部模板</a>
+        <a class="button button-ghost button-small" href="stats/">查看内容统计</a>
         <a class="button button-ghost button-small" href="archive/">查看归档</a>
         ${tags.slice(0, 2).map((tag) => `<a class="tag tag-link" href="tags/${tag.slug}/">${tag.name}</a>`).join('')}
         ${categories.slice(0, 2).map((category) => `<a class="tag" href="categories/${category.slug}/">${category.name} · ${category.count}</a>`).join('')}
@@ -3497,6 +3499,220 @@ const collectTemplates = (posts) =>
     }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 
+
+const extractReadingMinutes = (label = '') => Number(label.match(/\d+(?:\.\d+)?/)?.[0] ?? 0);
+
+const buildContentStats = ({ posts, postsEn, tags, categories, seriesList, templates }) => {
+  const totalWords = posts.reduce((sum, post) => sum + (post.wordCount ?? 0), 0);
+  const totalReadingMinutes = posts.reduce((sum, post) => sum + extractReadingMinutes(post.readingTime), 0);
+  const totalTags = posts.reduce((sum, post) => sum + (post.tags?.length ?? 0), 0);
+  const translatedPostCount = posts.filter((post) => postsEn.some((englishPost) => englishPost.slug === post.slug)).length;
+  const usedTemplates = templates.filter((template) => template.count > 0);
+  const postsByYear = Array.from(
+    posts.reduce((map, post) => {
+      const year = new Date(`${post.date}T00:00:00+08:00`).getFullYear();
+      const existing = map.get(year) ?? { year, count: 0, words: 0 };
+      existing.count += 1;
+      existing.words += post.wordCount ?? 0;
+      map.set(year, existing);
+      return map;
+    }, new Map()).values()
+  ).sort((a, b) => b.year - a.year);
+  const postsByMonth = Array.from(
+    posts.reduce((map, post) => {
+      const date = new Date(`${post.date}T00:00:00+08:00`);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      const existing = map.get(key) ?? { key, label: `${year} 年 ${month} 月`, count: 0 };
+      existing.count += 1;
+      map.set(key, existing);
+      return map;
+    }, new Map()).values()
+  )
+    .sort((a, b) => b.key.localeCompare(a.key))
+    .slice(0, 6);
+  const longestPosts = [...posts].sort((a, b) => b.wordCount - a.wordCount).slice(0, 3);
+  const mostTaggedPosts = [...posts]
+    .sort((a, b) => (b.tags?.length ?? 0) - (a.tags?.length ?? 0) || b.wordCount - a.wordCount)
+    .slice(0, 3);
+  const topTags = [...tags]
+    .sort((a, b) => b.posts.length - a.posts.length || a.name.localeCompare(b.name, 'zh-CN'))
+    .slice(0, 6);
+  const earliestPost = [...posts].sort((a, b) => new Date(`${a.date}T00:00:00+08:00`) - new Date(`${b.date}T00:00:00+08:00`))[0] ?? null;
+  const latestUpdatedPost = [...posts].sort(
+    (a, b) =>
+      new Date(`${b.updated ?? b.date}T00:00:00+08:00`) - new Date(`${a.updated ?? a.date}T00:00:00+08:00`)
+  )[0] ?? null;
+
+  return {
+    postCount: posts.length,
+    translatedPostCount,
+    translationCoverage: posts.length ? Math.round((translatedPostCount / posts.length) * 100) : 0,
+    categoryCount: categories.length,
+    tagCount: tags.length,
+    seriesCount: seriesList.length,
+    templateCount: usedTemplates.length,
+    totalTemplateCount: templates.length,
+    totalWords,
+    totalReadingMinutes,
+    averageWords: posts.length ? Math.round(totalWords / posts.length) : 0,
+    averageReadingMinutes: posts.length ? Math.round((totalReadingMinutes / posts.length) * 10) / 10 : 0,
+    averageTagsPerPost: posts.length ? Math.round((totalTags / posts.length) * 10) / 10 : 0,
+    pinnedPostCount: posts.filter((post) => post.pinned).length,
+    updatedPostCount: posts.filter((post) => post.updated && post.updated !== post.date).length,
+    earliestPost,
+    latestUpdatedPost,
+    topCategories: categories.slice(0, 5),
+    topTags,
+    topSeries: seriesList.slice(0, 3),
+    topTemplates: usedTemplates.slice(0, 3),
+    postsByYear,
+    postsByMonth,
+    longestPosts,
+    mostTaggedPosts
+  };
+};
+
+const renderContentStatsPage = (contentStats) => `
+  <section class="page-hero reveal">
+    <p class="kicker">内容统计</p>
+    <h1>用一页把内容体量、结构分布和更新节奏看清楚。</h1>
+    <p>这里汇总了当前公开文章的篇数、字数、阅读体量、分类、标签、模板、系列与更新时间，适合快速判断这个博客内容系统现在长到了什么程度。</p>
+    <div class="post-list__filters">
+      <a class="button button-secondary button-small" href="../">返回文章列表</a>
+      <a class="button button-ghost button-small" href="../archive/">查看归档</a>
+      <a class="button button-ghost button-small" href="../templates/">查看模板</a>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="section-heading">
+      <p class="kicker">概览</p>
+      <h2>先看这组核心数字，快速建立整体印象。</h2>
+      <p class="section-intro">所有统计都只基于当前公开内容生成，不包含草稿预览页；因此这里展示的是访客在站内真正能浏览到的内容规模。</p>
+    </div>
+    <div class="stats-grid content-stats-grid">
+      <article class="stat content-stat"><span class="kicker">公开文章</span><strong>${contentStats.postCount} 篇</strong><p>当前已进入博客列表、RSS 与 sitemap 的正式内容数量。</p></article>
+      <article class="stat content-stat"><span class="kicker">累计字数</span><strong>${formatWordCount(contentStats.totalWords)}</strong><p>按正文字符统计，能更直观看到当前内容库的体量。</p></article>
+      <article class="stat content-stat"><span class="kicker">累计阅读</span><strong>${contentStats.totalReadingMinutes} 分钟</strong><p>把现有文章全部读完，大约需要这么久。</p></article>
+      <article class="stat content-stat"><span class="kicker">语言覆盖</span><strong>${contentStats.translatedPostCount} / ${contentStats.postCount}</strong><p>已有 ${contentStats.translationCoverage}% 的文章同步提供英文版本。</p></article>
+      <article class="stat content-stat"><span class="kicker">内容结构</span><strong>${contentStats.categoryCount} 个分类 · ${contentStats.tagCount} 个标签</strong><p>分类负责稳定主题，标签负责更细粒度的话题切片。</p></article>
+      <article class="stat content-stat"><span class="kicker">组织方式</span><strong>${contentStats.seriesCount} 个系列 · ${contentStats.templateCount} / ${contentStats.totalTemplateCount} 个模板</strong><p>除了常规列表，也支持按系列与内容模板继续浏览。</p></article>
+      <article class="stat content-stat"><span class="kicker">单篇平均</span><strong>${formatWordCount(contentStats.averageWords)} · ${contentStats.averageReadingMinutes} 分钟</strong><p>当前文章平均篇幅与阅读时长，大致反映内容密度。</p></article>
+      <article class="stat content-stat"><span class="kicker">维护节奏</span><strong>${contentStats.updatedPostCount} 篇有更新 · ${contentStats.pinnedPostCount} 篇置顶</strong><p>说明这个内容库不只是增加新文章，也会持续回头修补与重排。</p></article>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="split-grid content-stats-layout">
+      <article class="note-card content-ranking-card">
+        <div class="section-heading">
+          <p class="kicker">结构分布</p>
+          <h2>目前内容主要落在哪些主题与结构里。</h2>
+          <p class="section-intro">这部分更适合用来看“内容库的骨架”：哪些分类最常写、哪些标签更密集、系列与模板目前用到了什么程度。</p>
+        </div>
+        <div class="content-ranking-grid">
+          <section class="content-ranking-block">
+            <h3>分类分布</h3>
+            <ol class="content-ranking-list">
+              ${contentStats.topCategories
+                .map(
+                  (category) => `<li><a class="text-link" href="../categories/${category.slug}/">${category.name}</a><span>${category.count} 篇</span></li>`
+                )
+                .join('')}
+            </ol>
+          </section>
+          <section class="content-ranking-block">
+            <h3>高频标签</h3>
+            <ol class="content-ranking-list">
+              ${contentStats.topTags
+                .map((tag) => `<li><a class="text-link" href="../tags/${tag.slug}/">${tag.name}</a><span>${tag.posts.length} 篇</span></li>`)
+                .join('')}
+            </ol>
+          </section>
+          <section class="content-ranking-block">
+            <h3>模板使用情况</h3>
+            <ol class="content-ranking-list">
+              ${contentStats.topTemplates.length
+                ? contentStats.topTemplates
+                    .map(
+                      (template) => `<li><a class="text-link" href="../templates/${template.slug}/">${template.name}</a><span>${template.count} 篇</span></li>`
+                    )
+                    .join('')
+                : '<li><span>模板已就绪</span><span>等待内容接入</span></li>'}
+            </ol>
+          </section>
+        </div>
+      </article>
+      <aside class="content-stats-aside">
+        <article class="note-card content-summary-card">
+          <h3>内容密度</h3>
+          <div class="meta-row"><span>平均标签数</span><span>${contentStats.averageTagsPerPost} 个 / 篇</span></div>
+          <div class="meta-row"><span>首篇发布时间</span><span>${contentStats.earliestPost ? formatDate(contentStats.earliestPost.date) : '—'}</span></div>
+          <div class="meta-row"><span>最近更新</span><span>${contentStats.latestUpdatedPost ? formatDate(contentStats.latestUpdatedPost.updated ?? contentStats.latestUpdatedPost.date) : '—'}</span></div>
+          <div class="meta-row"><span>最近更新文章</span><span>${contentStats.latestUpdatedPost ? `<a class="text-link" href="../${contentStats.latestUpdatedPost.slug}/">${contentStats.latestUpdatedPost.title}</a>` : '—'}</span></div>
+        </article>
+        <article class="note-card content-summary-card">
+          <h3>系列覆盖</h3>
+          ${contentStats.topSeries.length
+            ? `<ul class="list-card">${contentStats.topSeries
+                .map(
+                  (series) => `<li><a class="text-link" href="../series/${series.slug}/">${series.name}</a><br /><span class="muted">${series.posts.length} 篇文章，适合连续阅读。</span></li>`
+                )
+                .join('')}</ul>`
+            : '<p>当前还没有系列内容，后续只要在 frontmatter 中声明系列名与顺序，就会自动进入这里。</p>'}
+        </article>
+      </aside>
+    </div>
+  </section>
+  <section class="section reveal">
+    <div class="split-grid content-stats-layout">
+      <article class="note-card content-timeline-card">
+        <div class="section-heading">
+          <p class="kicker">时间维度</p>
+          <h2>从时间上看，内容是怎么慢慢长出来的。</h2>
+          <p class="section-intro">除了总量，内容系统还要看更新分布：最早是什么时候开始写、最近集中更新在哪些月份、每年大致增加了多少内容。</p>
+        </div>
+        <div class="card-grid content-year-grid">
+          ${contentStats.postsByYear
+            .map(
+              (year) => `<article class="panel content-year-card"><p class="kicker">${year.year}</p><h3>${year.count} 篇公开文章</h3><p>累计 ${formatWordCount(year.words)}，可以从这一年看到当时的关注重点与写作节奏。</p></article>`
+            )
+            .join('')}
+        </div>
+        <div class="post-list__filters content-month-chips">
+          ${contentStats.postsByMonth.map((month) => `<span class="tag">${month.label} · ${month.count} 篇</span>`).join('')}
+        </div>
+      </article>
+      <article class="note-card content-ranking-card">
+        <div class="section-heading">
+          <p class="kicker">篇幅与阅读</p>
+          <h2>哪些文章更长，哪些内容信息密度更高。</h2>
+          <p class="section-intro">如果你想从更完整、更有体量的内容开始，这里会更有帮助；如果你只是想快速浏览，也可以从标签更集中的文章切入。</p>
+        </div>
+        <section class="content-ranking-block">
+          <h3>篇幅最长的文章</h3>
+          <ol class="content-ranking-list">
+            ${contentStats.longestPosts
+              .map(
+                (post) => `<li><a class="text-link" href="../${post.slug}/">${post.title}</a><span>${formatWordCount(post.wordCount)} · ${post.readingTime}</span></li>`
+              )
+              .join('')}
+          </ol>
+        </section>
+        <section class="content-ranking-block">
+          <h3>标签最密集的文章</h3>
+          <ol class="content-ranking-list">
+            ${contentStats.mostTaggedPosts
+              .map(
+                (post) => `<li><a class="text-link" href="../${post.slug}/">${post.title}</a><span>${post.tags.length} 个标签</span></li>`
+              )
+              .join('')}
+          </ol>
+        </section>
+      </article>
+    </div>
+  </section>`;
+
 const render404 = (posts = []) => {
   const suggestedRoutes = [
     {
@@ -3627,6 +3843,7 @@ const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [
 const categories = collectCategories(posts);
 const seriesList = collectSeries(posts);
 const templates = collectTemplates(posts);
+const contentStats = buildContentStats({ posts, postsEn, tags, categories, seriesList, templates });
 
 writeText(
   path.join(outDir, 'index.html'),
@@ -3909,6 +4126,24 @@ writeText(
   })
 );
 
+writeText(
+  path.join(outDir, 'blog', 'stats', 'index.html'),
+  renderLayout({
+    title: site.seo?.contentStats?.title ?? formatMetaTitle('内容统计', site.shortName),
+    description: site.seo?.contentStats?.description ?? `查看当前 ${posts.length} 篇公开文章的结构、字数、标签、模板与更新时间统计。`,
+    currentPath: '/blog/stats/',
+    outputPath: path.join(outDir, 'blog', 'stats', 'index.html'),
+    body: renderContentStatsPage(contentStats),
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg',
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' },
+      { name: '内容统计', path: '/blog/stats/' }
+    ])
+  })
+);
+
 for (const category of categories) {
   writeText(
     path.join(outDir, 'blog', 'categories', category.slug, 'index.html'),
@@ -4167,6 +4402,7 @@ const sitemapEntries = [
   { path: '/blog/series/' },
   { path: '/blog/templates/' },
   { path: '/blog/archive/' },
+  { path: '/blog/stats/' },
   { path: '/now/' },
   { path: '/en/' },
   { path: '/en/about/' },

@@ -32,6 +32,10 @@ export const site = {
       title: '文章归档｜时间线浏览｜沈晨玙',
       description: '按发布时间归档浏览全部博客文章。'
     },
+    contentStats: {
+      title: '内容统计｜博客内容概览｜沈晨玙',
+      description: '查看博客内容的篇数、字数、分类、标签、模板与更新时间等整体统计。'
+    },
     notFound: {
       title: '页面未找到｜沈晨玙',
       description: '你访问的页面不存在，可以返回首页继续浏览文章、项目与近况。'

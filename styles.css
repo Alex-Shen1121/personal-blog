@@ -820,6 +820,99 @@ body.has-reading-progress .reading-progress {
   font-size: 1.6rem;
 }
 
+.stat {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+}
+
+.stat strong {
+  display: block;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.15;
+}
+
+.stat p {
+  margin: 0;
+  line-height: 1.75;
+}
+
+.content-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.content-stats-layout {
+  align-items: start;
+}
+
+.content-stat {
+  align-content: start;
+}
+
+.content-ranking-card,
+.content-timeline-card,
+.content-summary-card {
+  gap: 18px;
+}
+
+.content-ranking-grid,
+.content-stats-aside {
+  display: grid;
+  gap: 18px;
+}
+
+.content-ranking-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.content-ranking-block {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.content-ranking-block h3 {
+  margin: 0;
+}
+
+.content-ranking-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.content-ranking-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  padding: 14px 16px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+
+.content-ranking-list li span:last-child {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.content-year-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.content-year-card {
+  min-height: 100%;
+}
+
+.content-month-chips {
+  margin-top: 4px;
+}
+
 .hero-visual {
   display: grid;
   gap: 18px;
@@ -2670,6 +2763,9 @@ body.has-reading-progress .reading-progress {
   .site-footer__grid,
   .post-pagination,
   .project-media-grid,
+  .content-stats-grid,
+  .content-ranking-grid,
+  .content-year-grid,
   .site-announcement__inner {
     grid-template-columns: 1fr;
   }
@@ -2867,6 +2963,11 @@ body.has-reading-progress .reading-progress {
   }
 
   .post-list__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .content-ranking-list li {
     flex-direction: column;
     align-items: flex-start;
   }
