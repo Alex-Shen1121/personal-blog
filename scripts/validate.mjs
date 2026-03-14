@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pages, site } from '../src/data/site.mjs';
 import { validateCanonicalConfig, validateCanonicalPath } from '../src/utils/canonical.mjs';
 import { parseAndValidateFrontmatter } from './frontmatter.mjs';
+import { validateMarkdownContentQuality } from './markdown-quality.mjs';
 
 const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
 const requiredSourceFiles = [
@@ -11,6 +12,7 @@ const requiredSourceFiles = [
   'scripts/build.mjs',
   'scripts/frontmatter.mjs',
   'scripts/html-audit.mjs',
+  'scripts/markdown-quality.mjs',
   'src/data/site.mjs',
   'src/utils/canonical.mjs',
   'public/favicon.svg'
@@ -62,9 +64,12 @@ const parsedPosts = posts.map((post) => {
   const source = readFileSync(path.join(postsDir, post), 'utf8');
 
   try {
+    const parsedPost = parseAndValidateFrontmatter(source, { fileName: post });
+    validateMarkdownContentQuality(parsedPost.body, { fileName: post });
+
     return {
       fileName: post,
-      ...parseAndValidateFrontmatter(source, { fileName: post })
+      ...parsedPost
     };
   } catch (error) {
     console.error(error.message);
@@ -133,4 +138,4 @@ for (const post of parsedPosts) {
   }
 }
 
-console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected, required site files exist, and canonical rules are valid.`);
+console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected, required site files exist, canonical rules are valid, and Markdown content quality checks passed.`);

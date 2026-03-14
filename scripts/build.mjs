@@ -6,6 +6,7 @@ import { home, pages, site } from '../src/data/site.mjs';
 import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
 import { auditGeneratedHtml } from './html-audit.mjs';
 import { parseAndValidateFrontmatter } from './frontmatter.mjs';
+import { validateMarkdownContentQuality } from './markdown-quality.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -1846,6 +1847,7 @@ const loadPosts = () => {
     .map((fileName) => {
       const raw = readFileSync(path.join(postsDir, fileName), 'utf8');
       const { meta, body } = parseAndValidateFrontmatter(raw, { fileName });
+      validateMarkdownContentQuality(body, { fileName });
       const slug = resolvePostSlug({
         fileName,
         customSlug: meta.slug ?? '',
