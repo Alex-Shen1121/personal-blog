@@ -340,6 +340,105 @@ const renderPostMeta = (post) => {
   return items.map((item) => `<span>${item}</span>`).join('');
 };
 
+const parseBusuanziPayload = (value = '') => {
+  const payloadMatch = value.match(/\((\{.*\})\)/);
+  if (!payloadMatch?.[1]) return null;
+
+  try {
+    return JSON.parse(payloadMatch[1]);
+  } catch {
+    return null;
+  }
+};
+
+const fetchPostPageViews = async (post) => {
+  try {
+    const response = await fetch(BUSUANZI_POPULARITY_ENDPOINT, {
+      headers: {
+        referer: buildCanonicalUrl(site, `/blog/${post.slug}/`)
+      },
+      signal: AbortSignal.timeout(2500)
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = parseBusuanziPayload(await response.text());
+    const pageViews = Number(payload?.page_pv);
+    return Number.isFinite(pageViews) ? pageViews : null;
+  } catch {
+    return null;
+  }
+};
+
+const attachPopularityMetrics = async (posts) => {
+  const pageViewsList = await Promise.all(posts.map((post) => fetchPostPageViews(post)));
+
+  return posts.map((post, index) => ({
+    ...post,
+    pageViews: pageViewsList[index]
+  }));
+};
+
+const comparePostsByPopularity = (leftPost, rightPost) => {
+  const leftViews = Number.isFinite(leftPost.pageViews) ? leftPost.pageViews : -1;
+  const rightViews = Number.isFinite(rightPost.pageViews) ? rightPost.pageViews : -1;
+
+  if (rightViews !== leftViews) {
+    return rightViews - leftViews;
+  }
+
+  if (leftPost.pinned !== rightPost.pinned) {
+    return Number(rightPost.pinned) - Number(leftPost.pinned);
+  }
+
+  const leftUpdatedAt = new Date(`${leftPost.updated ?? leftPost.date}T00:00:00+08:00`);
+  const rightUpdatedAt = new Date(`${rightPost.updated ?? rightPost.date}T00:00:00+08:00`);
+
+  return rightUpdatedAt - leftUpdatedAt;
+};
+
+const getPopularPosts = (posts, { limit = POPULAR_POST_LIMIT, excludeSlug = '' } = {}) =>
+  [...posts]
+    .filter((post) => post.slug !== excludeSlug)
+    .sort(comparePostsByPopularity)
+    .slice(0, limit);
+
+const hasPopularityMetrics = (posts) => posts.some((post) => Number.isFinite(post.pageViews));
+
+const renderPopularPostMetric = (post) => {
+  if (Number.isFinite(post.pageViews)) {
+    return `${post.pageViews.toLocaleString('zh-CN')} 次阅读`;
+  }
+
+  if (post.pinned) {
+    return '当前主推';
+  }
+
+  if (post.updated && post.updated !== post.date) {
+    return `更新于 ${formatDate(post.updated)}`;
+  }
+
+  return `发布于 ${formatDate(post.date)}`;
+};
+
+const renderPopularPostsSection = (posts, { basePath = '' } = {}) => {
+  const popularPosts = getPopularPosts(posts);
+  if (!popularPosts.length) return '';
+
+  const hasMetrics = hasPopularityMetrics(popularPosts);
+  const sectionIntro = hasMetrics
+    ? '结合当前访问数据整理出最近更常被打开的内容，第一次来到博客时可以先从这里读起。'
+    : '如果访问统计暂时不可用，这里会优先展示当前主推和更值得先读的内容。';
+
+  return `<section class="section reveal" id="popular-posts"><div class="post-list__header"><div class="section-heading"><p class="kicker">热门文章</p><h2>先看这几篇，更容易快速建立整体印象。</h2><p class="section-intro">${sectionIntro}</p></div><div class="post-list__filters"><span class="tag">${hasMetrics ? '访问热度' : '推荐排序'}</span><a class="button button-ghost button-small" href="#post-search-input">继续搜索</a></div></div><div class="post-grid popular-posts-grid">${popularPosts
+    .map(
+      (post, index) => `<article class="post-card popular-post-card"><div class="popular-post-card__header"><span class="feature-label">热门 ${String(index + 1).padStart(2, '0')}</span><span class="popular-post-card__metric">${renderPopularPostMetric(post)}</span></div><p class="kicker"><a href="${basePath}categories/${post.category.slug}/">${post.category.name}</a></p><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, basePath)}<a class="button button-ghost" href="${basePath}${post.slug}/">阅读详情</a></article>`
+    )
+    .join('')}</div></section>`;
+};
+
 const escapeHtml = (value) =>
   value
     .replaceAll('&', '&amp;')
@@ -1069,6 +1168,8 @@ const detectImageMimeType = (assetPath = '') => {
 const siteHomeUrl = buildCanonicalUrl(site, '/');
 const personSchemaId = `${siteHomeUrl}#person`;
 const websiteSchemaId = `${siteHomeUrl}#website`;
+const BUSUANZI_POPULARITY_ENDPOINT = 'https://busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback';
+const POPULAR_POST_LIMIT = 3;
 
 const normalizeStructuredData = (value) => {
   if (!value) return [];
@@ -2153,6 +2254,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
       <a class="button button-ghost button-small" href="archive/">查看归档</a>
     </div>
   </section>
+  ${renderPopularPostsSection(posts)}
   <section class="section reveal" data-post-search data-post-search-total="${posts.length}">
     ${getEmailSubscriptionHref()
       ? `<article class="note-card post-subscribe-card">
@@ -2710,7 +2812,7 @@ for (const file of readdirSync(publicDir)) {
   emitStaticAsset(path.join(publicDir, file), outDir);
 }
 
-const posts = loadPosts();
+const posts = await attachPopularityMetrics(loadPosts());
 const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [tag, tag]))).values())
   .sort((a, b) => a.localeCompare(b, 'zh-CN'))
   .map((tag) => ({
