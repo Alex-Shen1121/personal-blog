@@ -8,6 +8,7 @@ const requiredSourceFiles = [
   'styles.css',
   'script.js',
   'scripts/build.mjs',
+  'scripts/html-audit.mjs',
   'src/data/site.mjs',
   'src/utils/canonical.mjs',
   'public/favicon.svg'

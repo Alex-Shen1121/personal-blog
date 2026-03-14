@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { home, pages, site } from '../src/data/site.mjs';
 import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
+import { auditGeneratedHtml } from './html-audit.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -1381,6 +1382,7 @@ const renderLayout = ({
     <noscript><link rel="stylesheet" href="${stylesheetHref}" /></noscript>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">跳到正文</a>
     <div class="reading-progress" data-reading-progress>
       <span class="reading-progress__bar" data-reading-progress-bar></span>
     </div>
@@ -1405,7 +1407,7 @@ const renderLayout = ({
           </nav>
         </div>
       </header>
-      <main>
+      <main id="main-content" tabindex="-1">
         ${body}
       </main>
       <button class="back-to-top" type="button" data-back-to-top aria-label="返回顶部" aria-hidden="true" tabindex="-1">
@@ -2847,6 +2849,11 @@ writeText(
   )}\n`
 );
 
+const htmlAudit = auditGeneratedHtml({ distDir: outDir });
+if (htmlAudit.issues.length > 0) {
+  throw new Error(`HTML semantics/accessibility audit failed:\n- ${htmlAudit.issues.join('\n- ')}`);
+}
+
 console.log(
-  `Build complete. Generated ${posts.length} posts, ${sitemapEntries.length} sitemap entries, and ${emittedAssetEntries.length} fingerprinted assets.`
+  `Build complete. Generated ${posts.length} posts, ${sitemapEntries.length} sitemap entries, ${emittedAssetEntries.length} fingerprinted assets, and audited ${htmlAudit.htmlFileCount} HTML files.`
 );

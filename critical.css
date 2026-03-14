@@ -84,6 +84,26 @@ body::selection {
   background: var(--selection);
 }
 
+.skip-link {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 120;
+  transform: translate(-50%, calc(-100% - 24px));
+  padding: 10px 16px;
+  border: 1px solid var(--surface-border-strong);
+  border-radius: 999px;
+  background: var(--panel-strong);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.skip-link:focus-visible {
+  outline: none;
+  transform: translate(-50%, 0);
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow);
+}
+
 main {
   padding-bottom: 48px;
 }
