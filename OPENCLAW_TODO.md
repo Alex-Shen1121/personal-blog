@@ -55,7 +55,7 @@
 - [x] 46. 统一 favicon / OG 图品牌化设计
 - [x] 47. 完善页面级 title / description
 - [x] 48. 支持文章页独立 Open Graph 信息
-- [ ] 49. 支持 Twitter Card
+- [x] 49. 支持 Twitter Card
 - [ ] 50. 增加 canonical 规则校验
 - [ ] 51. 自动生成结构化数据 JSON-LD
 - [ ] 52. 优化 sitemap / robots 控制

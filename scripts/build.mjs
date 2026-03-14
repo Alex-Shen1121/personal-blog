@@ -746,6 +746,13 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
   };
   const ogImage = withBase(resolvedOpenGraph.image);
   const ogImageType = detectImageMimeType(resolvedOpenGraph.image);
+  const resolvedTwitter = {
+    card: ogImage ? 'summary_large_image' : 'summary',
+    title: resolvedOpenGraph.title,
+    description: resolvedOpenGraph.description,
+    image: ogImage,
+    imageAlt: resolvedOpenGraph.imageAlt
+  };
   const metaTitle = escapeHtml(title);
   const metaDescription = escapeHtml(description);
   const metaCanonical = escapeHtml(canonical);
@@ -754,6 +761,11 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
   const metaOgType = escapeHtml(resolvedOpenGraph.type);
   const metaOgImage = escapeHtml(ogImage);
   const metaOgImageAlt = resolvedOpenGraph.imageAlt ? escapeHtml(resolvedOpenGraph.imageAlt) : '';
+  const metaTwitterCard = escapeHtml(resolvedTwitter.card);
+  const metaTwitterTitle = escapeHtml(resolvedTwitter.title);
+  const metaTwitterDescription = escapeHtml(resolvedTwitter.description);
+  const metaTwitterImage = resolvedTwitter.image ? escapeHtml(resolvedTwitter.image) : '';
+  const metaTwitterImageAlt = resolvedTwitter.imageAlt ? escapeHtml(resolvedTwitter.imageAlt) : '';
   const openGraphExtras = [
     ogImageType ? `<meta property="og:image:type" content="${escapeHtml(ogImageType)}" />` : '',
     '<meta property="og:image:width" content="1200" />',
@@ -803,9 +815,11 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     <meta property="og:url" content="${metaCanonical}" />
     <meta property="og:image" content="${metaOgImage}" />
     ${openGraphExtras}
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${metaTitle}" />
-    <meta name="twitter:description" content="${metaDescription}" />
+    <meta name="twitter:card" content="${metaTwitterCard}" />
+    <meta name="twitter:title" content="${metaTwitterTitle}" />
+    <meta name="twitter:description" content="${metaTwitterDescription}" />
+    ${metaTwitterImage ? `<meta name="twitter:image" content="${metaTwitterImage}" />` : ''}
+    ${metaTwitterImageAlt ? `<meta name="twitter:image:alt" content="${metaTwitterImageAlt}" />` : ''}
     <link rel="canonical" href="${metaCanonical}" />
     <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
