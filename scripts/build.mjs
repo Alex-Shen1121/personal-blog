@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { home, pages, site } from '../src/data/site.mjs';
 import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
 import { auditGeneratedHtml } from './html-audit.mjs';
+import { parseAndValidateFrontmatter } from './frontmatter.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -519,42 +520,6 @@ const createSummaryFallback = (content, maxLength = 90) => {
 const resolvePostSummary = (summary, content) => {
   const normalizedSummary = summary?.trim();
   return normalizedSummary || createSummaryFallback(content);
-};
-
-const parseFrontmatter = (content) => {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) throw new Error('Post missing frontmatter block.');
-
-  const [, rawMeta, rawBody] = match;
-  const meta = {};
-
-
-
-  for (const line of rawMeta.split('\n')) {
-    const [rawKey, ...rest] = line.split(':');
-    const key = rawKey.trim();
-    const value = rest.join(':').trim();
-    if (!key) continue;
-
-    if (key === 'tags') {
-      meta[key] = value.split(',').map((item) => item.trim()).filter(Boolean);
-      continue;
-    }
-
-    if (key === 'draft' || key === 'pinned') {
-      meta[key] = value.toLowerCase() === 'true';
-      continue;
-    }
-
-    if (key === 'seriesOrder') {
-      meta[key] = Number(value);
-      continue;
-    }
-
-    meta[key] = value;
-  }
-
-  return { meta, body: rawBody.trim() };
 };
 
 const CODE_LANGUAGE_ALIASES = {
@@ -1880,7 +1845,7 @@ const loadPosts = () => {
     .filter((file) => file.endsWith('.md'))
     .map((fileName) => {
       const raw = readFileSync(path.join(postsDir, fileName), 'utf8');
-      const { meta, body } = parseFrontmatter(raw);
+      const { meta, body } = parseAndValidateFrontmatter(raw, { fileName });
       const slug = resolvePostSlug({
         fileName,
         customSlug: meta.slug ?? '',
