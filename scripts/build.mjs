@@ -2307,9 +2307,9 @@ const renderEnglishPostPage = (post, relatedPosts = [], navigationPosts = {}) =>
             subjectSeparator: ' | '
           })
         )}">${siteEn.feedback.email.label}</a><a class="button button-secondary" href="${escapeHtml(siteEn.feedback.issue.url)}" target="_blank" rel="noreferrer">${siteEn.feedback.issue.label}</a></div></div>
-        ${relatedPosts.length ? `<div class="note-card"><h3>Related posts</h3><ul class="list-card">${relatedPosts.map((item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.summary}</span></li>`).join('')}</ul></div>` : ''}
       </aside>
     </section>
+    ${renderPostKnowledgeNetworkSection(post, relatedPosts, { locale: 'en', basePath: '../' })}
   </article>`;
 
 const renderHomePage = (posts) => {
@@ -2860,26 +2860,91 @@ const loadPosts = (directoryPath = postsDir) => {
   return sortPosts(posts);
 };
 
-const getRelatedPosts = (currentPost, posts, limit = 2) => {
+const relatedPostCopy = {
+  zh: {
+    recentReason: '延伸阅读：最近更新',
+    sharedTagsLabel: '共同标签',
+    sameCategoryLabel: '同分类',
+    sameSeriesLabel: '同系列',
+    sectionKicker: '相关文章图谱',
+    sectionTitle: '从这篇文章出发，顺着主题继续往下看。',
+    sectionIntro: '我会优先把同标签、同分类、同系列的内容连起来；如果语义连接还不够强，就补上最近更新的上下文。',
+    graphSummary: (count) => `当前节点已连接 ${count} 篇内容`,
+    graphHelper: '节点越大，说明和当前文章的关联越强。',
+    currentNodeLabel: '当前文章',
+    currentNodeCount: (count) => `${count} 条连接`,
+    listTitle: '推荐阅读路径',
+    listIntro: '按关联强度排序，也可以把它当作一张轻量的知识网络入口。',
+    latestBadge: '最近更新',
+    readLabel: '阅读文章'
+  },
+  en: {
+    recentReason: 'Fresh context from recent posts',
+    sharedTagsLabel: 'Shared tags',
+    sameCategoryLabel: 'Same category',
+    sameSeriesLabel: 'Same series',
+    sectionKicker: 'Related graph',
+    sectionTitle: 'Start from this post and keep following the topic.',
+    sectionIntro: 'Posts with shared tags, category, or series are linked first, with recent updates filling in the lighter context around them.',
+    graphSummary: (count) => `${count} connected posts from the current node`,
+    graphHelper: 'Larger nodes indicate stronger relationships to the current post.',
+    currentNodeLabel: 'Current post',
+    currentNodeCount: (count) => `${count} links`,
+    listTitle: 'Suggested path',
+    listIntro: 'Sorted by relationship strength, so you can treat it like a lightweight knowledge network.',
+    latestBadge: 'Recent update',
+    readLabel: 'Read post'
+  }
+};
+
+const getRelatedPostCopy = (locale = 'zh') => relatedPostCopy[locale] ?? relatedPostCopy.zh;
+
+const buildRelatedPostReason = ({ sharedTags = [], sameCategory = false, sameSeries = false, locale = 'zh' }) => {
+  const copy = getRelatedPostCopy(locale);
+  const parts = [];
+
+  if (sharedTags.length) {
+    parts.push(`${copy.sharedTagsLabel}：${sharedTags.join(' / ')}`);
+  }
+
+  if (sameCategory) {
+    parts.push(copy.sameCategoryLabel);
+  }
+
+  if (sameSeries) {
+    parts.push(copy.sameSeriesLabel);
+  }
+
+  return parts.length ? parts.join(' · ') : copy.recentReason;
+};
+
+const getRelatedPosts = (currentPost, posts, options = {}) => {
+  const { limit = 4, locale = 'zh' } = options;
   const currentTags = new Set(currentPost.tags);
 
   return posts
     .filter((post) => post.slug !== currentPost.slug)
     .map((post) => {
       const sharedTags = post.tags.filter((tag) => currentTags.has(tag));
+      const sameCategory = Boolean(post.category?.slug && post.category.slug === currentPost.category?.slug);
+      const sameSeries = Boolean(post.series?.slug && currentPost.series?.slug && post.series.slug === currentPost.series.slug);
+      const relationScore = sharedTags.length * 4 + Number(sameSeries) * 3 + Number(sameCategory) * 2;
+
       return {
         ...post,
         sharedTags,
-        recommendationReason:
-          sharedTags.length > 0 ? `相同话题：${sharedTags.join(' / ')}` : '延伸阅读：最近更新'
+        sameCategory,
+        sameSeries,
+        relationScore,
+        recommendationReason: buildRelatedPostReason({ sharedTags, sameCategory, sameSeries, locale })
       };
     })
     .sort((a, b) => {
-      if (b.sharedTags.length !== a.sharedTags.length) {
-        return b.sharedTags.length - a.sharedTags.length;
+      if (b.relationScore !== a.relationScore) {
+        return b.relationScore - a.relationScore;
       }
 
-      return new Date(b.date) - new Date(a.date);
+      return new Date(b.updated ?? b.date) - new Date(a.updated ?? a.date);
     })
     .slice(0, limit);
 };
@@ -3370,6 +3435,111 @@ const renderPostNavigation = (navigationPosts) => {
   return `<nav class="post-pagination reveal" aria-label="文章上一篇和下一篇导航">${items.join('')}</nav>`;
 };
 
+
+const getKnowledgeNetworkAngles = (count) => {
+  if (count <= 0) return [];
+  if (count === 1) return [-18];
+  if (count === 2) return [-140, 35];
+  if (count === 3) return [-145, -25, 85];
+  if (count === 4) return [-150, -55, 35, 125];
+
+  return Array.from({ length: count }, (_, index) => -140 + (250 / Math.max(count - 1, 1)) * index);
+};
+
+const buildPostKnowledgeNetwork = (post, relatedPosts = []) => {
+  const center = { x: 240, y: 164 };
+  const radiusX = 156;
+  const radiusY = 108;
+  const nodes = relatedPosts.map((item, index) => {
+    const angle = (getKnowledgeNetworkAngles(relatedPosts.length)[index] * Math.PI) / 180;
+    return {
+      ...item,
+      index,
+      label: String(index + 1).padStart(2, '0'),
+      x: Number((center.x + Math.cos(angle) * radiusX).toFixed(1)),
+      y: Number((center.y + Math.sin(angle) * radiusY).toFixed(1)),
+      radius: Math.min(48, 34 + item.relationScore * 1.5)
+    };
+  });
+
+  const relationDimensions = Array.from(
+    new Set(
+      nodes
+        .flatMap((item) => [
+          item.sharedTags.length ? 'shared-tags' : '',
+          item.sameCategory ? 'same-category' : '',
+          item.sameSeries ? 'same-series' : ''
+        ])
+        .filter(Boolean)
+    )
+  );
+
+  return {
+    center,
+    width: 480,
+    height: 328,
+    nodes,
+    relationDimensions
+  };
+};
+
+const renderKnowledgeNetworkDimensionTags = (dimensions = [], locale = 'zh') => {
+  const copy = getRelatedPostCopy(locale);
+  const labels = [
+    dimensions.includes('shared-tags') ? copy.sharedTagsLabel : '',
+    dimensions.includes('same-category') ? copy.sameCategoryLabel : '',
+    dimensions.includes('same-series') ? copy.sameSeriesLabel : ''
+  ].filter(Boolean);
+
+  return labels.length ? labels.map((label) => `<span class="tag">${label}</span>`).join('') : `<span class="tag">${copy.latestBadge}</span>`;
+};
+
+const renderKnowledgeNetworkRelationTags = (post, item, basePath = '../', locale = 'zh') => {
+  const copy = getRelatedPostCopy(locale);
+  const tags = [];
+
+  if (item.sharedTags.length) {
+    tags.push(
+      ...item.sharedTags.map(
+        (tag) => `<a class="tag tag-link" href="${basePath}tags/${slugifyTag(tag)}/">${tag}</a>`
+      )
+    );
+  }
+
+  if (item.sameCategory) {
+    tags.push(`<a class="tag tag-link" href="${basePath}categories/${item.category.slug}/">${item.category.name}</a>`);
+  }
+
+  if (item.sameSeries && item.series) {
+    tags.push(`<a class="tag tag-link" href="${basePath}series/${item.series.slug}/">${item.series.name}</a>`);
+  }
+
+  return tags.length ? tags.join('') : `<span class="tag">${copy.latestBadge}</span>`;
+};
+
+const renderPostKnowledgeNetworkSection = (post, relatedPosts = [], options = {}) => {
+  if (!relatedPosts.length) return '';
+
+  const { locale = 'zh', basePath = '../' } = options;
+  const copy = getRelatedPostCopy(locale);
+  const graph = buildPostKnowledgeNetwork(post, relatedPosts);
+  const sectionId = `post-network-${post.slug}`;
+
+  return `<section class="section reveal post-knowledge-section" aria-labelledby="${sectionId}"><div class="section-heading"><p class="kicker">${copy.sectionKicker}</p><h2 id="${sectionId}">${copy.sectionTitle}</h2><p class="section-intro">${copy.sectionIntro}</p></div><div class="post-knowledge-layout"><article class="note-card post-knowledge-card"><div class="post-knowledge-card__meta"><span class="tag">${copy.graphSummary(graph.nodes.length)}</span>${renderKnowledgeNetworkDimensionTags(graph.relationDimensions, locale)}</div><div class="knowledge-network" role="img" aria-label="${escapeHtml(post.title)} related graph"><svg viewBox="0 0 ${graph.width} ${graph.height}" aria-hidden="true" focusable="false"><defs><linearGradient id="knowledge-edge-gradient-${post.slug}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.72" /><stop offset="100%" stop-color="var(--accent-2)" stop-opacity="0.3" /></linearGradient></defs><g>${graph.nodes
+    .map(
+      (item) => `<line class="knowledge-network__edge knowledge-network__edge--${item.relationScore >= 7 ? 'strong' : item.relationScore >= 4 ? 'medium' : 'soft'}" x1="${graph.center.x}" y1="${graph.center.y}" x2="${item.x}" y2="${item.y}" stroke="url(#knowledge-edge-gradient-${post.slug})" />`
+    )
+    .join('')}<circle class="knowledge-network__halo" cx="${graph.center.x}" cy="${graph.center.y}" r="88" /><circle class="knowledge-network__node knowledge-network__node--current" cx="${graph.center.x}" cy="${graph.center.y}" r="58" />${graph.nodes
+    .map(
+      (item) => `<a href="${basePath}${item.slug}/" class="knowledge-network__node-link"><title>${escapeHtml(item.title)}</title><circle class="knowledge-network__node knowledge-network__node--related" cx="${item.x}" cy="${item.y}" r="${item.radius}" /><text class="knowledge-network__node-index" x="${item.x}" y="${item.y + 5}" text-anchor="middle">${item.label}</text></a>`
+    )
+    .join('')}<text class="knowledge-network__center-label" x="${graph.center.x}" y="${graph.center.y - 6}" text-anchor="middle">${copy.currentNodeLabel}</text><text class="knowledge-network__center-meta" x="${graph.center.x}" y="${graph.center.y + 18}" text-anchor="middle">${copy.currentNodeCount(graph.nodes.length)}</text></g></svg></div><p class="muted post-knowledge-card__hint">${copy.graphHelper}</p></article><article class="note-card post-knowledge-list-card"><h3>${copy.listTitle}</h3><p class="muted">${copy.listIntro}</p><ol class="knowledge-network__list">${graph.nodes
+    .map(
+      (item) => `<li><span class="knowledge-network__list-index">${item.label}</span><div><a class="text-link" href="${basePath}${item.slug}/">${item.title}</a><p class="muted">${item.recommendationReason}</p><div class="tag-list knowledge-network__item-tags">${renderKnowledgeNetworkRelationTags(post, item, basePath, locale)}</div></div></li>`
+    )
+    .join('')}</ol></article></div></section>`;
+};
+
 const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
   <article class="post-detail" data-reading-progress-target>
     <section class="post-header reveal">
@@ -3431,18 +3601,9 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
             <a class="button button-ghost" href="../../projects/">查看项目</a>
           </div>
         </div>
-        <div class="note-card">
-          <h3>相关文章</h3>
-          <ul class="list-card">
-            ${relatedPosts
-              .map(
-                (item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.recommendationReason}</span><br /><span class="muted">${item.summary}</span></li>`
-              )
-              .join('')}
-          </ul>
-        </div>
       </aside>
     </section>
+    ${renderPostKnowledgeNetworkSection(post, relatedPosts, { locale: 'zh', basePath: '../' })}
   </article>`;
 
 
@@ -4305,7 +4466,7 @@ writeText(
 );
 
 for (const [index, post] of postsEn.entries()) {
-  const relatedPosts = getRelatedPosts(post, postsEn);
+  const relatedPosts = getRelatedPosts(post, postsEn, { locale: 'en' });
   const navigationPosts = {
     previous: postsEn[index - 1] ?? null,
     next: postsEn[index + 1] ?? null
@@ -4344,7 +4505,7 @@ for (const [index, post] of postsEn.entries()) {
 }
 
 for (const draftPost of draftPostsEn) {
-  const relatedPosts = getRelatedPosts(draftPost, postsEn);
+  const relatedPosts = getRelatedPosts(draftPost, postsEn, { locale: 'en' });
 
   writeText(
     path.join(outDir, 'en', 'blog', draftPost.slug, 'index.html'),

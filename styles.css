@@ -2569,6 +2569,178 @@ body.has-reading-progress .reading-progress {
   margin-top: 2px;
 }
 
+.post-knowledge-section {
+  padding-top: 32px;
+}
+
+.post-knowledge-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+  gap: 24px;
+}
+
+.post-knowledge-card,
+.post-knowledge-list-card {
+  display: grid;
+  gap: 16px;
+}
+
+.post-knowledge-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.post-knowledge-card__hint,
+.post-knowledge-list-card > p {
+  margin: 0;
+}
+
+.knowledge-network {
+  position: relative;
+  overflow: hidden;
+  padding: 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: calc(var(--radius-lg) + 4px);
+  background:
+    radial-gradient(circle at top left, var(--accent-soft), transparent 52%),
+    radial-gradient(circle at bottom right, rgba(52, 211, 153, 0.12), transparent 46%),
+    var(--surface-soft);
+}
+
+.knowledge-network svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.knowledge-network__halo {
+  fill: none;
+  stroke: var(--accent-border);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 8;
+  opacity: 0.9;
+}
+
+.knowledge-network__edge {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.knowledge-network__edge--strong {
+  stroke-width: 4.5;
+  opacity: 0.9;
+}
+
+.knowledge-network__edge--medium {
+  stroke-width: 3.25;
+  opacity: 0.76;
+}
+
+.knowledge-network__edge--soft {
+  stroke-width: 2.25;
+  opacity: 0.58;
+}
+
+.knowledge-network__node-link {
+  cursor: pointer;
+}
+
+.knowledge-network__node {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    transform var(--motion-fast) var(--motion-ease-soft),
+    opacity var(--motion-fast) var(--motion-ease);
+}
+
+.knowledge-network__node--current {
+  fill: color-mix(in srgb, var(--accent) 22%, var(--panel));
+  stroke: var(--accent-border-strong);
+  stroke-width: 2.5;
+}
+
+.knowledge-network__node--related {
+  fill: color-mix(in srgb, var(--accent-2) 18%, var(--panel));
+  stroke: color-mix(in srgb, var(--accent-2) 52%, var(--surface-border-strong));
+  stroke-width: 2;
+}
+
+.knowledge-network__node-link:hover .knowledge-network__node,
+.knowledge-network__node-link:focus-visible .knowledge-network__node {
+  transform: scale(1.04);
+}
+
+.knowledge-network__node-link:hover .knowledge-network__node--related,
+.knowledge-network__node-link:focus-visible .knowledge-network__node--related {
+  fill: color-mix(in srgb, var(--accent) 24%, var(--panel));
+  stroke: var(--accent-border-strong);
+}
+
+.knowledge-network__node-index,
+.knowledge-network__center-label,
+.knowledge-network__center-meta {
+  fill: var(--text);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.knowledge-network__node-index {
+  font-size: 0.95rem;
+}
+
+.knowledge-network__center-label {
+  font-size: 1rem;
+}
+
+.knowledge-network__center-meta {
+  font-size: 0.82rem;
+  fill: var(--soft);
+  font-weight: 500;
+}
+
+.knowledge-network__list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.knowledge-network__list li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-soft);
+}
+
+.knowledge-network__list li p {
+  margin: 6px 0 0;
+}
+
+.knowledge-network__list-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-border);
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.knowledge-network__item-tags {
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .contact-links a,
 .footer-links a,
 .text-link {
@@ -2766,7 +2938,8 @@ body.has-reading-progress .reading-progress {
   .content-stats-grid,
   .content-ranking-grid,
   .content-year-grid,
-  .site-announcement__inner {
+  .site-announcement__inner,
+  .post-knowledge-layout {
     grid-template-columns: 1fr;
   }
 
@@ -3038,6 +3211,20 @@ body.has-reading-progress .reading-progress {
 
   .post-nav-card {
     padding: 20px;
+  }
+
+  .knowledge-network {
+    padding: 8px;
+  }
+
+  .knowledge-network__list li {
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .knowledge-network__list-index {
+    width: 36px;
+    height: 36px;
   }
 }
 
