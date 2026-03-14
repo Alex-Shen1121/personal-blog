@@ -464,6 +464,33 @@ const resolveLinkHref = (href, prefix = '') => {
 
 const isExternalLink = (href = '') => /^(?:[a-z]+:)?\/\//i.test(href);
 
+const getEmailSubscriptionHref = () => {
+  const email = site.author.email?.trim?.();
+  if (!email) return '';
+
+  const subject = site.emailSubscription?.subject?.trim?.();
+  const body = site.emailSubscription?.body?.trim?.();
+  const params = new URLSearchParams();
+  if (subject) params.set('subject', subject);
+  if (body) params.set('body', body);
+
+  const query = params.toString();
+  return `mailto:${email}${query ? `?${query}` : ''}`;
+};
+
+const renderEmailSubscriptionLink = ({
+  label = site.emailSubscription?.ctaLabel ?? '邮件订阅',
+  className = '',
+  variant = 'secondary',
+  small = false
+} = {}) => {
+  const href = getEmailSubscriptionHref();
+  if (!href) return '';
+
+  const classes = ['button', `button-${variant}`, small ? 'button-small' : '', className].filter(Boolean).join(' ');
+  return `<a class="${classes}" href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
+};
+
 const normalizeProjectExternalLinks = (links) => {
   if (!Array.isArray(links)) return [];
 
@@ -1484,6 +1511,7 @@ const renderLayout = ({
             <div class="footer-links">
               ${site.author.links.map((link) => `<a href="${link.url}"${link.url.startsWith('http') ? ' target="_blank" rel="noreferrer"' : ''}>${link.label}</a>`).join('')}
               ${rssHref ? `<a href="${rssHref}">RSS 订阅</a>` : ''}
+              ${getEmailSubscriptionHref() ? `<a href="${escapeHtml(getEmailSubscriptionHref())}">邮件订阅</a>` : ''}
             </div>
           </section>
         </div>
@@ -2064,10 +2092,25 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
     <p>目前已支持文章标签与分类系统：文章列表、标签/分类索引页与详情页都会基于 Markdown frontmatter 自动生成。</p>
     <div class="post-list__filters">
       <a class="button button-secondary button-small" href="../rss.xml">RSS 订阅</a>
+      ${renderEmailSubscriptionLink({ small: true })}
       <a class="button button-ghost button-small" href="archive/">查看归档</a>
     </div>
   </section>
   <section class="section reveal" data-post-search data-post-search-total="${posts.length}">
+    ${getEmailSubscriptionHref()
+      ? `<article class="note-card post-subscribe-card">
+          <div class="section-heading">
+            <p class="kicker">${escapeHtml(site.emailSubscription?.title ?? '邮件订阅')}</p>
+            <h2>不想错过新文章，也可以直接用邮箱订阅更新。</h2>
+            <p class="section-intro">${escapeHtml(site.emailSubscription?.description ?? '')}</p>
+          </div>
+          <div class="post-subscribe-card__actions">
+            ${renderEmailSubscriptionLink({ variant: 'primary' })}
+            <a class="button button-secondary" href="../rss.xml">改用 RSS 订阅</a>
+          </div>
+          ${site.emailSubscription?.note ? `<p class="muted">${escapeHtml(site.emailSubscription.note)}</p>` : ''}
+        </article>`
+      : ''}
     <div class="post-discovery panel">
       <div class="post-discovery__intro">
         <p class="kicker">站内搜索</p>

@@ -1390,6 +1390,16 @@ body.has-reading-progress .reading-progress {
   margin-bottom: 22px;
 }
 
+.post-subscribe-card {
+  margin-bottom: 22px;
+}
+
+.post-subscribe-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .post-discovery__intro {
   display: grid;
   gap: 10px;

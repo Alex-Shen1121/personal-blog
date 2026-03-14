@@ -48,6 +48,15 @@ export const site = {
     title: '沈晨玙博客 RSS 订阅',
     description: '订阅沈晨玙的博客更新，持续获取最新文章与长期写作内容。'
   },
+  emailSubscription: {
+    title: '邮件订阅',
+    description:
+      '如果你不看 RSS，也可以通过邮件接收更新。给我发一封订阅邮件后，我会把你加入文章更新提醒名单；只会在发布新文章或重要站点更新时发送。',
+    ctaLabel: '发邮件订阅',
+    note: '建议直接使用预填好的邮件标题，方便我快速处理。',
+    subject: '订阅博客更新',
+    body: '你好，我想订阅你的博客更新邮件提醒。\n\n我的邮箱：\n我主要关注的内容方向：\n'
+  },
   license: {
     name: 'MIT License',
     url: 'https://github.com/Alex-Shen1121/personal-blog/blob/main/LICENSE'
