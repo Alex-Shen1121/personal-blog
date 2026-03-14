@@ -94,13 +94,14 @@ const registerImagesFromDirectory = (directoryPath, publicPathPrefix = '/') => {
 const getImageAttributes = ({ src = '', loading = '', decoding = 'async', fetchpriority = '' } = {}) => {
   const attributes = [];
   const metadataEntry = imageMetadata.get(normalizeImagePath(src));
+  const resolvedLoading = loading || (fetchpriority === 'high' ? 'eager' : 'lazy');
 
   if (metadataEntry) {
     attributes.push(`width="${metadataEntry.width}"`, `height="${metadataEntry.height}"`);
   }
 
-  if (loading) {
-    attributes.push(`loading="${loading}"`);
+  if (resolvedLoading) {
+    attributes.push(`loading="${resolvedLoading}"`);
   }
 
   if (decoding) {
