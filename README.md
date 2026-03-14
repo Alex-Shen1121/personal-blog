@@ -51,6 +51,7 @@
 ├─ scripts/              # 构建与校验脚本
 ├─ src/assets/           # 本地图像与装饰素材
 ├─ src/data/site.mjs     # 站点配置、导航、页面内容数据
+├─ CHANGELOG.md          # 项目更新记录
 ├─ dist/                 # 构建产物目录（自动生成）
 ├─ package.json
 └─ README.md
@@ -115,6 +116,8 @@ npm run build
 - 主要修改文件
 - 验证结果
 - 是否影响 GitHub Pages 部署产物
+
+仓库级变更记录统一维护在 [CHANGELOG.md](./CHANGELOG.md)。提交涉及用户可感知行为、构建流程、文档规则或部署方式的改动时，建议同步更新对应条目。
 
 ## 内容维护
 

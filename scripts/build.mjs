@@ -1479,7 +1479,7 @@ const renderLayout = ({
             </div>
           </section>
         </div>
-        <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源。</span>
+        <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源，变更记录见 <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a>。</span>
       </footer>
     </div>
     <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}" defer></script>

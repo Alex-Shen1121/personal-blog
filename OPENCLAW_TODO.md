@@ -76,7 +76,7 @@
 - [x] 64. 优化构建失败提示信息
 - [x] 65. 增加 README 贡献说明
 - [x] 66. 增加 LICENSE 文件
-- [ ] 67. 增加 CHANGELOG
+- [x] 67. 增加 CHANGELOG
 - [ ] 68. 增加 GitHub Issue / PR 模板
 - [ ] 69. 增加 CI 构建缓存
 - [ ] 70. 增加自动化校验流程
