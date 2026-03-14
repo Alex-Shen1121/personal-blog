@@ -53,7 +53,7 @@
 - [x] 44. 优化链接 hover / active 状态
 - [x] 45. 优化空态、错误态、无内容态
 - [x] 46. 统一 favicon / OG 图品牌化设计
-- [ ] 47. 完善页面级 title / description
+- [x] 47. 完善页面级 title / description
 - [ ] 48. 支持文章页独立 Open Graph 信息
 - [ ] 49. 支持 Twitter Card
 - [ ] 50. 增加 canonical 规则校验

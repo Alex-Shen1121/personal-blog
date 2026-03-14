@@ -710,6 +710,8 @@ const renderNav = (currentPath, prefix) => {
     .join('');
 };
 
+const formatMetaTitle = (...segments) => segments.filter(Boolean).join('｜');
+
 const renderLayout = ({ title, description, currentPath, outputPath, body, image = site.brand.ogImage }) => {
   const prefix = getRelativePrefix(outputPath);
   const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
@@ -718,6 +720,10 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
   const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
   const ogImage = withBase(image);
+  const metaTitle = escapeHtml(title);
+  const metaDescription = escapeHtml(description);
+  const metaCanonical = escapeHtml(canonical);
+  const metaOgImage = escapeHtml(ogImage);
   const currentHref = currentPath === '/' ? '/' : currentPath;
   const themeBootScript = `(() => {
   const storageKey = 'personal-blog-theme';
@@ -738,22 +744,22 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#07111f" />
-    <title>${title}</title>
-    <meta name="description" content="${description}" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description}" />
+    <title>${metaTitle}</title>
+    <meta name="description" content="${metaDescription}" />
+    <meta property="og:title" content="${metaTitle}" />
+    <meta property="og:description" content="${metaDescription}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="${site.shortName}" />
-    <meta property="og:url" content="${canonical}" />
-    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:site_name" content="${escapeHtml(site.shortName)}" />
+    <meta property="og:url" content="${metaCanonical}" />
+    <meta property="og:image" content="${metaOgImage}" />
     <meta property="og:image:type" content="image/svg+xml" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${description}" />
-    <link rel="canonical" href="${canonical}" />
-    <link rel="icon" type="image/svg+xml" href="${faviconHref}" />
+    <meta name="twitter:title" content="${metaTitle}" />
+    <meta name="twitter:description" content="${metaDescription}" />
+    <link rel="canonical" href="${metaCanonical}" />
+    <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>${themeBootScript}</script>
@@ -1791,8 +1797,8 @@ const seriesList = collectSeries(posts);
 writeText(
   path.join(outDir, 'index.html'),
   renderLayout({
-    title: site.title,
-    description: site.description,
+    title: site.seo?.home?.title ?? site.title,
+    description: site.seo?.home?.description ?? site.description,
     currentPath: '/',
     outputPath: path.join(outDir, 'index.html'),
     body: renderHomePage(posts)
@@ -1803,8 +1809,8 @@ for (const [key, page] of Object.entries(pages).filter(([key]) => key !== 'blog'
   writeText(
     path.join(outDir, key, 'index.html'),
     renderLayout({
-      title: `${page.title}｜${site.shortName}`,
-      description: page.description,
+      title: page.seo?.title ?? formatMetaTitle(page.title, site.shortName),
+      description: page.seo?.description ?? page.description,
       currentPath: `/${key}/`,
       outputPath: path.join(outDir, key, 'index.html'),
       body: renderInfoPage(key)
@@ -1817,8 +1823,8 @@ for (const project of pages.projects.items ?? []) {
   writeText(
     path.join(outDir, 'projects', project.slug, 'index.html'),
     renderLayout({
-      title: `${project.title}｜项目详情｜${site.shortName}`,
-      description: project.summary ?? pages.projects.description,
+      title: project.seo?.title ?? formatMetaTitle(project.title, '项目详情', site.shortName),
+      description: project.seo?.description ?? project.summary ?? pages.projects.seo?.description ?? pages.projects.description,
       currentPath: `/projects/${project.slug}/`,
       outputPath: path.join(outDir, 'projects', project.slug, 'index.html'),
       body: renderProjectDetailPage(project),
@@ -1830,8 +1836,10 @@ for (const project of pages.projects.items ?? []) {
 writeText(
   path.join(outDir, 'blog', 'index.html'),
   renderLayout({
-    title: `文章｜${site.shortName}`,
-    description: '沈晨玙的文章列表，记录产品、设计、前端体验与个人工作方式。',
+    title: pages.blog.seo?.title ?? site.seo?.blog?.title ?? formatMetaTitle('文章', site.shortName),
+    description:
+      pages.blog.seo?.description ??
+      `沈晨玙的博客文章列表，当前收录 ${posts.length} 篇文章，覆盖产品、设计、前端体验与内容系统。`,
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
     body: renderBlogListPage(posts, tags, categories, seriesList),
@@ -1842,8 +1850,8 @@ writeText(
 writeText(
   path.join(outDir, 'blog', 'tags', 'index.html'),
   renderLayout({
-    title: `文章标签｜${site.shortName}`,
-    description: '按标签浏览文章归档。',
+    title: site.seo?.tags?.title ?? formatMetaTitle('文章标签', site.shortName),
+    description: site.seo?.tags?.description ?? `按标签浏览 ${tags.length} 个主题下的 ${posts.length} 篇文章归档。`,
     currentPath: '/blog/tags/',
     outputPath: path.join(outDir, 'blog', 'tags', 'index.html'),
     body: renderTagListPage(tags),
@@ -1855,8 +1863,8 @@ for (const tag of tags) {
   writeText(
     path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
     renderLayout({
-      title: `${tag.name}｜标签｜${site.shortName}`,
-      description: `浏览标签“${tag.name}”下的文章。`,
+      title: formatMetaTitle(`标签：${tag.name}`, '博客文章', site.shortName),
+      description: `浏览标签“${tag.name}”下的 ${tag.posts.length} 篇文章，查看我围绕「${tag.name}」主题的持续写作。`,
       currentPath: `/blog/tags/${tag.slug}/`,
       outputPath: path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
       body: renderTagDetailPage(tag),
@@ -1865,12 +1873,11 @@ for (const tag of tags) {
   );
 }
 
-
 writeText(
   path.join(outDir, 'blog', 'series', 'index.html'),
   renderLayout({
-    title: `文章系列｜${site.shortName}`,
-    description: '按系列浏览博客文章。',
+    title: site.seo?.series?.title ?? formatMetaTitle('文章系列', site.shortName),
+    description: site.seo?.series?.description ?? `按系列顺序浏览 ${seriesList.length} 个文章主题。`,
     currentPath: '/blog/series/',
     outputPath: path.join(outDir, 'blog', 'series', 'index.html'),
     body: renderSeriesListPage(seriesList)
@@ -1881,7 +1888,7 @@ for (const series of seriesList) {
   writeText(
     path.join(outDir, 'blog', 'series', series.slug, 'index.html'),
     renderLayout({
-      title: `${series.name}｜文章系列｜${site.shortName}`,
+      title: formatMetaTitle(`系列：${series.name}`, '博客文章', site.shortName),
       description: series.description,
       currentPath: `/blog/series/${series.slug}/`,
       outputPath: path.join(outDir, 'blog', 'series', series.slug, 'index.html'),
@@ -1894,8 +1901,8 @@ for (const series of seriesList) {
 writeText(
   path.join(outDir, 'blog', 'categories', 'index.html'),
   renderLayout({
-    title: `文章分类｜${site.shortName}`,
-    description: '按分类浏览博客文章。',
+    title: site.seo?.categories?.title ?? formatMetaTitle('文章分类', site.shortName),
+    description: site.seo?.categories?.description ?? `按 ${categories.length} 个分类浏览 ${posts.length} 篇博客文章。`,
     currentPath: '/blog/categories/',
     outputPath: path.join(outDir, 'blog', 'categories', 'index.html'),
     body: renderCategoryListPage(categories)
@@ -1905,8 +1912,8 @@ writeText(
 writeText(
   path.join(outDir, 'blog', 'archive', 'index.html'),
   renderLayout({
-    title: `文章归档｜${site.shortName}`,
-    description: '按时间归档浏览全部博客文章。',
+    title: site.seo?.archive?.title ?? formatMetaTitle('文章归档', site.shortName),
+    description: site.seo?.archive?.description ?? `按时间顺序归档浏览全部 ${posts.length} 篇博客文章。`,
     currentPath: '/blog/archive/',
     outputPath: path.join(outDir, 'blog', 'archive', 'index.html'),
     body: renderArchivePage(posts),
@@ -1918,8 +1925,8 @@ for (const category of categories) {
   writeText(
     path.join(outDir, 'blog', 'categories', category.slug, 'index.html'),
     renderLayout({
-      title: `${category.name}｜文章分类｜${site.shortName}`,
-      description: `${category.name} 分类下的文章列表。`,
+      title: formatMetaTitle(`分类：${category.name}`, '博客文章', site.shortName),
+      description: `浏览「${category.name}」分类下的 ${category.posts.length} 篇文章，查看这一主题方向的全部归档。`,
       currentPath: `/blog/categories/${category.slug}/`,
       outputPath: path.join(outDir, 'blog', 'categories', category.slug, 'index.html'),
       body: renderCategoryPage(category, category.posts),
@@ -1939,7 +1946,7 @@ for (const [index, post] of posts.entries()) {
   writeText(
     path.join(outDir, 'blog', post.slug, 'index.html'),
     renderLayout({
-      title: `${post.title}｜${site.shortName}`,
+      title: formatMetaTitle(post.title, '博客文章', site.shortName),
       description: post.summary,
       currentPath: `/blog/${post.slug}/`,
       outputPath: path.join(outDir, 'blog', post.slug, 'index.html'),
@@ -1952,8 +1959,8 @@ for (const [index, post] of posts.entries()) {
 writeText(
   path.join(outDir, '404.html'),
   renderLayout({
-    title: `页面未找到｜${site.shortName}`,
-    description: '你访问的页面不存在。',
+    title: site.seo?.notFound?.title ?? formatMetaTitle('页面未找到', site.shortName),
+    description: site.seo?.notFound?.description ?? '你访问的页面不存在。',
     currentPath: '/404.html',
     outputPath: path.join(outDir, '404.html'),
     body: render404()

@@ -3,6 +3,36 @@ export const site = {
   shortName: '沈晨玙',
   description:
     '沈晨玙的个人主页与博客，记录产品、设计、工程和生活观察，分享正在做的项目、近期近况与长期思考。',
+  seo: {
+    home: {
+      title: '沈晨玙｜个人主页、项目与博客',
+      description: '沈晨玙的个人主页与博客，集中展示个人介绍、项目案例、文章与近期近况。'
+    },
+    blog: {
+      title: '博客文章｜产品、设计与前端体验｜沈晨玙',
+      description: '沈晨玙的博客文章列表，记录产品、设计、前端体验与内容系统的思考。'
+    },
+    tags: {
+      title: '文章标签导航｜沈晨玙',
+      description: '按标签浏览博客文章，快速查看不同主题下的写作内容。'
+    },
+    categories: {
+      title: '文章分类导航｜沈晨玙',
+      description: '按分类浏览博客文章，查看不同主题方向下的内容归档。'
+    },
+    series: {
+      title: '文章系列导航｜沈晨玙',
+      description: '按系列顺序浏览博客文章，适合连续阅读同一主题。'
+    },
+    archive: {
+      title: '文章归档｜时间线浏览｜沈晨玙',
+      description: '按发布时间归档浏览全部博客文章。'
+    },
+    notFound: {
+      title: '页面未找到｜沈晨玙',
+      description: '你访问的页面不存在，可以返回首页继续浏览文章、项目与近况。'
+    }
+  },
   siteUrl: 'https://alex-shen1121.github.io/personal-blog/',
   repoBasePath: '/personal-blog/',
   brand: {
@@ -213,6 +243,10 @@ export const pages = {
   about: {
     title: '关于我',
     description: '关于沈晨玙的工作方式、关注领域与做事偏好。',
+    seo: {
+      title: '关于沈晨玙｜工作方式、关注方向与做事偏好',
+      description: '了解沈晨玙的工作方式、关注领域、项目判断与长期想做的内容方向。'
+    },
     intro:
       '我偏爱那种既有逻辑、又有温度的数字产品。工作里常做的，是把目标、信息、交互和视觉统一到同一个叙事里。',
     sections: [
@@ -233,12 +267,20 @@ export const pages = {
   projects: {
     title: '项目',
     description: '近年持续在做或正在推进的一些项目方向。',
+    seo: {
+      title: '项目案例与长期主题｜沈晨玙',
+      description: '查看沈晨玙正在推进或长期维护的项目方向，涵盖个人博客系统、页面叙事与写作工作流。'
+    },
     intro:
       '这里放的不只是“做过什么”，也包括我正在打磨的方向、想继续深挖的问题，以及值得长期维护的主题。',
     items: [
       {
         slug: 'personal-blog-system',
         title: '个人主页与博客系统',
+        seo: {
+          title: '个人主页与博客系统｜静态内容站项目案例｜沈晨玙',
+          description: '个人主页与博客系统项目详情，展示内容结构设计、构建脚本与 GitHub Pages 发布方案。'
+        },
         category: '静态生成 / 内容优先',
         status: { label: '已上线并持续迭代', tone: 'live' },
         role: '产品规划 / 信息架构 / 前端实现',
@@ -288,6 +330,10 @@ export const pages = {
       {
         slug: 'narrative-product-pages',
         title: '案例型产品介绍页',
+        seo: {
+          title: '案例型产品介绍页｜页面叙事项目方向｜沈晨玙',
+          description: '案例型产品介绍页项目方向，聚焦品牌表达、信息节奏与克制的页面叙事设计。'
+        },
         category: '品牌表达 / 页面叙事',
         status: { label: '持续打磨方法论', tone: 'active' },
         role: '页面策略 / 文案组织 / 视觉节奏',
@@ -322,6 +368,10 @@ export const pages = {
       {
         slug: 'writing-workflow-system',
         title: '个人知识与写作工作流',
+        seo: {
+          title: '个人知识与写作工作流｜内容系统项目方向｜沈晨玙',
+          description: '个人知识与写作工作流项目方向，围绕选题、草稿、归档与复用整理个人内容系统。'
+        },
         category: '方法沉淀 / 长期复利',
         status: { label: '长期维护', tone: 'maintained' },
         role: '选题整理 / 内容归档 / 系统复盘',
@@ -358,11 +408,19 @@ export const pages = {
   blog: {
     title: '文章',
     description: '围绕产品、设计、前端体验与内容系统的写作。',
+    seo: {
+      title: '博客文章｜产品、设计与前端体验｜沈晨玙',
+      description: '沈晨玙的博客文章列表，记录产品、设计、前端体验与内容系统的思考。'
+    },
     intro: '这里会持续整理我关于内容、产品体验和工作方法的思考。当前版本已支持 Markdown 驱动的文章生成。'
   },
   now: {
     title: '近况',
     description: '我近期正在关注与推进的事情。',
+    seo: {
+      title: '近期近况与阶段性推进｜沈晨玙',
+      description: '查看沈晨玙最近在推进的项目、设计观察与阶段性记录。'
+    },
     intro:
       '这个页面用来记录阶段性的关注点，像一张会更新的工作便签。它不追求完整，但会尽量保持真实。',
     items: [
