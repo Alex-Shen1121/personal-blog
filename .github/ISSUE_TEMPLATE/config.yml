@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 贡献说明与本地验证流程
+    url: https://github.com/Alex-Shen1121/personal-blog/blob/main/README.md#贡献说明
+    about: 提交 Issue 或 Pull Request 前，可先查看仓库约定与验证命令。
