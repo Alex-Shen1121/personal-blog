@@ -47,6 +47,45 @@ export const site = {
     favicon: '/favicon.svg',
     ogImage: '/og-cover.svg'
   },
+  theme: {
+    defaultMode: 'system',
+    light: {
+      themeColor: '#f4f7fb',
+      tokens: {
+        accent: '#0ea5e9',
+        'accent-2': '#6366f1',
+        'accent-3': '#10b981',
+        'accent-fill-end': '#818cf8',
+        'accent-link-hover': '#1d4ed8',
+        'accent-link-active': '#3730a3',
+        'interactive-link-active-bg': 'rgba(99, 102, 241, 0.14)',
+        'accent-soft': 'rgba(14, 165, 233, 0.12)',
+        'accent-soft-strong': 'rgba(99, 102, 241, 0.14)',
+        'accent-border': 'rgba(99, 102, 241, 0.22)',
+        'accent-border-strong': 'rgba(99, 102, 241, 0.3)',
+        'body-glow-1': 'rgba(56, 189, 248, 0.16)',
+        'body-glow-2': 'rgba(129, 140, 248, 0.12)'
+      }
+    },
+    dark: {
+      themeColor: '#07111f',
+      tokens: {
+        accent: '#38bdf8',
+        'accent-2': '#8b5cf6',
+        'accent-3': '#34d399',
+        'accent-fill-end': '#818cf8',
+        'accent-link-hover': '#93c5fd',
+        'accent-link-active': '#c4b5fd',
+        'interactive-link-active-bg': 'rgba(129, 140, 248, 0.18)',
+        'accent-soft': 'rgba(56, 189, 248, 0.1)',
+        'accent-soft-strong': 'rgba(129, 140, 248, 0.14)',
+        'accent-border': 'rgba(129, 140, 248, 0.26)',
+        'accent-border-strong': 'rgba(129, 140, 248, 0.3)',
+        'body-glow-1': 'rgba(56, 189, 248, 0.16)',
+        'body-glow-2': 'rgba(139, 92, 246, 0.14)'
+      }
+    }
+  },
   rss: {
     path: '/rss.xml',
     title: '沈晨玙博客 RSS 订阅',

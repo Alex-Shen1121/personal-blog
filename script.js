@@ -6,6 +6,7 @@ const yearNode = document.querySelector('[data-current-year]');
 const themeStorageKey = 'personal-blog-theme';
 const pageLanguage = (root.lang || '').toLowerCase();
 const isEnglishPage = pageLanguage.startsWith('en');
+const runtimeThemeConfig = window.__PERSONAL_BLOG_THEME__ || {};
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
 const prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -23,7 +24,31 @@ const getSavedTheme = () => {
   return saved === 'light' || saved === 'dark' ? saved : null;
 };
 
-const getPreferredTheme = () => getSavedTheme() ?? (systemThemeQuery.matches ? 'light' : 'dark');
+const getDefaultThemeMode = () => {
+  const configuredMode = runtimeThemeConfig.defaultMode;
+  return configuredMode === 'light' || configuredMode === 'dark' || configuredMode === 'system'
+    ? configuredMode
+    : 'system';
+};
+
+const getThemeColor = (theme) => {
+  const configuredThemeColor = runtimeThemeConfig.themeColor?.[theme];
+  if (typeof configuredThemeColor === 'string' && configuredThemeColor.trim()) {
+    return configuredThemeColor.trim();
+  }
+
+  return theme === 'light' ? '#f4f7fb' : '#07111f';
+};
+
+const getPreferredTheme = () => {
+  const savedTheme = getSavedTheme();
+  if (savedTheme) {
+    return savedTheme;
+  }
+
+  const defaultThemeMode = getDefaultThemeMode();
+  return defaultThemeMode === 'system' ? (systemThemeQuery.matches ? 'light' : 'dark') : defaultThemeMode;
+};
 
 const syncThemeLabel = (theme) => {
   if (!themeToggle) return;
@@ -41,7 +66,7 @@ const syncThemeLabel = (theme) => {
 
 const syncThemeColor = (theme) => {
   if (!themeColorMeta) return;
-  themeColorMeta.setAttribute('content', theme === 'light' ? '#f4f7fb' : '#07111f');
+  themeColorMeta.setAttribute('content', getThemeColor(theme));
 };
 
 const applyTheme = (theme) => {
@@ -61,7 +86,7 @@ if (themeToggle) {
 }
 
 systemThemeQuery.addEventListener('change', (event) => {
-  if (getSavedTheme()) return;
+  if (getSavedTheme() || getDefaultThemeMode() !== 'system') return;
   applyTheme(event.matches ? 'light' : 'dark');
 });
 

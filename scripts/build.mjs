@@ -80,6 +80,77 @@ const enUi = {
   }
 };
 
+const defaultThemeConfig = {
+  defaultMode: 'system',
+  light: {
+    themeColor: '#f4f7fb',
+    tokens: {}
+  },
+  dark: {
+    themeColor: '#07111f',
+    tokens: {}
+  }
+};
+
+const normalizeThemeMode = (value) => (value === 'light' || value === 'dark' || value === 'system' ? value : 'system');
+
+const normalizeThemeTokens = (tokens) => {
+  if (!tokens || typeof tokens !== 'object' || Array.isArray(tokens)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(tokens).flatMap(([key, value]) => {
+      const normalizedKey = String(key || '').trim();
+      const normalizedValue = value == null ? '' : String(value).trim();
+      return normalizedKey && normalizedValue ? [[normalizedKey, normalizedValue]] : [];
+    })
+  );
+};
+
+const normalizeThemeVariant = (variant, fallback) => ({
+  themeColor:
+    typeof variant?.themeColor === 'string' && variant.themeColor.trim()
+      ? variant.themeColor.trim()
+      : fallback.themeColor,
+  tokens: normalizeThemeTokens(variant?.tokens)
+});
+
+const normalizeThemeConfig = (themeConfig = {}) => ({
+  defaultMode: normalizeThemeMode(themeConfig?.defaultMode),
+  light: normalizeThemeVariant(themeConfig?.light, defaultThemeConfig.light),
+  dark: normalizeThemeVariant(themeConfig?.dark, defaultThemeConfig.dark)
+});
+
+const themeConfig = normalizeThemeConfig(site.theme);
+
+const renderThemeTokenBlock = (selector, tokens = {}) => {
+  const entries = Object.entries(tokens);
+  if (entries.length === 0) {
+    return '';
+  }
+
+  const declarations = entries.map(([token, value]) => `  --${token}: ${value};`).join('\n');
+  return `${selector} {\n${declarations}\n}`;
+};
+
+const renderThemeConfigStyle = (config) =>
+  [
+    renderThemeTokenBlock(':root', config.dark.tokens),
+    renderThemeTokenBlock(":root[data-theme='light']", config.light.tokens)
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+const serializeThemeRuntimeConfig = (config) =>
+  JSON.stringify({
+    defaultMode: config.defaultMode,
+    themeColor: {
+      light: config.light.themeColor,
+      dark: config.dark.themeColor
+    }
+  }).replace(/</g, '\u003c');
+
 const normalizeFatalBuildError = (error) => {
   if (error instanceof Error) {
     return error;
@@ -1836,8 +1907,15 @@ const renderLayout = ({
   ]
     .filter(Boolean)
     .join('\n    ');
+  const resolvedThemeConfig = normalizeThemeConfig(siteConfig.theme ?? themeConfig);
+  const initialThemeColor =
+    resolvedThemeConfig.defaultMode === 'light'
+      ? resolvedThemeConfig.light.themeColor
+      : resolvedThemeConfig.dark.themeColor;
+  const themeConfigStyle = renderThemeConfigStyle(resolvedThemeConfig).replaceAll('</style>', '<\\/style>');
+  const themeRuntimeScript = `window.__PERSONAL_BLOG_THEME__=${serializeThemeRuntimeConfig(resolvedThemeConfig)};`;
   const currentHref = currentPath === '/' ? '/' : currentPath;
-  const themeBootScript = `(()=>{const storageKey='personal-blog-theme';const savedTheme=localStorage.getItem(storageKey);const theme=savedTheme==='light'||savedTheme==='dark'?savedTheme:(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=theme;const themeColorMeta=document.querySelector('meta[name="theme-color"]');if(themeColorMeta){themeColorMeta.setAttribute('content',theme==='light'?'#f4f7fb':'#07111f')}})();`;
+  const themeBootScript = `(()=>{const storageKey='personal-blog-theme';const config=window.__PERSONAL_BLOG_THEME__||{};const themeColors=config.themeColor||{};const defaultMode=config.defaultMode==='light'||config.defaultMode==='dark'||config.defaultMode==='system'?config.defaultMode:'system';const getThemeColor=(theme)=>themeColors[theme]||(theme==='light'?'#f4f7fb':'#07111f');const savedTheme=localStorage.getItem(storageKey);const theme=savedTheme==='light'||savedTheme==='dark'?savedTheme:(defaultMode==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):defaultMode);document.documentElement.dataset.theme=theme;const themeColorMeta=document.querySelector('meta[name="theme-color"]');if(themeColorMeta){themeColorMeta.setAttribute('content',getThemeColor(theme))}})();`;
   const criticalCss = criticalCssSource.replaceAll('</style>', '<\\/style>');
   const alternateLinkTags = alternateLinks
     .filter((item) => item?.href && item?.hreflang)
@@ -1853,7 +1931,7 @@ const renderLayout = ({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#07111f" />
+    <meta name="theme-color" content="${escapeHtml(initialThemeColor)}" />
     <title>${metaTitle}</title>
     <meta name="description" content="${metaDescription}" />
     <meta property="og:title" content="${metaOgTitle}" />
@@ -1876,8 +1954,10 @@ const renderLayout = ({
     ${rssHref ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(documentLang.startsWith('en') ? `${siteConfig.shortName} RSS` : site.rss?.title ?? `${siteConfig.shortName} RSS`)}" href="${escapeHtml(rssHref)}" />` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script>${themeRuntimeScript}</script>
     <script>${themeBootScript}</script>
     <style>${criticalCss}</style>
+    ${themeConfigStyle ? `<style>${themeConfigStyle}</style>` : ""}
     <link rel="preload" href="${fontStylesheetHref}" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="${fontStylesheetHref}" /></noscript>
     <link rel="preload" href="${stylesheetHref}" as="style" onload="this.onload=null;this.rel='stylesheet'" />

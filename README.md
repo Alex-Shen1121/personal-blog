@@ -26,6 +26,7 @@
 - 博客列表页与文章详情页生成
 - 项目页、关于页、近况页展示
 - 深浅色主题切换
+- 支持通过 `src/data/site.mjs` 自定义主题默认模式、主题色与 CSS 变量令牌
 - `prefers-reduced-motion` 兼容处理
 - 基础 SEO 元信息支持
 - 支持 RSS 订阅、邮件订阅与社交媒体跳转入口，并自动生成 `rss.xml`
@@ -119,7 +120,7 @@ npm run preview
 
 | 配置位置 | 主要用途 |
 | --- | --- |
-| `src/data/site.mjs` | 站点标题、`siteUrl`、`repoBasePath`、导航、作者信息、品牌资源、页面文案、访问统计配置 |
+| `src/data/site.mjs` | 站点标题、`siteUrl`、`repoBasePath`、导航、作者信息、品牌资源、主题配置、页面文案、访问统计配置 |
 | `content/posts/*.md` | 文章 frontmatter 与正文内容 |
 | `public/` | 直接发布的静态文件，如 favicon、robots、分享图等 |
 | `.github/workflows/*.yml` | CI 校验、Node 版本、GitHub Pages 部署流程 |
@@ -130,7 +131,7 @@ npm run preview
 1. **仓库名、域名或 Pages 部署路径变化**
    - 修改 `src/data/site.mjs` 中的 `siteUrl` 与 `repoBasePath`
    - 两者的 pathname 需要保持一致，否则 `npm run validate` / `npm run build` 会在 canonical 校验阶段失败
-2. **站点标题、导航、作者信息、品牌资源、访问统计变化**
+2. **站点标题、导航、作者信息、品牌资源、主题色、访问统计变化**
    - 统一修改 `src/data/site.mjs`
 3. **文章内容与文章元信息变化**
    - 在 `content/posts/` 中维护 Markdown 与 frontmatter
@@ -192,6 +193,29 @@ npm run precommit
 - 项目页、关于页、近况页文案
 - 联系方式、作者信息、留言 / 反馈入口与社交媒体跳转配置
 - GitHub Pages 部署所需路径配置
+- 主题配置：`theme.defaultMode` 可控制默认跟随系统 / 固定浅色 / 固定深色；`theme.light.tokens` 与 `theme.dark.tokens` 可按 CSS 变量名（不带 `--`）覆盖主题令牌，例如 `accent`、`accent-2`、`body-glow-1`
+
+示例：
+
+```js
+theme: {
+  defaultMode: 'system',
+  light: {
+    themeColor: '#f4f7fb',
+    tokens: {
+      accent: '#0ea5e9',
+      'accent-2': '#6366f1'
+    }
+  },
+  dark: {
+    themeColor: '#07111f',
+    tokens: {
+      accent: '#7dd3fc',
+      'accent-2': '#a78bfa'
+    }
+  }
+}
+```
 
 ### 新增博客文章
 

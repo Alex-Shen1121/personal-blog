@@ -22,6 +22,53 @@ const requiredSourceFiles = [
 ];
 const requiredPages = ['about', 'projects', 'blog', 'now'];
 
+const validateThemeConfig = (themeConfig = {}) => {
+  if (!themeConfig || typeof themeConfig !== 'object' || Array.isArray(themeConfig)) {
+    return ['site.theme must be an object when provided.'];
+  }
+
+  const errors = [];
+  const validModes = new Set(['system', 'light', 'dark']);
+
+  if (themeConfig.defaultMode && !validModes.has(themeConfig.defaultMode)) {
+    errors.push(`site.theme.defaultMode must be one of ${Array.from(validModes).join(', ')}.`);
+  }
+
+  const validateThemeVariant = (variant, label) => {
+    if (!variant) return;
+
+    if (typeof variant !== 'object' || Array.isArray(variant)) {
+      errors.push(`site.theme.${label} must be an object.`);
+      return;
+    }
+
+    if (variant.themeColor != null && (typeof variant.themeColor !== 'string' || !variant.themeColor.trim())) {
+      errors.push(`site.theme.${label}.themeColor must be a non-empty string.`);
+    }
+
+    if (variant.tokens != null) {
+      if (typeof variant.tokens !== 'object' || Array.isArray(variant.tokens)) {
+        errors.push(`site.theme.${label}.tokens must be an object.`);
+      } else {
+        for (const [token, value] of Object.entries(variant.tokens)) {
+          if (!String(token).trim()) {
+            errors.push(`site.theme.${label}.tokens contains an empty token name.`);
+          }
+
+          if (typeof value !== 'string' || !value.trim()) {
+            errors.push(`site.theme.${label}.tokens.${token} must be a non-empty string.`);
+          }
+        }
+      }
+    }
+  };
+
+  validateThemeVariant(themeConfig.light, 'light');
+  validateThemeVariant(themeConfig.dark, 'dark');
+
+  return errors;
+};
+
 const slugify = (value) =>
   value
     .replace(/\.md$/, '')
@@ -93,6 +140,13 @@ for (const page of requiredPages) {
   }
 }
 
+const themeConfigErrors = validateThemeConfig(site.theme);
+if (themeConfigErrors.length > 0) {
+  console.error(`Invalid theme configuration:
+- ${themeConfigErrors.join('\n- ')}`);
+  process.exit(1);
+}
+
 const canonicalConfig = validateCanonicalConfig(site);
 if (canonicalConfig.errors.length > 0) {
   console.error(`Invalid canonical configuration:\n- ${canonicalConfig.errors.join('\n- ')}`);
@@ -141,4 +195,4 @@ for (const post of parsedPosts) {
   }
 }
 
-console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected, required site files exist, canonical rules are valid, and Markdown content quality checks passed.`);
+console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected, required site files exist, theme and canonical rules are valid, and Markdown content quality checks passed.`);
