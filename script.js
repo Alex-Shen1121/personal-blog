@@ -252,6 +252,150 @@ const initAnalytics = () => {
 
 initAnalytics();
 
+const initProjectFilters = () => {
+  const filterSections = document.querySelectorAll('[data-project-filter]');
+  if (!filterSections.length) return;
+
+  const projectViewStorageKey = 'personal-blog-project-view';
+  const getSavedProjectView = () => {
+    const saved = window.localStorage?.getItem(projectViewStorageKey);
+    return saved === 'theme' || saved === 'portfolio' ? saved : null;
+  };
+
+  filterSections.forEach((section) => {
+    if (section.dataset.projectFilterBound === 'true') return;
+    section.dataset.projectFilterBound = 'true';
+
+    const input = section.querySelector('[data-project-filter-input]');
+    const grids = [...section.querySelectorAll('[data-project-filter-grid]')];
+    const cards = [...section.querySelectorAll('[data-project-card]')];
+    const feedback = section.querySelector('[data-project-filter-feedback]');
+    const emptyState = section.querySelector('[data-project-filter-empty]');
+    const emptySummary = section.querySelector('[data-project-filter-empty-summary]');
+    const resetButton = section.querySelector('[data-project-filter-reset]');
+    const filterButtons = [...section.querySelectorAll('[data-filter-option]')];
+    const viewButtons = [...section.querySelectorAll('[data-project-view-option]')];
+    const viewPanels = [...section.querySelectorAll('[data-project-view-panel]')];
+    const total = Number(section.dataset.projectFilterTotal || cards.length);
+    const initialView = getSavedProjectView() || section.dataset.projectView || 'theme';
+    const state = { category: 'all', status: 'all', view: initialView };
+
+    if (!grids.length || !cards.length || !feedback || !emptyState || !emptySummary) return;
+
+    const syncFilterButtons = () => {
+      filterButtons.forEach((button) => {
+        const isActive = state[button.dataset.filterGroup] === button.dataset.filterValue;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+    };
+
+    const syncViewButtons = () => {
+      viewButtons.forEach((button) => {
+        const isActive = button.dataset.projectViewValue === state.view;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+    };
+
+    const syncViewPanels = () => {
+      viewPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.projectViewPanel !== state.view;
+      });
+    };
+
+    const buildFeedback = (query, visibleCount) => {
+      const activeFilters = [];
+      if (state.category !== 'all') activeFilters.push(`方向 “${state.category}”`);
+      if (state.status !== 'all') activeFilters.push(`状态 “${state.status}”`);
+
+      if (!query && !activeFilters.length) {
+        return `当前共 ${total} 个项目，正在以${state.view === 'portfolio' ? '作品集模式' : '主题模式'}查看。`;
+      }
+
+      const parts = [];
+      if (query) parts.push(`关键词 “${input?.value.trim() || ''}”`);
+      if (activeFilters.length) parts.push(activeFilters.join('，'));
+      return `${parts.join(' + ')} 共找到 ${visibleCount} / ${total} 个项目。`;
+    };
+
+    const buildEmptySummary = () => {
+      const parts = [];
+      const rawQuery = input?.value.trim() || '';
+      if (rawQuery) parts.push(`关键词 “${rawQuery}”`);
+      if (state.category !== 'all') parts.push(`方向 “${state.category}”`);
+      if (state.status !== 'all') parts.push(`状态 “${state.status}”`);
+      return parts.length
+        ? `当前没有符合 ${parts.join(' + ')} 的项目，可以先清空条件再继续浏览。`
+        : '当前筛选条件下还没有匹配内容。';
+    };
+
+    const updateResults = () => {
+      const query = input?.value.trim().toLowerCase() || '';
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const searchIndex = card.dataset.searchIndex || '';
+        const cardCategory = card.dataset.category || '';
+        const cardStatus = card.dataset.status || '';
+        const matchesQuery = !query || searchIndex.includes(query);
+        const matchesCategory = state.category === 'all' || cardCategory === state.category;
+        const matchesStatus = state.status === 'all' || cardStatus === state.status;
+        const matched = matchesQuery && matchesCategory && matchesStatus;
+        card.hidden = !matched;
+        if (matched && card.dataset.projectViewCard === state.view) {
+          visibleCount += 1;
+        }
+      });
+
+      const isEmpty = visibleCount === 0;
+      grids.forEach((grid) => {
+        const isCurrentView = grid.dataset.projectFilterGrid === state.view;
+        grid.hidden = isEmpty || !isCurrentView;
+      });
+      emptyState.hidden = !isEmpty;
+      emptySummary.textContent = buildEmptySummary();
+      feedback.textContent = buildFeedback(query, visibleCount);
+      syncFilterButtons();
+      syncViewButtons();
+      syncViewPanels();
+      section.dataset.projectView = state.view;
+    };
+
+    input?.addEventListener('input', updateResults);
+    input?.addEventListener('search', updateResults);
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        state[button.dataset.filterGroup] = button.dataset.filterValue;
+        updateResults();
+      });
+    });
+
+    viewButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        state.view = button.dataset.projectViewValue || 'theme';
+        window.localStorage?.setItem(projectViewStorageKey, state.view);
+        updateResults();
+      });
+    });
+
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        if (input) input.value = '';
+        state.category = 'all';
+        state.status = 'all';
+        updateResults();
+        input?.focus();
+      });
+    }
+
+    updateResults();
+  });
+};
+
+initProjectFilters();
+
 const revealItems = document.querySelectorAll('.reveal');
 const revealStepSelectors = [
   '.card-grid > *',

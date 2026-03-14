@@ -1155,6 +1155,123 @@ body.has-reading-progress .reading-progress {
   color: inherit;
 }
 
+
+.feature-label--portfolio {
+  border-color: var(--accent-border-strong);
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.18), rgba(167, 139, 250, 0.14));
+  color: var(--active-text);
+}
+
+.project-view-switch,
+.project-view-switch__copy {
+  display: grid;
+  gap: 12px;
+}
+
+.project-view-switch {
+  padding: 18px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-soft);
+}
+
+.project-view-switch__copy > span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-view-switch__copy p {
+  margin: 0;
+  color: var(--soft);
+  line-height: 1.75;
+}
+
+.project-view-switch__actions {
+  gap: 10px;
+}
+
+.project-portfolio-grid {
+  grid-template-columns: 1fr;
+}
+
+.project-portfolio-card {
+  gap: 20px;
+}
+
+.project-portfolio-card__hero,
+.project-portfolio-card__content,
+.project-portfolio-card__lists {
+  display: grid;
+  gap: 18px;
+}
+
+.project-portfolio-card__hero {
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+  align-items: start;
+}
+
+.project-portfolio-card__cover {
+  margin: 0;
+}
+
+.project-portfolio-card__cover img {
+  aspect-ratio: 1.28 / 1;
+}
+
+.project-portfolio-card__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.project-portfolio-card__content h3,
+.project-portfolio-card__context {
+  margin: 0;
+}
+
+.project-portfolio-card__context {
+  color: var(--soft);
+  font-weight: 600;
+  line-height: 1.75;
+}
+
+.project-portfolio-card__facts {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.project-portfolio-card__lists {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.project-portfolio-card__list {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+
+.project-portfolio-card__list > span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-portfolio-card__list ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--soft);
+}
+
+.project-portfolio-card__list li + li {
+  margin-top: 0.55rem;
+}
+
 .page-hero__meta {
   display: flex;
   flex-wrap: wrap;
@@ -2545,7 +2662,10 @@ body.has-reading-progress .reading-progress {
   }
 
   .metrics,
-  .cta-band__actions {
+  .cta-band__actions,
+  .project-portfolio-card__hero,
+  .project-portfolio-card__lists,
+  .project-portfolio-card__facts {
     grid-template-columns: 1fr;
   }
 

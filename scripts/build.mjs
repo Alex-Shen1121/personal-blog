@@ -2341,26 +2341,60 @@ const renderHomePage = (posts) => {
     </section>`;
 };
 
-const renderProjectCard = (item, { assetPrefix = '', filterable = false } = {}) => {
-  const statusBadge = renderProjectStatusBadge(item.status);
-  const facts = [
-    ['角色', item.role],
-    ['周期', item.timeline],
-    ['关注点', item.focus],
-    ['当前阶段', getProjectStatusLabel(item.status)]
-  ].filter(([, value]) => value);
-  const previewMedia = getProjectPrimaryMedia(item);
-  const externalLinks = normalizeProjectExternalLinks(item.externalLinks);
+const getProjectFilterSearchIndex = (item) =>
+  [
+    item.title,
+    item.summary,
+    item.category,
+    item.role,
+    item.focus,
+    getProjectStatusLabel(item.status),
+    item.portfolio?.label,
+    item.portfolio?.context,
+    ...(item.portfolio?.deliverables ?? []),
+    ...(item.portfolio?.outcomes ?? []),
+    ...(item.stack ?? [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
 
+const renderProjectFilterAttributes = (item, { filterable = false, view = '' } = {}) => {
+  if (!filterable) return '';
+
+  const attributes = [
+    'data-project-card',
+    `data-search-index="${escapeHtml(getProjectFilterSearchIndex(item))}"`,
+    `data-category="${escapeHtml(normalizeFilterValue(item.category ?? ''))}"`,
+    `data-status="${escapeHtml(normalizeFilterValue(getProjectStatusLabel(item.status)))}"`
+  ];
+
+  if (view) {
+    attributes.push(`data-project-view-card="${escapeHtml(view)}"`);
+  }
+
+  return ` ${attributes.join(' ')}`;
+};
+
+const getProjectPrimaryHrefAndLabel = (item, assetPrefix = '') => {
   const relatedHref = item.href ? resolveLinkHref(item.href, assetPrefix) : '';
   const primaryHref = item.slug ? `${item.slug}/` : relatedHref;
   const primaryVariant = item.slug ? 'ghost' : isExternalLink(primaryHref) ? 'secondary' : 'ghost';
   const primaryLabel = item.slug ? '查看项目详情' : item.linkLabel ?? (isExternalLink(primaryHref) ? '访问项目' : '查看项目');
-  const metaItems = facts
-    .slice(1)
-    .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
-    .join('');
-  const actionLinks = [
+
+  return {
+    relatedHref,
+    primaryHref,
+    primaryVariant,
+    primaryLabel
+  };
+};
+
+const renderProjectActionLinks = (item, assetPrefix = '') => {
+  const { primaryHref, primaryVariant, primaryLabel } = getProjectPrimaryHrefAndLabel(item, assetPrefix);
+  const externalLinks = normalizeProjectExternalLinks(item.externalLinks);
+
+  return [
     primaryHref
       ? renderProjectActionLink({
           href: primaryHref,
@@ -2376,25 +2410,62 @@ const renderProjectCard = (item, { assetPrefix = '', filterable = false } = {}) 
       })
     )
   ].filter(Boolean);
-  const searchIndex = [
-    item.title,
-    item.summary,
-    item.category,
-    item.role,
-    item.focus,
-    getProjectStatusLabel(item.status),
-    ...(item.stack ?? [])
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-  const filterAttributes = filterable
-    ? ` data-project-card data-search-index="${escapeHtml(searchIndex)}" data-category="${escapeHtml(normalizeFilterValue(item.category ?? ''))}" data-status="${escapeHtml(normalizeFilterValue(getProjectStatusLabel(item.status)))}"`
-    : '';
+};
+
+const normalizeProjectPortfolio = (portfolio = {}) => ({
+  label: portfolio?.label?.trim?.() || '案例视角',
+  context: portfolio?.context?.trim?.() || '',
+  deliverables: Array.isArray(portfolio?.deliverables) ? portfolio.deliverables.filter(Boolean) : [],
+  outcomes: Array.isArray(portfolio?.outcomes) ? portfolio.outcomes.filter(Boolean) : []
+});
+
+const renderPortfolioProjectList = (title, items = []) => {
+  if (!items.length) return '';
+
+  return `<article class="project-portfolio-card__list"><span>${title}</span><ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></article>`;
+};
+
+const renderProjectCard = (item, { assetPrefix = '', filterable = false } = {}) => {
+  const statusBadge = renderProjectStatusBadge(item.status);
+  const facts = [
+    ['角色', item.role],
+    ['周期', item.timeline],
+    ['关注点', item.focus],
+    ['当前阶段', getProjectStatusLabel(item.status)]
+  ].filter(([, value]) => value);
+  const previewMedia = getProjectPrimaryMedia(item);
+  const actionLinks = renderProjectActionLinks(item, assetPrefix);
+  const metaItems = facts
+    .slice(1)
+    .map(([label, value]) => (label === '当前阶段' && statusBadge ? statusBadge : `<span class="tag">${value}</span>`))
+    .join('');
+  const filterAttributes = renderProjectFilterAttributes(item, {
+    filterable,
+    view: filterable ? 'theme' : ''
+  });
 
   return `<article class="project-panel project-card"${filterAttributes}>${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}"${getImageAttributes({ src: previewMedia.src, loading: 'lazy' })} /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
     .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${actionLinks.length ? `<div class="project-actions">${actionLinks.join('')}</div>` : ''}</article>`;
+};
+
+const renderPortfolioProjectCard = (item, { assetPrefix = '', filterable = false } = {}) => {
+  const statusBadge = renderProjectStatusBadge(item.status);
+  const previewMedia = getProjectPrimaryMedia(item);
+  const actionLinks = renderProjectActionLinks(item, assetPrefix);
+  const portfolio = normalizeProjectPortfolio(item.portfolio);
+  const facts = [
+    ['角色', item.role],
+    ['周期', item.timeline],
+    ['关注点', item.focus],
+    ['项目方向', item.category]
+  ].filter(([, value]) => value);
+  const filterAttributes = renderProjectFilterAttributes(item, {
+    filterable,
+    view: filterable ? 'portfolio' : ''
+  });
+
+  return `<article class="project-panel project-portfolio-card"${filterAttributes}><div class="project-portfolio-card__hero">${previewMedia ? `<div class="project-card__cover project-portfolio-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}"${getImageAttributes({ src: previewMedia.src, loading: 'lazy' })} /></div>` : ''}<div class="project-portfolio-card__content"><div class="project-portfolio-card__eyebrow"><span class="feature-label feature-label--portfolio">${escapeHtml(portfolio.label)}</span>${statusBadge || ''}</div><div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span></div><h3>${item.title ?? '阶段记录'}</h3>${portfolio.context ? `<p class="project-portfolio-card__context">${escapeHtml(portfolio.context)}</p>` : ''}<p>${item.summary ?? item.text ?? item}</p></div></div>${facts.length ? `<dl class="project-facts project-portfolio-card__facts">${facts.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>` : ''}<div class="project-portfolio-card__lists">${renderPortfolioProjectList('交付内容', portfolio.deliverables)}${renderPortfolioProjectList('当前结果', portfolio.outcomes)}</div>${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${actionLinks.length ? `<div class="project-actions">${actionLinks.join('')}</div>` : ''}</article>`;
 };
 
 const renderProjectDetailPage = (item) => {
@@ -2467,18 +2538,38 @@ const renderProjectsPage = (page) => {
   const projects = page.items ?? [];
   const categories = collectUniqueValues(projects, (project) => project.category);
   const statuses = collectUniqueValues(projects, (project) => getProjectStatusLabel(project.status));
+  const defaultView = page.viewModes?.default ?? 'theme';
+  const themeMode = page.viewModes?.theme ?? {
+    label: '主题模式',
+    description: '更适合先按长期主题和当前阶段理解我在持续投入什么。'
+  };
+  const portfolioMode = page.viewModes?.portfolio ?? {
+    label: '作品集模式',
+    description: '更适合按案例视角快速查看每个项目的截图、职责、交付内容和当前结果。'
+  };
 
-  return `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
-    <section class="section reveal" data-project-filter data-project-filter-total="${projects.length}">
+  return `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p><div class="page-hero__meta"><span class="tag">支持两种查看方式</span><span class="tag">可按主题 / 案例切换</span></div></section>
+    <section class="section reveal" data-project-filter data-project-filter-total="${projects.length}" data-project-view="${escapeHtml(defaultView)}">
       <div class="post-discovery panel">
         <div class="post-discovery__intro">
           <p class="kicker">项目筛选</p>
           <h2>按项目方向、阶段或关键词，快速收窄当前列表。</h2>
-          <p class="section-intro">更适合先从一个具体主题切入，再决定要不要打开项目详情继续看。</p>
+          <p class="section-intro">也可以在“主题模式”和“作品集模式”之间切换：前者更适合先看长期投入方向，后者更适合先看案例式信息。</p>
+        </div>
+        <div class="project-view-switch" aria-label="项目查看模式切换">
+          <div class="project-view-switch__copy">
+            <span>查看方式</span>
+            <p data-project-view-panel="theme">${themeMode.description}</p>
+            <p data-project-view-panel="portfolio" hidden>${portfolioMode.description}</p>
+          </div>
+          <div class="filter-chips project-view-switch__actions" role="group" aria-label="项目查看模式">
+            <button class="filter-chip${defaultView === 'theme' ? ' is-active' : ''}" type="button" data-project-view-option data-project-view-value="theme" aria-pressed="${defaultView === 'theme' ? 'true' : 'false'}">${themeMode.label}</button>
+            <button class="filter-chip${defaultView === 'portfolio' ? ' is-active' : ''}" type="button" data-project-view-option data-project-view-value="portfolio" aria-pressed="${defaultView === 'portfolio' ? 'true' : 'false'}">${portfolioMode.label}</button>
+          </div>
         </div>
         <label class="search-field" for="project-search-input">
           <span>搜索项目</span>
-          <input id="project-search-input" type="search" placeholder="搜索项目名称、摘要、角色或技术栈" autocomplete="off" data-project-filter-input />
+          <input id="project-search-input" type="search" placeholder="搜索项目名称、摘要、角色、交付内容或技术栈" autocomplete="off" data-project-filter-input />
         </label>
         <div class="discovery-toolbar">
           <div class="filter-groups">
@@ -2514,8 +2605,11 @@ const renderProjectsPage = (page) => {
         </div>
         <p class="search-feedback" data-project-filter-feedback>当前共 ${projects.length} 个项目。</p>
       </div>
-      <div class="project-grid" data-project-filter-grid>${projects
+      <div class="project-grid" data-project-filter-grid="theme">${projects
         .map((item) => renderProjectCard(item, { assetPrefix: '../', filterable: true }))
+        .join('')}</div>
+      <div class="project-grid project-portfolio-grid" data-project-filter-grid="portfolio" hidden>${projects
+        .map((item) => renderPortfolioProjectCard(item, { assetPrefix: '../', filterable: true }))
         .join('')}</div>
       ${renderStateCard({
         tone: 'empty',
