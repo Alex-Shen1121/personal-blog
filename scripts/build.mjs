@@ -10,6 +10,7 @@ const outDir = path.join(rootDir, 'dist');
 const postsDir = path.join(rootDir, 'content', 'posts');
 const assetsDir = path.join(rootDir, 'src', 'assets');
 const publicDir = path.join(rootDir, 'public');
+const criticalCssSource = readFileSync(path.join(rootDir, 'critical.css'), 'utf8');
 const canonicalConfig = validateCanonicalConfig(site);
 
 if (canonicalConfig.errors.length > 0) {
@@ -1139,6 +1140,7 @@ const renderLayout = ({
   const canonical = buildCanonicalUrl(site, currentPath);
   const stylesheetHref = trimLocalPrefix(`${prefix}/styles.css`);
   const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
+  const fontStylesheetHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap';
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
   const resolvedOpenGraph = {
     title: openGraph.title ?? title,
@@ -1222,6 +1224,7 @@ const renderLayout = ({
     themeColorMeta.setAttribute('content', theme === 'light' ? '#f4f7fb' : '#07111f');
   }
 })();`;
+  const criticalCss = criticalCssSource.replaceAll('</style>', '<\\/style>');
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -1250,8 +1253,11 @@ const renderLayout = ({
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>${themeBootScript}</script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="${stylesheetHref}" />
+    <style>${criticalCss}</style>
+    <link rel="preload" href="${fontStylesheetHref}" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="${fontStylesheetHref}" /></noscript>
+    <link rel="preload" href="${stylesheetHref}" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="${stylesheetHref}" /></noscript>
   </head>
   <body>
     <div class="reading-progress" data-reading-progress>
@@ -1310,7 +1316,7 @@ const renderLayout = ({
         <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。</span>
       </footer>
     </div>
-    <script src="${scriptHref}"></script>
+    <script src="${scriptHref}" defer></script>
   </body>
 </html>`;
 };
@@ -2348,6 +2354,7 @@ ensureDir(outDir);
 ensureDir(path.join(outDir, 'assets'));
 copyFileSync(path.join(rootDir, 'styles.css'), path.join(outDir, 'styles.css'));
 copyFileSync(path.join(rootDir, 'script.js'), path.join(outDir, 'script.js'));
+copyFileSync(path.join(rootDir, 'enhancements.js'), path.join(outDir, 'enhancements.js'));
 
 for (const file of readdirSync(assetsDir)) {
   copyFileSync(path.join(assetsDir, file), path.join(outDir, 'assets', file));
