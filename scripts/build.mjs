@@ -10,6 +10,7 @@ import { auditGeneratedHtml } from './html-audit.mjs';
 import { parseAndValidateFrontmatter } from './frontmatter.mjs';
 import { validateMarkdownContentQuality } from './markdown-quality.mjs';
 import { runDeadLinkCheck } from './dead-link-check.mjs';
+import { printBuildReport } from './build-report.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -4724,3 +4725,6 @@ if (deadLinks.length > 0) {
 console.log(
   `Build complete. Generated ${posts.length} published posts, ${draftPosts.length + draftPostsEn.length} draft preview pages, ${sitemapEntries.length} sitemap entries, ${emittedAssetEntries.length} fingerprinted assets, and audited ${htmlAudit.htmlFileCount} HTML files.`
 );
+
+// Print build size report
+printBuildReport();

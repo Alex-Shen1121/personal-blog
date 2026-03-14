@@ -18,6 +18,12 @@
     "sitemap": "node scripts/sitemap.mjs",
     "dead-links": "node scripts/dead-link-check.mjs",
     "web-vitals": "node scripts/web-vitals.mjs --url https://alex-shen1121.github.io/personal-blog/",
-    "notify": "node scripts/notify-build-failure.mjs"
+    "notify": "node scripts/notify-build-failure.mjs",
+    "backup": "node scripts/backup.mjs",
+    "build:report": "node scripts/build-report.mjs",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "rollback": "bash scripts/rollback.sh"
   }
 }

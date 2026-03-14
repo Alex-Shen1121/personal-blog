@@ -324,6 +324,144 @@ draft: true
 - `siteUrl`
 - `repoBasePath`
 
+## 发布流程
+
+### 新增内容
+
+#### 新增博客文章
+
+1. 在 `content/posts/` 目录下创建新的 Markdown 文件
+2. 添加 frontmatter 元信息：
+
+```md
+---
+title: 文章标题
+date: 2026-03-14
+summary: 一句话摘要
+category: 分类
+tags: 标签一, 标签二
+cover: /assets/cover-image.svg
+template: insight  # 可选：insight / playbook / field-note
+---
+
+正文内容...
+```
+
+3. 本地验证：`npm run validate`
+4. 本地构建：`npm run build`
+5. 本地预览：`npm run preview`
+6. 提交并推送：
+
+```bash
+git add content/posts/your-new-post.md
+git commit -m "docs: 新增文章 - 标题"
+git push origin main
+```
+
+#### 新增项目
+
+1. 在 `src/data/site.mjs` 的 `pages.projects.items` 数组中添加项目对象
+2. 完善项目的标题、描述、分类、状态、时间线、关键信息、案例说明等字段
+3. 如有项目截图，放在 `src/assets/` 目录
+4. 提交并推送
+
+#### 新增页面
+
+1. 在 `src/data/site.mjs` 中添加页面数据配置
+2. 在 `scripts/build.mjs` 中添加对应的页面渲染逻辑（如果是新类型页面）
+3. 提交并推送
+
+### 部署流程
+
+#### 自动部署（推荐）
+
+项目已配置 GitHub Actions，推送到 `main` 分支后自动完成以下流程：
+
+1. **自动触发**：Push 到 main 分支
+2. **校验阶段**：运行 `npm run validate`
+3. **构建阶段**：运行 `npm run build`，输出构建产物大小报告
+4. **部署阶段**：将 `dist/` 目录发布到 GitHub Pages
+5. **验证阶段**：（可选）运行 Playwright 视觉回归测试
+
+部署状态查看：https://github.com/Alex-Shen1121/personal-blog/actions
+
+#### 本地构建部署
+
+```bash
+# 1. 安装依赖
+npm install
+
+# 2. 校验内容
+npm run validate
+
+# 3. 构建站点
+npm run build
+
+# 4. 预览效果
+npm run preview
+# 访问 http://127.0.0.1:4173
+
+# 5. 手动推送到 GitHub
+git add .
+git commit -m "feat: 你的改动描述"
+git push origin main
+```
+
+#### 回滚部署
+
+如需回滚到上一个版本：
+
+```bash
+# 方式一：使用回滚脚本
+bash scripts/rollback.sh
+
+# 方式二：手动回滚
+# 1. 查看提交历史
+git log --oneline -10
+
+# 2. 切换到上一个提交
+git checkout HEAD~1
+
+# 3. 强制推送到远程（⚠️ 危险操作）
+git push origin main --force
+```
+
+### 备份策略
+
+项目配置了定时自动备份：
+
+- **备份频率**：每周日凌晨 3:00 自动执行
+- **备份内容**：源代码（content/, src/, public/, scripts/ 等）
+- **备份位置**：本地 `.backups/` 目录，可选上传到 GitHub Releases
+
+手动触发备份：
+
+```bash
+# 本地备份
+node scripts/backup.mjs local
+
+# 上传到 GitHub Releases
+node scripts/backup.mjs github
+```
+
+### 测试流程
+
+项目使用 Playwright 进行视觉回归测试：
+
+```bash
+# 安装测试依赖
+npm install -D @playwright/test
+npx playwright install --with-deps
+
+# 运行测试
+npx playwright test
+
+# 生成 HTML 报告
+npx playwright show-report
+```
+
+CI 中会自动运行测试（需要在 GitHub Actions 中配置）。
+
 ## 适用场景
 
 这个项目适合以下类型的使用者：

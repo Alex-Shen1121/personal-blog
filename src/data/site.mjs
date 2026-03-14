@@ -107,6 +107,18 @@ export const site = {
     readyText: '统计已更新，数据可能有短暂延迟。',
     unavailableText: '统计服务暂时不可用。'
   },
+  // 错误追踪配置
+  errorTracking: {
+    enabled: false, // 设置为 true 开启错误上报
+    endpoint: null, // 错误上报的 webhook 地址
+    sampleRate: 1, // 错误采样率 0-1
+    ignorePatterns: [
+      // 忽略的错误模式
+      'ResizeObserver',
+      'favicon'
+    ],
+    maxErrors: 10 // 最多上报的错误数量
+  },
   announcement: {
     eyebrow: '站点公告',
     badge: '2026 春季更新',
