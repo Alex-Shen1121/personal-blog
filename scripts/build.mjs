@@ -2114,7 +2114,32 @@ const collectCategories = (posts) =>
     }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 
-const render404 = () => `
+const render404 = (posts = []) => {
+  const suggestedRoutes = [
+    {
+      label: '首页总览',
+      href: './',
+      note: '回到站点总览，重新选择要继续看的入口。'
+    },
+    {
+      label: '文章列表',
+      href: './blog/',
+      note: '支持按标题、摘要、分类和标签快速筛选内容。'
+    },
+    {
+      label: '项目页',
+      href: './projects/',
+      note: '适合先看正在持续迭代的主题和案例方向。'
+    },
+    {
+      label: '近况页',
+      href: './now/',
+      note: '快速了解最近在推进什么，以及站点目前的更新重点。'
+    }
+  ];
+  const recentPosts = posts.slice(0, 3);
+
+  return `
   <section class="page-hero reveal">
     <p class="kicker">404</p>
     <h1>这个页面暂时不存在。</h1>
@@ -2124,15 +2149,62 @@ const render404 = () => `
       icon: '404',
       kicker: '错误提示',
       title: '没有找到你要访问的页面。',
-      summary: '可以先回到首页、文章页或项目页继续浏览，避免停在一个空白入口上。',
-      tips: ['如果你是从旧链接跳转过来的，建议重新从导航进入对应页面。', '如果这是我刚提到的内容，说明它可能还在整理或尚未上线。'],
+      summary: '可以先回到首页、文章页或项目页继续浏览，也可以直接从最近更新的内容重新进入。',
+      tips: [
+        '如果你是从旧链接跳转过来的，建议重新从导航或目录页进入对应内容。',
+        '文章列表页支持关键词、分类和标签筛选，适合重新定位一篇文章。'
+      ],
       actions: [
         '<a class="button button-primary button-small" href="./index.html">返回首页</a>',
         '<a class="button button-secondary button-small" href="./blog/">查看文章</a>',
         '<a class="button button-ghost button-small" href="./projects/">查看项目</a>'
       ]
     })}
-  </section>`;
+  </section>
+  <section class="section reveal">
+    <div class="section-heading">
+      <p class="kicker">继续浏览</p>
+      <h2>先回到稳定入口，再重新定位你想看的内容。</h2>
+      <p class="section-intro">如果你是从旧链接、收藏夹或搜索结果进来的，优先回到目录页会更快找到正确路径。</p>
+    </div>
+    <div class="nav-guide-grid">
+      <article class="panel nav-guide-card">
+        <h3>常用入口</h3>
+        <ul class="nav-guide-list">
+          ${suggestedRoutes
+            .map(
+              (item) => `<li><a class="nav-guide-link" href="${item.href}"><strong>${item.label}</strong><span>${item.note}</span></a></li>`
+            )
+            .join('')}
+        </ul>
+      </article>
+      <article class="panel nav-guide-card">
+        <h3>你也可以这样排查</h3>
+        <ul class="nav-guide-list">
+          <li><a class="nav-guide-link" href="./blog/"><strong>先去文章列表搜索标题或标签</strong><span>文章页支持按关键词、分类和标签筛选，适合重新找回一篇内容。</span></a></li>
+          <li><a class="nav-guide-link" href="./projects/"><strong>从项目页重新进入案例详情</strong><span>如果你记得主题但不记得具体链接，先看项目目录通常更稳妥。</span></a></li>
+          <li><a class="nav-guide-link" href="mailto:alex@example.com"><strong>仍然找不到？可以直接联系我</strong><span>如果这是我刚分享给你的内容，可能只是链接已调整或页面还在整理。</span></a></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+  ${recentPosts.length
+    ? `<section class="section reveal">
+        <div class="section-heading">
+          <p class="kicker">最近更新</p>
+          <h2>如果你只是想继续浏览，可以先读这几篇。</h2>
+          <p class="section-intro">这里放最近可直接打开的文章入口，避免停在 404 页面上没有下一步。</p>
+        </div>
+        <div class="card-grid">
+          ${recentPosts
+            .map(
+              (post) => `<article class="post-card post-card--compact"><div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="./blog/categories/${post.category.slug}/">${post.category.name}</a></p><h3>${post.title}</h3><p>${post.summary}</p>${renderTagLinks(post.tags, './blog/')}<a class="text-link" href="./blog/${post.slug}/">继续阅读 →</a></article>`
+            )
+            .join('')}
+        </div>
+      </section>`
+    : ''}`;
+};
 
 if (existsSync(outDir)) {
   rmSync(outDir, { recursive: true, force: true });
@@ -2459,7 +2531,7 @@ writeText(
     description: site.seo?.notFound?.description ?? '你访问的页面不存在。',
     currentPath: '/404.html',
     outputPath: path.join(outDir, '404.html'),
-    body: render404(),
+    body: render404(posts),
     robots: site.seo?.robots?.notFound ?? 'noindex,follow'
   })
 );
