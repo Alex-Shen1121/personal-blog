@@ -57,7 +57,7 @@
 - [x] 48. 支持文章页独立 Open Graph 信息
 - [x] 49. 支持 Twitter Card
 - [x] 50. 增加 canonical 规则校验
-- [ ] 51. 自动生成结构化数据 JSON-LD
+- [x] 51. 自动生成结构化数据 JSON-LD
 - [ ] 52. 优化 sitemap / robots 控制
 - [ ] 53. 优化 404 页面引导
 - [ ] 54. 增加文章 slug 自定义能力

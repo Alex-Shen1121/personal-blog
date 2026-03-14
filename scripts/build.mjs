@@ -704,6 +704,265 @@ const detectImageMimeType = (assetPath = '') => {
   return '';
 };
 
+const siteHomeUrl = buildCanonicalUrl(site, '/');
+const personSchemaId = `${siteHomeUrl}#person`;
+const websiteSchemaId = `${siteHomeUrl}#website`;
+
+const normalizeStructuredData = (value) => {
+  if (!value) return [];
+  return (Array.isArray(value) ? value : [value]).filter(Boolean);
+};
+
+const serializeStructuredData = (value) =>
+  JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/<\/script/gi, '<\\/script');
+
+const resolveAbsoluteUrl = (value = '') => {
+  if (!value) return '';
+  if (/^(?:[a-z]+:)?\/\//i.test(value) || value.startsWith('data:')) {
+    return value;
+  }
+  return withBase(value.startsWith('/') ? value : `/${value}`);
+};
+
+const createImageObject = (image, caption = '') => {
+  const url = resolveAbsoluteUrl(image);
+  if (!url) return null;
+
+  const imageObject = {
+    '@type': 'ImageObject',
+    url,
+    contentUrl: url
+  };
+  const mimeType = detectImageMimeType(image);
+  if (mimeType) imageObject.encodingFormat = mimeType;
+  if (caption) imageObject.caption = caption;
+  return imageObject;
+};
+
+const createBreadcrumbs = (items = []) =>
+  items
+    .map((item) => {
+      if (!item?.name) return null;
+      const url = item.url ?? (item.path ? buildCanonicalUrl(site, item.path) : '');
+      if (!url) return null;
+      return {
+        name: item.name,
+        url
+      };
+    })
+    .filter(Boolean);
+
+const buildPersonStructuredData = () => {
+  const sameAs = (site.author.links ?? [])
+    .map((link) => link?.url?.trim?.())
+    .filter((url) => /^https?:\/\//i.test(url));
+
+  const person = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': personSchemaId,
+    name: site.author.name,
+    url: siteHomeUrl,
+    description: site.author.intro,
+    jobTitle: site.author.role,
+    email: site.author.email
+  };
+
+  if (site.author.city) {
+    person.address = {
+      '@type': 'PostalAddress',
+      addressLocality: site.author.city
+    };
+  }
+
+  if (sameAs.length) {
+    person.sameAs = sameAs;
+  }
+
+  return person;
+};
+
+const buildWebsiteStructuredData = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': websiteSchemaId,
+  url: siteHomeUrl,
+  name: site.shortName,
+  alternateName: site.title,
+  description: site.description,
+  inLanguage: 'zh-CN',
+  publisher: {
+    '@id': personSchemaId
+  }
+});
+
+const buildBreadcrumbStructuredData = (canonical, items = []) => {
+  if (!items.length) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    '@id': `${canonical}#breadcrumb`,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: item.url
+    }))
+  };
+};
+
+const buildPageStructuredData = ({
+  title,
+  description,
+  canonical,
+  image,
+  pageType = 'WebPage',
+  breadcrumbs = [],
+  mainEntityId = ''
+}) => {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': pageType,
+    '@id': `${canonical}#page`,
+    url: canonical,
+    name: title,
+    description,
+    inLanguage: 'zh-CN',
+    isPartOf: {
+      '@id': websiteSchemaId
+    },
+    about: {
+      '@id': personSchemaId
+    }
+  };
+
+  const imageObject = createImageObject(image);
+  if (imageObject) {
+    schema.primaryImageOfPage = imageObject;
+  }
+
+  if (breadcrumbs.length) {
+    schema.breadcrumb = {
+      '@id': `${canonical}#breadcrumb`
+    };
+  }
+
+  if (mainEntityId) {
+    schema.mainEntity = {
+      '@id': mainEntityId
+    };
+  }
+
+  return schema;
+};
+
+const buildItemListStructuredData = ({ canonical, items = [] }) => {
+  if (!items.length) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    '@id': `${canonical}#itemlist`,
+    url: canonical,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': item.type ?? 'Thing',
+        name: item.name,
+        url: item.url,
+        ...(item.description ? { description: item.description } : {})
+      }
+    }))
+  };
+};
+
+const buildPostListStructuredData = (currentPath, posts) =>
+  buildItemListStructuredData({
+    canonical: buildCanonicalUrl(site, currentPath),
+    items: posts.map((post) => ({
+      type: 'BlogPosting',
+      name: post.title,
+      url: buildCanonicalUrl(site, `/blog/${post.slug}/`),
+      description: post.summary
+    }))
+  });
+
+const buildCollectionListStructuredData = (currentPath, items, mapItem) =>
+  buildItemListStructuredData({
+    canonical: buildCanonicalUrl(site, currentPath),
+    items: items.map(mapItem)
+  });
+
+const buildBlogPostingStructuredData = ({ post, canonical }) => {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    '@id': `${canonical}#article`,
+    url: canonical,
+    headline: post.title,
+    description: post.summary,
+    datePublished: toIsoDateTime(post.date),
+    dateModified: toIsoDateTime(post.updated ?? post.date),
+    author: {
+      '@id': personSchemaId
+    },
+    publisher: {
+      '@id': personSchemaId
+    },
+    mainEntityOfPage: {
+      '@id': `${canonical}#page`
+    },
+    articleSection: post.category.name,
+    wordCount: post.wordCount,
+    inLanguage: 'zh-CN'
+  };
+
+  const imageObject = createImageObject(post.ogImage ?? post.cover, `${post.title} 的文章封面图`);
+  if (imageObject) {
+    schema.image = imageObject;
+  }
+
+  if (post.tags.length) {
+    schema.keywords = post.tags.join(', ');
+  }
+
+  return schema;
+};
+
+const buildProjectStructuredData = ({ project, canonical }) => {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    '@id': `${canonical}#project`,
+    url: canonical,
+    name: project.title,
+    description: project.summary,
+    creator: {
+      '@id': personSchemaId
+    },
+    inLanguage: 'zh-CN',
+    genre: project.category
+  };
+
+  const imageObject = createImageObject(getProjectPrimaryMedia(project)?.src, project.title);
+  if (imageObject) {
+    schema.image = imageObject;
+  }
+
+  if (project.stack?.length) {
+    schema.keywords = project.stack.join(', ');
+  }
+
+  return schema;
+};
+
 const defaultCoverPool = [
   '/assets/illustration-wave.svg',
   '/assets/illustration-orbit.svg',
@@ -735,7 +994,19 @@ const renderNav = (currentPath, prefix) => {
 
 const formatMetaTitle = (...segments) => segments.filter(Boolean).join('｜');
 
-const renderLayout = ({ title, description, currentPath, outputPath, body, image = site.brand.ogImage, openGraph = {} }) => {
+const renderLayout = ({
+  title,
+  description,
+  currentPath,
+  outputPath,
+  body,
+  image = site.brand.ogImage,
+  openGraph = {},
+  pageType = 'WebPage',
+  breadcrumbs = [],
+  structuredData = [],
+  mainEntityId = ''
+}) => {
   const prefix = getRelativePrefix(outputPath);
   const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
   const canonical = buildCanonicalUrl(site, currentPath);
@@ -772,6 +1043,24 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
   const metaTwitterDescription = escapeHtml(resolvedTwitter.description);
   const metaTwitterImage = resolvedTwitter.image ? escapeHtml(resolvedTwitter.image) : '';
   const metaTwitterImageAlt = resolvedTwitter.imageAlt ? escapeHtml(resolvedTwitter.imageAlt) : '';
+  const structuredDataScripts = [
+    buildWebsiteStructuredData(),
+    buildPersonStructuredData(),
+    buildPageStructuredData({
+      title,
+      description,
+      canonical,
+      image: resolvedOpenGraph.image,
+      pageType,
+      breadcrumbs,
+      mainEntityId
+    }),
+    buildBreadcrumbStructuredData(canonical, breadcrumbs),
+    ...normalizeStructuredData(structuredData)
+  ]
+    .filter(Boolean)
+    .map((schema) => `<script type="application/ld+json">${serializeStructuredData(schema)}</script>`)
+    .join('\n    ');
   const openGraphExtras = [
     ogImageType ? `<meta property="og:image:type" content="${escapeHtml(ogImageType)}" />` : '',
     '<meta property="og:image:width" content="1200" />',
@@ -827,6 +1116,7 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     ${metaTwitterImage ? `<meta name="twitter:image" content="${metaTwitterImage}" />` : ''}
     ${metaTwitterImageAlt ? `<meta name="twitter:image:alt" content="${metaTwitterImageAlt}" />` : ''}
     <link rel="canonical" href="${metaCanonical}" />
+    ${structuredDataScripts}
     <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1872,7 +2162,8 @@ writeText(
     description: site.seo?.home?.description ?? site.description,
     currentPath: '/',
     outputPath: path.join(outDir, 'index.html'),
-    body: renderHomePage(posts)
+    body: renderHomePage(posts),
+    mainEntityId: personSchemaId
   })
 );
 
@@ -1884,7 +2175,28 @@ for (const [key, page] of Object.entries(pages).filter(([key]) => key !== 'blog'
       description: page.seo?.description ?? page.description,
       currentPath: `/${key}/`,
       outputPath: path.join(outDir, key, 'index.html'),
-      body: renderInfoPage(key)
+      body: renderInfoPage(key),
+      pageType: key === 'about' ? 'AboutPage' : key === 'projects' ? 'CollectionPage' : 'WebPage',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: page.title, path: `/${key}/` }
+      ]),
+      structuredData:
+        key === 'projects'
+          ? [
+              buildCollectionListStructuredData(
+                '/projects/',
+                (page.items ?? []).filter((item) => item.slug),
+                (item) => ({
+                  type: 'CreativeWork',
+                  name: item.title,
+                  url: buildCanonicalUrl(site, `/projects/${item.slug}/`),
+                  description: item.summary
+                })
+              )
+            ]
+          : [],
+      mainEntityId: key === 'about' ? personSchemaId : ''
     })
   );
 }
@@ -1899,7 +2211,14 @@ for (const project of pages.projects.items ?? []) {
       currentPath: `/projects/${project.slug}/`,
       outputPath: path.join(outDir, 'projects', project.slug, 'index.html'),
       body: renderProjectDetailPage(project),
-      image: getProjectPrimaryMedia(project)?.src ?? '/assets/illustration-wave.svg'
+      image: getProjectPrimaryMedia(project)?.src ?? '/assets/illustration-wave.svg',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '项目', path: '/projects/' },
+        { name: project.title, path: `/projects/${project.slug}/` }
+      ]),
+      structuredData: [buildProjectStructuredData({ project, canonical: buildCanonicalUrl(site, `/projects/${project.slug}/`) })],
+      mainEntityId: `${buildCanonicalUrl(site, `/projects/${project.slug}/`)}#project`
     })
   );
 }
@@ -1914,7 +2233,13 @@ writeText(
     currentPath: '/blog/',
     outputPath: path.join(outDir, 'blog', 'index.html'),
     body: renderBlogListPage(posts, tags, categories, seriesList),
-    image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg',
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' }
+    ]),
+    structuredData: [buildPostListStructuredData('/blog/', posts)]
   })
 );
 
@@ -1926,7 +2251,21 @@ writeText(
     currentPath: '/blog/tags/',
     outputPath: path.join(outDir, 'blog', 'tags', 'index.html'),
     body: renderTagListPage(tags),
-    image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg',
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' },
+      { name: '标签', path: '/blog/tags/' }
+    ]),
+    structuredData: [
+      buildCollectionListStructuredData('/blog/tags/', tags, (tag) => ({
+        type: 'CollectionPage',
+        name: tag.name,
+        url: buildCanonicalUrl(site, `/blog/tags/${tag.slug}/`),
+        description: `标签“${tag.name}”下共 ${tag.posts.length} 篇文章。`
+      }))
+    ]
   })
 );
 
@@ -1939,7 +2278,15 @@ for (const tag of tags) {
       currentPath: `/blog/tags/${tag.slug}/`,
       outputPath: path.join(outDir, 'blog', 'tags', tag.slug, 'index.html'),
       body: renderTagDetailPage(tag),
-      image: tag.posts[0]?.cover ?? '/assets/illustration-wave.svg'
+      image: tag.posts[0]?.cover ?? '/assets/illustration-wave.svg',
+      pageType: 'CollectionPage',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '文章', path: '/blog/' },
+        { name: '标签', path: '/blog/tags/' },
+        { name: tag.name, path: `/blog/tags/${tag.slug}/` }
+      ]),
+      structuredData: [buildPostListStructuredData(`/blog/tags/${tag.slug}/`, tag.posts)]
     })
   );
 }
@@ -1951,7 +2298,21 @@ writeText(
     description: site.seo?.series?.description ?? `按系列顺序浏览 ${seriesList.length} 个文章主题。`,
     currentPath: '/blog/series/',
     outputPath: path.join(outDir, 'blog', 'series', 'index.html'),
-    body: renderSeriesListPage(seriesList)
+    body: renderSeriesListPage(seriesList),
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' },
+      { name: '系列', path: '/blog/series/' }
+    ]),
+    structuredData: [
+      buildCollectionListStructuredData('/blog/series/', seriesList, (series) => ({
+        type: 'CollectionPage',
+        name: series.name,
+        url: buildCanonicalUrl(site, `/blog/series/${series.slug}/`),
+        description: series.description
+      }))
+    ]
   })
 );
 
@@ -1964,7 +2325,15 @@ for (const series of seriesList) {
       currentPath: `/blog/series/${series.slug}/`,
       outputPath: path.join(outDir, 'blog', 'series', series.slug, 'index.html'),
       body: renderSeriesDetailPage(series),
-      image: series.posts[0]?.cover ?? '/assets/illustration-wave.svg'
+      image: series.posts[0]?.cover ?? '/assets/illustration-wave.svg',
+      pageType: 'CollectionPage',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '文章', path: '/blog/' },
+        { name: '系列', path: '/blog/series/' },
+        { name: series.name, path: `/blog/series/${series.slug}/` }
+      ]),
+      structuredData: [buildPostListStructuredData(`/blog/series/${series.slug}/`, series.posts)]
     })
   );
 }
@@ -1976,7 +2345,21 @@ writeText(
     description: site.seo?.categories?.description ?? `按 ${categories.length} 个分类浏览 ${posts.length} 篇博客文章。`,
     currentPath: '/blog/categories/',
     outputPath: path.join(outDir, 'blog', 'categories', 'index.html'),
-    body: renderCategoryListPage(categories)
+    body: renderCategoryListPage(categories),
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' },
+      { name: '分类', path: '/blog/categories/' }
+    ]),
+    structuredData: [
+      buildCollectionListStructuredData('/blog/categories/', categories, (category) => ({
+        type: 'CollectionPage',
+        name: category.name,
+        url: buildCanonicalUrl(site, `/blog/categories/${category.slug}/`),
+        description: `分类“${category.name}”下共 ${category.posts.length} 篇文章。`
+      }))
+    ]
   })
 );
 
@@ -1988,7 +2371,14 @@ writeText(
     currentPath: '/blog/archive/',
     outputPath: path.join(outDir, 'blog', 'archive', 'index.html'),
     body: renderArchivePage(posts),
-    image: posts[0]?.cover ?? '/assets/illustration-wave.svg'
+    image: posts[0]?.cover ?? '/assets/illustration-wave.svg',
+    pageType: 'CollectionPage',
+    breadcrumbs: createBreadcrumbs([
+      { name: '首页', path: '/' },
+      { name: '文章', path: '/blog/' },
+      { name: '归档', path: '/blog/archive/' }
+    ]),
+    structuredData: [buildPostListStructuredData('/blog/archive/', posts)]
   })
 );
 
@@ -2001,7 +2391,15 @@ for (const category of categories) {
       currentPath: `/blog/categories/${category.slug}/`,
       outputPath: path.join(outDir, 'blog', 'categories', category.slug, 'index.html'),
       body: renderCategoryPage(category, category.posts),
-      image: category.latestPost?.cover ?? '/assets/illustration-wave.svg'
+      image: category.latestPost?.cover ?? '/assets/illustration-wave.svg',
+      pageType: 'CollectionPage',
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '文章', path: '/blog/' },
+        { name: '分类', path: '/blog/categories/' },
+        { name: category.name, path: `/blog/categories/${category.slug}/` }
+      ]),
+      structuredData: [buildPostListStructuredData(`/blog/categories/${category.slug}/`, category.posts)]
     })
   );
 }
@@ -2023,6 +2421,13 @@ for (const [index, post] of posts.entries()) {
       outputPath: path.join(outDir, 'blog', post.slug, 'index.html'),
       body: renderPostPage(post, relatedPosts, navigationPosts, series),
       image: post.cover,
+      breadcrumbs: createBreadcrumbs([
+        { name: '首页', path: '/' },
+        { name: '文章', path: '/blog/' },
+        { name: post.title, path: `/blog/${post.slug}/` }
+      ]),
+      structuredData: [buildBlogPostingStructuredData({ post, canonical: buildCanonicalUrl(site, `/blog/${post.slug}/`) })],
+      mainEntityId: `${buildCanonicalUrl(site, `/blog/${post.slug}/`)}#article`,
       openGraph: {
         title: post.ogTitle ?? post.title,
         description: post.ogDescription ?? post.summary,
