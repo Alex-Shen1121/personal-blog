@@ -972,6 +972,535 @@ function initPageLoader() {
   });
 }
 
+/* ===== ENHANCED FEATURES 31-45 ===== */
+
+// 31. Global Search (CMD+K / CTRL+K)
+function initGlobalSearch() {
+  const searchOverlay = document.createElement('div');
+  searchOverlay.className = 'search-overlay';
+  searchOverlay.innerHTML = `
+    <div class="search-modal">
+      <div class="search-modal__header">
+        <input type="text" class="search-input" placeholder="搜索文章、项目、标签..." aria-label="搜索">
+        <button class="search-close" aria-label="关闭搜索">✕</button>
+      </div>
+      <div class="search-results">
+        <div class="search-results__empty">输入关键词开始搜索</div>
+      </div>
+      <div class="search-footer">
+        <span class="search-hint"><kbd>↑</kbd> <kbd>↓</kbd> 导航</span>
+        <span class="search-hint"><kbd>↵</kbd> 选择</span>
+        <span class="search-hint"><kbd>ESC</kbd> 关闭</span>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(searchOverlay);
+
+  const searchInput = searchOverlay.querySelector('.search-input');
+  const searchResults = searchOverlay.querySelector('.search-results');
+  const searchClose = searchOverlay.querySelector('.search-close');
+  const searchModal = searchOverlay.querySelector('.search-modal');
+
+  // Generate mock search index from page content
+  const searchIndex = [];
+  document.querySelectorAll('.post-card, .project-card, .tag').forEach(item => {
+    const title = item.querySelector('h3, h4, a')?.textContent || '';
+    const desc = item.querySelector('p')?.textContent || '';
+    const link = item.querySelector('a')?.href || '';
+    if (title && link) {
+      searchIndex.push({ title: title.trim(), desc: desc.trim(), link });
+    }
+  });
+
+  // Search history
+  const searchHistoryKey = 'personal-blog-search-history';
+  const getSearchHistory = () => JSON.parse(localStorage.getItem(searchHistoryKey) || '[]');
+  const addSearchHistory = (query) => {
+    if (!query.trim()) return;
+    let history = getSearchHistory();
+    history = [query, ...history.filter(h => h !== query)].slice(0, 5);
+    localStorage.setItem(searchHistoryKey, JSON.stringify(history));
+  };
+
+  const performSearch = (query) => {
+    if (!query.trim()) {
+      const history = getSearchHistory();
+      if (history.length > 0) {
+        searchResults.innerHTML = `
+          <div class="search-results__section">
+            <div class="search-results__title">最近搜索</div>
+            ${history.map(h => `<a href="?q=${encodeURIComponent(h)}" class="search-result" data-search-history="${h}">${highlightMatch(h, h)}</a>`).join('')}
+          </div>
+        `;
+      } else {
+        searchResults.innerHTML = '<div class="search-results__empty">输入关键词开始搜索</div>';
+      }
+      return;
+    }
+
+    const results = searchIndex.filter(item => 
+      item.title.toLowerCase().includes(query.toLowerCase()) ||
+      item.desc.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 10);
+
+    if (results.length === 0) {
+      searchResults.innerHTML = '<div class="search-results__empty">未找到相关结果</div>';
+      return;
+    }
+
+    searchResults.innerHTML = `
+      <div class="search-results__section">
+        <div class="search-results__title">搜索结果</div>
+        ${results.map((item, i) => `
+          <a href="${item.link}" class="search-result${i === 0 ? ' is-active' : ''}" data-index="${i}">
+            <span class="search-result__title">${highlightMatch(item.title, query)}</span>
+            <span class="search-result__desc">${highlightMatch(item.desc, query)}</span>
+          </a>
+        `).join('')}
+      </div>
+    `;
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query.trim()) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+  };
+
+  const openSearch = () => {
+    searchOverlay.classList.add('is-open');
+    searchInput.focus();
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeSearch = () => {
+    searchOverlay.classList.remove('is-open');
+    searchInput.value = '';
+    searchResults.innerHTML = '<div class="search-results__empty">输入关键词开始搜索</div>';
+    document.body.style.overflow = '';
+  };
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      openSearch();
+    }
+    if (e.key === 'Escape' && searchOverlay.classList.contains('is-open')) {
+      closeSearch();
+    }
+  });
+
+  // Click on search button
+  document.querySelector('[data-search-trigger]')?.addEventListener('click', openSearch);
+
+  // Search input
+  let selectedIndex = -1;
+  searchInput.addEventListener('input', (e) => {
+    performSearch(e.target.value);
+    selectedIndex = -1;
+  });
+
+  // Keyboard navigation
+  searchInput.addEventListener('keydown', (e) => {
+    const results = searchResults.querySelectorAll('.search-result');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = Math.min(selectedIndex + 1, results.length - 1);
+      updateSelection(results);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = Math.max(selectedIndex - 1, -1);
+      updateSelection(results);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0 && results[selectedIndex]) {
+        addSearchHistory(searchInput.value);
+        window.location.href = results[selectedIndex].href;
+      } else if (searchInput.value.trim()) {
+        addSearchHistory(searchInput.value);
+        window.location.href = `/search.html?q=${encodeURIComponent(searchInput.value)}`;
+      }
+    }
+  });
+
+  const updateSelection = (results) => {
+    results.forEach((r, i) => r.classList.toggle('is-active', i === selectedIndex));
+  };
+
+  // Close handlers
+  searchClose.addEventListener('click', closeSearch);
+  searchOverlay.addEventListener('click', (e) => {
+    if (e.target === searchOverlay) closeSearch();
+  });
+}
+
+// 32. Navigation Dropdown
+function initNavDropdown() {
+  const navItems = document.querySelectorAll('.site-nav > li');
+  
+  navItems.forEach(item => {
+    const link = item.querySelector('a');
+    const dropdown = item.querySelector('.nav-dropdown');
+    
+    if (!dropdown) return;
+    
+    item.classList.add('has-dropdown');
+    
+    link?.addEventListener('click', (e) => {
+      if (window.innerWidth > 768) {
+        e.preventDefault();
+        item.classList.toggle('is-open');
+      }
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (!item.contains(e.target)) {
+        item.classList.remove('is-open');
+      }
+    });
+  });
+}
+
+// 33. Enhanced TOC (click to scroll + active highlight)
+function initEnhancedToc() {
+  const tocList = document.querySelector('.toc-list');
+  if (!tocList) return;
+  
+  const tocLinks = tocList.querySelectorAll('a');
+  const headings = Array.from(tocLinks).map(link => {
+    const id = link.getAttribute('href').slice(1);
+    return document.getElementById(id);
+  }).filter(Boolean);
+
+  // Click to scroll
+  tocLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = link.getAttribute('href').slice(1);
+      const heading = document.getElementById(id);
+      if (heading) {
+        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.pushState(null, '', `#${id}`);
+      }
+    });
+  });
+
+  // Active highlight on scroll
+  let ticking = false;
+  const updateActive = () => {
+    let currentIndex = 0;
+    headings.forEach((heading, index) => {
+      const rect = heading.getBoundingClientRect();
+      if (rect.top <= 150) {
+        currentIndex = index;
+      }
+    });
+    
+    tocLinks.forEach((link, index) => {
+      link.classList.toggle('is-active', index === currentIndex);
+      link.style.color = index === currentIndex ? 'var(--accent)' : '';
+    });
+    ticking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateActive);
+      ticking = true;
+    }
+  }, { passive: true });
+  updateActive();
+}
+
+// 35. Social Share
+function initSocialShare() {
+  const shareButtons = document.querySelectorAll('[data-share]');
+  if (shareButtons.length === 0) return;
+
+  const pageUrl = encodeURIComponent(window.location.href);
+  const pageTitle = encodeURIComponent(document.title);
+
+  shareButtons.forEach(btn => {
+    const platform = btn.dataset.share;
+    let url = '';
+
+    switch (platform) {
+      case 'twitter':
+      case 'x':
+        url = `https://twitter.com/intent/tweet?url=${pageUrl}&text=${pageTitle}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${pageUrl}`;
+        break;
+      case 'weibo':
+        url = `https://service.weibo.com/share/share.php?url=${pageUrl}&title=${pageTitle}`;
+        break;
+      case 'copy':
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            showToast('链接已复制');
+          } catch {
+            showToast('复制失败');
+          }
+        });
+        return;
+    }
+
+    if (url) {
+      btn.addEventListener('click', () => {
+        window.open(url, '_blank', 'width=600,height=400');
+      });
+    }
+  });
+}
+
+function showToast(message) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
+  setTimeout(() => {
+    toast.classList.remove('is-visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+// 36. Giscus Comments
+function initGiscusComments() {
+  const giscusContainer = document.querySelector('[data-giscus]');
+  if (!giscusContainer) return;
+
+  const repo = giscusContainer.dataset.repo || 'Alex-Shen1121/blog';
+  const repoId = giscusContainer.dataset.repoId || 'R_kgDOG...';
+  const category = giscusContainer.dataset.category || 'Comments';
+  const categoryId = giscusContainer.dataset.categoryId || 'DIC_kwDOG...';
+
+  const script = document.createElement('script');
+  script.src = 'https://giscus.app/client.js';
+  script.setAttribute('data-repo', repo);
+  script.setAttribute('data-repo-id', repoId);
+  script.setAttribute('data-category', category);
+  script.setAttribute('data-category-id', categoryId);
+  script.setAttribute('data-mapping', 'pathname');
+  script.setAttribute('data-strict', '0');
+  script.setAttribute('data-reactions-enabled', '1');
+  script.setAttribute('data-emit-metadata', '0');
+  script.setAttribute('data-input-position', 'top');
+  script.setAttribute('data-theme', 'preferred_color_scheme');
+  script.setAttribute('data-lang', 'zh-CN');
+  script.setAttribute('crossorigin', 'anonymous');
+  script.async = true;
+
+  giscusContainer.appendChild(script);
+}
+
+// 37. Donation Support
+function initDonation() {
+  const donationBtn = document.querySelector('[data-donation]');
+  const donationModal = document.getElementById('donation-modal');
+  if (!donationBtn || !donationModal) return;
+
+  const closeBtn = donationModal.querySelector('.modal-close');
+
+  donationBtn.addEventListener('click', () => {
+    donationModal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  const closeModal = () => {
+    donationModal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  };
+
+  closeBtn?.addEventListener('click', closeModal);
+  donationModal.addEventListener('click', (e) => {
+    if (e.target === donationModal) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+}
+
+// 38. Newsletter Subscription
+function initNewsletter() {
+  const subscribeBtn = document.querySelector('[data-subscribe]');
+  const subscribeModal = document.getElementById('subscribe-modal');
+  if (!subscribeBtn || !subscribeModal) return;
+
+  // Check if user has already subscribed (don't show again)
+  const hasSubscribed = localStorage.getItem('personal-blog-subscribed');
+  if (hasSubscribed) return;
+
+  // Show after 5 seconds
+  setTimeout(() => {
+    subscribeModal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }, 5000);
+
+  const closeBtn = subscribeModal.querySelector('.modal-close');
+  const closeModal = () => {
+    subscribeModal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  };
+
+  closeBtn?.addEventListener('click', closeModal);
+  subscribeModal.addEventListener('click', (e) => {
+    if (e.target === subscribeModal) closeModal();
+  });
+
+  // Form submission
+  const form = subscribeModal.querySelector('form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = form.querySelector('input[type="email"]')?.value;
+    if (email) {
+      localStorage.setItem('personal-blog-subscribed', 'true');
+      showToast('订阅成功！');
+      closeModal();
+    }
+  });
+
+  // Don't show again checkbox
+  const dontShowAgain = subscribeModal.querySelector('[data-dont-show]');
+  dontShowAgain?.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      localStorage.setItem('personal-blog-subscribed', 'true');
+    }
+  });
+}
+
+// 40. Parallax Hero Effect
+function initParallaxHero() {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+
+  const heroVisual = hero.querySelector('.hero-visual, .hero-card');
+  if (!heroVisual) return;
+
+  let ticking = false;
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        if (scrollY < 600) {
+          heroVisual.style.transform = `translateY(${scrollY * 0.15}px)`;
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
+// 41. Custom Scrollbar
+function initCustomScrollbar() {
+  const style = document.createElement('style');
+  style.textContent = `
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--surface-soft); }
+    ::-webkit-scrollbar-thumb { 
+      background: var(--accent); 
+      border-radius: 5px; 
+      border: 2px solid var(--surface-soft);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-2); }
+  `;
+  document.head.appendChild(style);
+}
+
+// 43. Lazy Load Images with Intersection Observer
+function initLazyLoadImages() {
+  const images = document.querySelectorAll('img[data-src]');
+  if (images.length === 0) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        img.classList.add('is-loaded');
+        observer.unobserve(img);
+      }
+    });
+  }, { rootMargin: '50px' });
+
+  images.forEach(img => observer.observe(img));
+}
+
+// 44. Prefetch Adjacent Pages
+function initPrefetchAdjacent() {
+  const prefetchLinks = document.querySelectorAll('a[rel="next"], a[rel="prev"]');
+  
+  prefetchLinks.forEach(link => {
+    link.addEventListener('mouseenter', () => {
+      const url = link.href;
+      if (url) {
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'prefetch';
+        linkEl.href = url;
+        document.head.appendChild(linkEl);
+      }
+    }, { once: true });
+  });
+}
+
+// 45. Print Styles
+function initPrintStyles() {
+  // Add print-specific class
+  window.matchMedia('print').addEventListener('change', (e) => {
+    document.body.classList.toggle('is-printing', e.matches);
+  });
+}
+
+// 34. Reading Progress Section Indicator
+function initSectionIndicator() {
+  const tocList = document.querySelector('.toc-list');
+  if (!tocList) return;
+
+  const tocItems = tocList.querySelectorAll('.toc-item');
+  if (tocItems.length === 0) return;
+
+  // Create section indicator
+  const indicator = document.createElement('div');
+  indicator.className = 'section-indicator';
+  indicator.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(indicator);
+
+  const headings = Array.from(tocItems).map(item => {
+    const link = item.querySelector('a');
+    const id = link?.getAttribute('href')?.slice(1);
+    return id ? document.getElementById(id) : null;
+  }).filter(Boolean);
+
+  const updateIndicator = () => {
+    let currentIndex = 0;
+    headings.forEach((heading, index) => {
+      const rect = heading.getBoundingClientRect();
+      if (rect.top <= 200) {
+        currentIndex = index;
+      }
+    });
+
+    const activeItem = tocItems[currentIndex];
+    if (activeItem) {
+      const link = activeItem.querySelector('a');
+      indicator.textContent = link?.textContent || '';
+    }
+  };
+
+  window.addEventListener('scroll', updateIndicator, { passive: true });
+  updateIndicator();
+}
+
 // Initialize all features
 document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
@@ -984,4 +1513,19 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollReveal();
   initHeaderScroll();
   initPageLoader();
+  
+  // New features 31-45
+  initGlobalSearch();
+  initNavDropdown();
+  initEnhancedToc();
+  initSocialShare();
+  initGiscusComments();
+  initDonation();
+  initNewsletter();
+  initParallaxHero();
+  initCustomScrollbar();
+  initLazyLoadImages();
+  initPrefetchAdjacent();
+  initPrintStyles();
+  initSectionIndicator();
 });

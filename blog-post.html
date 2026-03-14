@@ -121,7 +121,7 @@
               <h2 id="technical-impl">技术实现</h2>
               <p>现代前端技术为个人主页的设计提供了丰富的可能性。从静态站点生成器到现代 CSS 框架，技术选型应该基于项目需求与团队能力。</p>
 
-              <pre class="code-block" data-language="css"><code>/* 响应式布局示例 */
+              <pre class="code-block" data-language="css"><button class="code-block__copy" data-copy-code aria-label="复制代码">复制</button><code>/* 响应式布局示例 */
 .hero {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -150,10 +150,22 @@
             <div class="post-share">
               <h4>分享这篇文章</h4>
               <div class="post-share-actions">
-                <button class="button button-ghost" onclick="alert('分享到 Twitter')">Twitter</button>
-                <button class="button button-ghost" onclick="alert('分享到 LinkedIn')">LinkedIn</button>
-                <button class="button button-ghost" onclick="alert('复制链接')">复制链接</button>
+                <button class="button button-ghost" data-share="twitter">Twitter</button>
+                <button class="button button-ghost" data-share="x">X / Twitter</button>
+                <button class="button button-ghost" data-share="linkedin">LinkedIn</button>
+                <button class="button button-ghost" data-share="weibo">微博</button>
+                <button class="button button-ghost" data-share="copy">复制链接</button>
               </div>
+              <div style="margin-top: 16px;">
+                <button class="button button-secondary" data-donation>赞赏支持</button>
+                <button class="button button-ghost" data-subscribe>订阅更新</button>
+              </div>
+            </div>
+
+            <!-- Comments Section (Giscus) -->
+            <div class="comments-section" data-giscus data-repo="Alex-Shen1121/blog" data-repo-id="R_kgDOGxxxxx" data-category="Comments" data-category-id="DIC_kwDOGxxxxx">
+              <h3>评论</h3>
+              <p class="muted">使用 GitHub 账号登录后可以发表评论</p>
             </div>
 
             <!-- Post Navigation -->
@@ -162,7 +174,7 @@
                 <small>没有了</small>
                 <span>已经是第一篇</span>
               </a>
-              <a href="#" class="post-nav-card">
+              <a href="#" class="post-nav-card" rel="next">
                 <small>下一篇</small>
                 <span>宁静界面的价值 →</span>
               </a>
@@ -245,6 +257,53 @@
       <span class="back-to-top__icon">↑</span>
       <span>返回顶部</span>
     </button>
+
+    <!-- Donation Modal -->
+    <div class="donation-modal" id="donation-modal">
+      <div class="donation-modal__content">
+        <button class="modal-close" aria-label="关闭">×</button>
+        <h3>赞赏支持</h3>
+        <p class="muted">如果我的文章对你有帮助，欢迎赞赏支持！</p>
+        <div class="donation-qr-codes">
+          <div class="donation-qr">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 140'%3E%3Crect fill='%23f0f0f0' width='140' height='140'/%3E%3Ctext x='70' y='75' font-size='12' text-anchor='middle' fill='%23999'%3E支付宝二维码%3C/text%3E%3C/svg%3E" alt="支付宝">
+            <span>支付宝</span>
+          </div>
+          <div class="donation-qr">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 140'%3E%3Crect fill='%23f0f0f0' width='140' height='140'/%3E%3Ctext x='70' y='75' font-size='12' text-anchor='middle' fill='%23999'%3E微信二维码%3C/text%3E%3C/svg%3E" alt="微信">
+            <span>微信</span>
+          </div>
+        </div>
+        <p class="muted" style="font-size: 0.85rem;">也欢迎访问 <a href="https://afdian.net/" target="_blank" style="color: var(--accent);">爱发电</a> 支持</p>
+      </div>
+    </div>
+
+    <!-- Subscribe Modal -->
+    <div class="subscribe-modal" id="subscribe-modal">
+      <div class="subscribe-modal__content">
+        <button class="modal-close" aria-label="关闭">×</button>
+        <h3>订阅更新</h3>
+        <p>订阅后有新文章时会收到邮件通知</p>
+        <form>
+          <input type="email" placeholder="你的邮箱地址" required>
+          <button type="submit">订阅</button>
+        </form>
+        <label class="subscribe-options">
+          <input type="checkbox" data-dont-show>
+          <span>不再显示此提示</span>
+        </label>
+        <div class="subscribe-rss">
+          <a href="/rss.xml">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 11a9 9 0 0 1 9 9"></path>
+              <path d="M4 4a16 16 0 0 1 16 16"></path>
+              <circle cx="5" cy="19" r="1"></circle>
+            </svg>
+            RSS 订阅
+          </a>
+        </div>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>

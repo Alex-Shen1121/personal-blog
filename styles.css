@@ -421,6 +421,66 @@ textarea {
   transform: translateY(-1px);
 }
 
+/* Search Trigger Button */
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--text);
+  background: var(--glass-surface);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease-soft);
+}
+
+.search-trigger:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+/* Code Block Copy Button */
+.code-block {
+  position: relative;
+}
+
+.code-block__copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.code-block:hover .code-block__copy {
+  opacity: 1;
+}
+
+.code-block__copy:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.code-block__copy.is-copied {
+  background: var(--success-soft);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
 .nav-toggle:focus-visible,
 .theme-toggle:focus-visible,
 .button:focus-visible,
@@ -5008,4 +5068,627 @@ body:not(.is-loading) .page-loader {
 
 .skill-list li {
   padding: 4px 0;
+}
+
+/* ===== ENHANCED FEATURES 31-45 STYLES ===== */
+
+/* 31. Search Modal */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.search-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.search-modal {
+  width: min(600px, 90vw);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-hover);
+  overflow: hidden;
+  transform: translateY(-20px) scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.search-overlay.is-open .search-modal {
+  transform: translateY(0) scale(1);
+}
+
+.search-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.search-close {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.search-close:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.search-results__section {
+  margin-bottom: 12px;
+}
+
+.search-results__title {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.search-result {
+  display: block;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.search-result:hover,
+.search-result.is-active {
+  background: var(--accent-soft);
+}
+
+.search-result__title {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.search-result__desc {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result mark {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-results__empty {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.search-footer {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 12px;
+  border-top: 1px solid var(--panel-border);
+  background: var(--surface-soft);
+}
+
+.search-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.search-hint kbd {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  font-size: 0.75rem;
+  font-family: inherit;
+}
+
+/* 32. Navigation Dropdown */
+.site-nav .has-dropdown {
+  position: relative;
+}
+
+.site-nav .nav-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.site-nav .has-dropdown.is-open .nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.site-nav .nav-dropdown a {
+  display: block;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--soft);
+  font-size: 0.95rem;
+}
+
+.site-nav .nav-dropdown a:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+/* 33. Enhanced TOC */
+.toc-list a.is-active {
+  color: var(--accent) !important;
+  font-weight: 600;
+}
+
+/* 34. Section Indicator */
+.section-indicator {
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  font-size: 0.85rem;
+  color: var(--muted);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 20;
+}
+
+body:has(.toc-list) .section-indicator {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 35. Social Share Buttons */
+.post-share-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.post-share-actions .button[data-share] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-share-actions .button[data-share="twitter"]::before { content: "𝕏"; }
+.post-share-actions .button[data-share="linkedin"]::before { content: "in"; }
+.post-share-actions .button[data-share="weibo"]::before { content: "微博"; }
+
+/* 36. Giscus Comments */
+.comments-section {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.comments-section h3 {
+  margin-bottom: 24px;
+}
+
+/* 37. Donation Modal */
+.donation-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.donation-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.donation-modal__content {
+  width: min(400px, 90vw);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  text-align: center;
+}
+
+.donation-modal h3 {
+  margin-bottom: 24px;
+}
+
+.donation-qr-codes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.donation-qr {
+  text-align: center;
+}
+
+.donation-qr img {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  object-fit: contain;
+}
+
+.donation-qr span {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.donation-modal .modal-close {
+  padding: 10px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.donation-modal .modal-close:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 38. Newsletter Subscribe Modal */
+.subscribe-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.subscribe-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.subscribe-modal__content {
+  position: relative;
+  width: min(480px, 90vw);
+  padding: 40px;
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  text-align: center;
+}
+
+.subscribe-modal h3 {
+  margin-bottom: 12px;
+  font-size: 1.5rem;
+}
+
+.subscribe-modal p {
+  margin-bottom: 24px;
+  color: var(--muted);
+}
+
+.subscribe-modal form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.subscribe-modal input[type="email"] {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.subscribe-modal input[type="email"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.subscribe-modal button[type="submit"] {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.subscribe-modal button[type="submit"]:hover {
+  background: var(--accent-fill-end);
+}
+
+.subscribe-modal .subscribe-options {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.subscribe-modal .subscribe-options input {
+  width: auto;
+}
+
+.subscribe-rss {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.subscribe-rss a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 39. Theme Transition */
+:root,
+:root[data-theme] {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 40. Parallax Hero */
+.hero {
+  transition: transform 0.1s ease-out;
+}
+
+.hero .hero-visual,
+.hero .hero-card {
+  will-change: transform;
+}
+
+/* 41. Link Cursor */
+a {
+  cursor: pointer;
+}
+
+/* 42. Back to Top (already exists, enhanced) */
+.back-to-top {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 43. Lazy Load Images */
+img[data-src] {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+img[data-src].is-loaded {
+  opacity: 1;
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  border: 1px solid var(--accent-border);
+  color: var(--text);
+  font-size: 0.95rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 10000;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 45. Print Styles */
+@media print {
+  .site-header,
+  .site-footer,
+  .back-to-top,
+  .reading-progress,
+  .page-loader,
+  .post-share,
+  .comments-section,
+  .related-posts-card,
+  .breadcrumb,
+  .search-overlay,
+  .donation-modal,
+  .subscribe-modal,
+  .theme-toggle,
+  .nav-toggle,
+  .button,
+  .lightbox,
+  .hero-actions,
+  .profile-card__links,
+  .post-pagination,
+  [data-analytics-card] {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .prose {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  .prose a {
+    color: black !important;
+    text-decoration: underline;
+  }
+
+  .prose pre,
+  .prose code {
+    background: #f5f5f5 !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .post-layout {
+    display: block !important;
+  }
+
+  .post-aside {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .site-shell {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+    color: #666;
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript"]::after {
+    content: "";
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .section-indicator {
+    display: none;
+  }
+
+  .search-modal {
+    margin: 16px;
+  }
+
+  .donation-qr-codes {
+    grid-template-columns: 1fr;
+  }
+
+  .subscribe-modal form {
+    flex-direction: column;
+  }
 }
