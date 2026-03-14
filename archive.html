@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="文章归档 - 沈晨玙的个人网站" />
+    <title>文章归档｜沈晨玙</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="reading-progress" aria-hidden="true">
+      <div class="reading-progress__bar"></div>
+    </div>
+
+    <div class="page-loader">
+      <div class="page-loader__frame">
+        <div class="page-loader__pill"></div>
+        <div class="page-loader__headline"></div>
+      </div>
+    </div>
+
+    <div class="site-shell">
+      <!-- Header -->
+      <header class="site-header" id="site-header">
+        <div class="site-header__inner">
+          <a class="brand" href="/">
+            <span class="brand-mark">S</span>
+            <div class="brand-copy">
+              <strong>沈晨玙</strong>
+              <small>产品与前端</small>
+            </div>
+          </a>
+          <div class="header-actions">
+            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题"></button>
+            <button class="nav-toggle" id="nav-toggle" aria-label="展开导航" aria-expanded="false">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+          <nav class="site-nav" id="site-nav" aria-label="Primary">
+            <a href="/">首页</a>
+            <a href="/blog/">文章</a>
+            <a href="/projects/">项目</a>
+            <a href="/tags/">标签</a>
+            <a href="/archive/" aria-current="page">归档</a>
+            <a href="/about/">关于</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <!-- Page Hero -->
+        <div class="page-hero">
+          <p class="eyebrow">归档</p>
+          <h1>文章归档</h1>
+          <p class="section-intro">按时间顺序浏览所有文章，了解站点内容的演变历程。</p>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" aria-label="面包屑导航">
+          <ol>
+            <li><a href="/">首页</a></li>
+            <li aria-current="page">归档</li>
+          </ol>
+        </nav>
+
+        <!-- Archive Stats -->
+        <div class="archive-stats">
+          <div class="stat">
+            <strong>24</strong>
+            <span>篇文章</span>
+          </div>
+          <div class="stat">
+            <strong>~50,000</strong>
+            <span>总字数</span>
+          </div>
+          <div class="stat">
+            <strong>12</strong>
+            <span>个标签</span>
+          </div>
+          <div class="stat">
+            <strong>4</strong>
+            <span>个分类</span>
+          </div>
+        </div>
+
+        <!-- Archive Timeline -->
+        <div class="archive-timeline">
+          <!-- 2026 -->
+          <section class="archive-year">
+            <h2 class="archive-year__label">
+              2026
+              <span class="archive-year__count">8 篇文章</span>
+            </h2>
+            <div class="archive-list">
+              <article class="archive-item">
+                <time class="archive-item__date">03-10</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">设计个人主页的思考</a></h3>
+                  <p>从信息架构到视觉设计，探讨如何打造既专业又个人化的个人主页。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">02-28</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">宁静界面的价值</a></h3>
+                  <p>为什么简洁的界面设计更能承载信息传达的有效性。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">02-15</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">写作作为基础设施</a></h3>
+                  <p>将写作视为一种思维整理与知识沉淀的基础设施建设。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">01-20</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">CSS Grid 与 Flexbox 的选择</a></h3>
+                  <p>深入分析 CSS Grid 与 Flexbox 的适用场景。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">01-05</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">响应式设计的最佳实践</a></h3>
+                  <p>从移动优先到断点策略，探讨现代响应式网页设计。</p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- 2025 -->
+          <section class="archive-year">
+            <h2 class="archive-year__label">
+              2025
+              <span class="archive-year__count">10 篇文章</span>
+            </h2>
+            <div class="archive-list">
+              <article class="archive-item">
+                <time class="archive-item__date">12-18</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">产品思维的技术实践</a></h3>
+                  <p>作为技术人，如何培养产品思维并将其应用到日常开发工作中。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">11-20</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">移动优先的设计思维</a></h3>
+                  <p>为什么移动优先是现代设计的正确方法。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">10-15</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">CSS 变量完全指南</a></h3>
+                  <p>深入理解 CSS 自定义属性的强大功能与应用场景。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">09-08</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">Web 性能优化实战</a></h3>
+                  <p>从理论到实践，全面提升网页加载性能。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">08-22</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">JavaScript 异步编程</a></h3>
+                  <p>Promise、async/await 与事件循环的深入理解。</p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- 2024 -->
+          <section class="archive-year">
+            <h2 class="archive-year__label">
+              2024
+              <span class="archive-year__count">6 篇文章</span>
+            </h2>
+            <div class="archive-list">
+              <article class="archive-item">
+                <time class="archive-item__date">12-05</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">React Hooks 最佳实践</a></h3>
+                  <p>深入理解 React Hooks 的使用原则与常见模式。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">10-18</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">TypeScript 入门指南</a></h3>
+                  <p>从 JavaScript 到 TypeScript 的平滑迁移之路。</p>
+                </div>
+              </article>
+              <article class="archive-item">
+                <time class="archive-item__date">08-30</time>
+                <div class="archive-item__content">
+                  <h3><a href="#">现代前端工程化</a></h3>
+                  <p>构建高效、可维护的前端开发工作流。</p>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="site-footer__grid">
+          <div class="site-footer__section site-footer__section--brand">
+            <h4>沈晨玙</h4>
+            <p>产品设计师 / 前端开发者</p>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">站内导航</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="/">首页</a></li>
+              <li><a href="/blog/">文章列表</a></li>
+              <li><a href="/projects/">项目作品</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">联系</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="mailto:alex@example.com">发送邮件</a></li>
+              <li><a href="https://github.com/Alex-Shen1121" target="_blank">GitHub</a></li>
+              <li><a href="/rss.xml">RSS 订阅</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bar">
+          <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

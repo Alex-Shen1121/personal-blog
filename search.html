@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="搜索结果 - 沈晨玙的个人网站" />
+    <title>搜索结果：响应式设计 - 沈晨玙</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="reading-progress" aria-hidden="true">
+      <div class="reading-progress__bar"></div>
+    </div>
+
+    <div class="page-loader">
+      <div class="page-loader__frame">
+        <div class="page-loader__pill"></div>
+        <div class="page-loader__headline"></div>
+      </div>
+    </div>
+
+    <div class="site-shell">
+      <!-- Header -->
+      <header class="site-header" id="site-header">
+        <div class="site-header__inner">
+          <a class="brand" href="/">
+            <span class="brand-mark">S</span>
+            <div class="brand-copy">
+              <strong>沈晨玙</strong>
+              <small>产品与前端</small>
+            </div>
+          </a>
+          <div class="header-actions">
+            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题"></button>
+            <button class="nav-toggle" id="nav-toggle" aria-label="展开导航" aria-expanded="false">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+          <nav class="site-nav" id="site-nav" aria-label="Primary">
+            <a href="/">首页</a>
+            <a href="/blog/">文章</a>
+            <a href="/projects/">项目</a>
+            <a href="/tags/">标签</a>
+            <a href="/archive/">归档</a>
+            <a href="/about/">关于</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <!-- Search Header -->
+        <div class="page-hero">
+          <p class="eyebrow">搜索</p>
+          <h1>搜索结果</h1>
+        </div>
+
+        <!-- Search Form -->
+        <div class="search-page-form">
+          <form action="/search/" method="get" class="search-form-large">
+            <div class="search-input-wrapper">
+              <input 
+                type="search" 
+                name="q" 
+                value="响应式设计" 
+                placeholder="搜索文章、项目..." 
+                aria-label="搜索"
+                autofocus
+              />
+              <button type="submit" class="button button-primary">搜索</button>
+            </div>
+          </form>
+          <p class="search-feedback">找到 <strong>3</strong> 个结果</p>
+        </div>
+
+        <!-- Filter -->
+        <div class="discovery-toolbar">
+          <div class="filter-groups">
+            <div class="filter-group">
+              <div class="filter-group__header">
+                <span>内容类型</span>
+              </div>
+              <div class="filter-chips">
+                <button class="filter-chip is-active">全部</button>
+                <button class="filter-chip">文章</button>
+                <button class="filter-chip">项目</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Results with Highlight -->
+        <div class="search-results">
+          <article class="search-result-card">
+            <div class="search-result-meta">
+              <span class="search-result-type">文章</span>
+              <span class="search-result-date">2026-01-05</span>
+            </div>
+            <h3><a href="#">响应式<span class="highlight">设计</span>的最佳实践</a></h3>
+            <p>从移动优先到断点策略，探讨现代响应式网页<span class="highlight">设计</span>的核心原则与实用技巧。<mark>响应式设计</mark>已经成为现代 Web 开发的基础技能...</p>
+            <div class="post-card__tags">
+              <span class="tag">前端</span>
+              <span class="tag">响应式</span>
+            </div>
+          </article>
+
+          <article class="search-result-card">
+            <div class="search-result-meta">
+              <span class="search-result-type">文章</span>
+              <span class="search-result-date">2025-11-20</span>
+            </div>
+            <h3><a href="#">移动优先的<span class="highlight">设计</span>思维</a></h3>
+            <p>为什么移动优先是现代<span class="highlight">设计</span>的正确方法，以及如何在实际项目中应用这一原则...</p>
+            <div class="post-card__tags">
+              <span class="tag">设计思考</span>
+              <span class="tag">移动端</span>
+            </div>
+          </article>
+
+          <article class="search-result-card">
+            <div class="search-result-meta">
+              <span class="search-result-type">项目</span>
+              <span class="search-result-date">2025-10-15</span>
+            </div>
+            <h3><a href="#">响应式组件库</a></h3>
+            <p>一个支持<span class="highlight">响应式</span>布局的组件库，提供丰富的 UI 组件与灵活的<span class="highlight">响应式</span>断点配置...</p>
+            <div class="post-card__tags">
+              <span class="tag">开源</span>
+              <span class="tag">组件库</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- Search Suggestions -->
+        <div class="search-suggestions">
+          <h3>搜索建议</h3>
+          <div class="suggestion-chips">
+            <a href="/search/?q=前端" class="filter-chip">前端</a>
+            <a href="/search/?q=设计" class="filter-chip">设计</a>
+            <a href="/search/?q=CSS" class="filter-chip">CSS</a>
+            <a href="/search/?q=用户体验" class="filter-chip">用户体验</a>
+            <a href="/search/?q=React" class="filter-chip">React</a>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="site-footer__grid">
+          <div class="site-footer__section site-footer__section--brand">
+            <h4>沈晨玙</h4>
+            <p>产品设计师 / 前端开发者</p>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">站内导航</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="/">首页</a></li>
+              <li><a href="/blog/">文章列表</a></li>
+              <li><a href="/projects/">项目作品</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">联系</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="mailto:alex@example.com">发送邮件</a></li>
+              <li><a href="https://github.com/Alex-Shen1121" target="_blank">GitHub</a></li>
+              <li><a href="/rss.xml">RSS 订阅</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bar">
+          <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

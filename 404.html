@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="页面未找到 - 沈晨玙的个人网站" />
+    <title>页面未找到 (404)｜沈晨玙</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .error-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+      }
+      .error-illustration {
+        width: 300px;
+        height: 200px;
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+      }
+      .error-code {
+        font-size: 8rem;
+        font-weight: 800;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+      }
+      .error-message {
+        font-size: 1.5rem;
+        color: var(--muted);
+        margin: 1rem 0 2rem;
+      }
+      .error-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="site-shell">
+      <main class="error-page">
+        <!-- Fun Illustration -->
+        <svg class="error-illustration" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="300" height="200" rx="20" fill="var(--surface-soft)"/>
+          <circle cx="150" cy="80" r="30" fill="var(--accent-soft)"/>
+          <circle cx="140" cy="75" r="5" fill="var(--text)"/>
+          <circle cx="160" cy="75" r="5" fill="var(--text)"/>
+          <path d="M140 95 Q150 105 160 95" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>
+          <rect x="100" y="130" width="100" height="8" rx="4" fill="var(--surface-border)"/>
+          <rect x="120" y="150" width="60" height="8" rx="4" fill="var(--surface-border)"/>
+          <circle cx="240" cy="50" r="20" fill="var(--accent-2)" opacity="0.5">
+            <animate attributeName="cy" values="50;40;50" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="60" cy="60" r="15" fill="var(--accent-3)" opacity="0.4">
+            <animate attributeName="cy" values="60;50;60" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+        
+        <h1 class="error-code">404</h1>
+        <p class="error-message">看起来你访问的页面不存在</p>
+        <p class="error-description">可能是因为链接错误、页面已删除，或者我们正在建设中。</p>
+        
+        <div class="error-actions">
+          <a href="/" class="button button-primary">返回首页</a>
+          <a href="/blog/" class="button button-secondary">浏览文章</a>
+          <a href="/projects/" class="button button-ghost">查看项目</a>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="error-suggestions">
+          <h3>你可以去</h3>
+          <ul class="quick-links">
+            <li><a href="/">🏠 首页</a></li>
+            <li><a href="/blog/">📝 文章列表</a></li>
+            <li><a href="/projects/">💼 项目作品</a></li>
+            <li><a href="/tags/">🏷️ 标签浏览</a></li>
+            <li><a href="/archive/">📅 内容归档</a></li>
+          </ul>
+        </div>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer__grid">
+          <div class="site-footer__section site-footer__section--brand">
+            <h4>沈晨玙</h4>
+            <p>产品设计师 / 前端开发者</p>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">站内导航</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="/">首页</a></li>
+              <li><a href="/blog/">文章列表</a></li>
+              <li><a href="/projects/">项目作品</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">联系</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="mailto:alex@example.com">发送邮件</a></li>
+              <li><a href="https://github.com/Alex-Shen1121" target="_blank">GitHub</a></li>
+              <li><a href="/rss.xml">RSS 订阅</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bar">
+          <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

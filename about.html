@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="关于沈晨玙 - 产品设计师与前端开发者的个人简介、技能与经历。" />
+    <title>关于｜沈晨玙</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="reading-progress" aria-hidden="true">
+      <div class="reading-progress__bar"></div>
+    </div>
+
+    <div class="page-loader">
+      <div class="page-loader__frame">
+        <div class="page-loader__pill"></div>
+        <div class="page-loader__headline"></div>
+      </div>
+    </div>
+
+    <div class="site-shell">
+      <!-- Header -->
+      <header class="site-header" id="site-header">
+        <div class="site-header__inner">
+          <a class="brand" href="/">
+            <span class="brand-mark">S</span>
+            <div class="brand-copy">
+              <strong>沈晨玙</strong>
+              <small>产品与前端</small>
+            </div>
+          </a>
+          <div class="header-actions">
+            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题"></button>
+            <button class="nav-toggle" id="nav-toggle" aria-label="展开导航" aria-expanded="false">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+          <nav class="site-nav" id="site-nav" aria-label="Primary">
+            <a href="/">首页</a>
+            <a href="/blog/">文章</a>
+            <a href="/projects/">项目</a>
+            <a href="/tags/">标签</a>
+            <a href="/archive/">归档</a>
+            <a href="/about/" aria-current="page">关于</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" aria-label="面包屑导航">
+          <ol>
+            <li><a href="/">首页</a></li>
+            <li aria-current="page">关于</li>
+          </ol>
+        </nav>
+
+        <!-- About Hero -->
+        <section class="about-hero">
+          <div class="about-profile">
+            <div class="about-avatar">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%2338bdf8' width='200' height='200' rx='100'/%3E%3Ctext x='100' y='115' font-size='64' text-anchor='middle' fill='white' font-family='Inter'%3ES%3C/text%3E%3C/svg%3E" alt="沈晨玙" />
+            </div>
+            <div class="about-intro">
+              <h1>沈晨玙</h1>
+              <p class="about-title">产品设计师 / 前端开发者</p>
+              <p class="about-bio">
+                你好！我是一名热衷于构建优质数字体验的产品设计师和前端开发者。
+                我关注产品、设计与工程的交汇点，致力于创造既美观又实用的产品。
+              </p>
+              <div class="about-actions">
+                <a href="mailto:alex@example.com" class="button button-primary">联系我</a>
+                <a href="/projects/" class="button button-secondary">查看项目</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="section" id="skills">
+          <div class="section-divider">
+            <span>技能图谱</span>
+          </div>
+          <div class="skills-showcase">
+            <div class="skill-category">
+              <h3>熟练使用</h3>
+              <div class="skill-tags">
+                <span class="skill-tag skill-tag--pro">HTML/CSS</span>
+                <span class="skill-tag skill-tag--pro">JavaScript</span>
+                <span class="skill-tag skill-tag--pro">React</span>
+                <span class="skill-tag skill-tag--pro">UI 设计</span>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>正在学习</h3>
+              <div class="skill-tags">
+                <span class="skill-tag">TypeScript</span>
+                <span class="skill-tag">Rust</span>
+                <span class="skill-tag">系统设计</span>
+                <span class="skill-tag">产品策略</span>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>工具与平台</h3>
+              <div class="skill-tags">
+                <span class="skill-tag">Figma</span>
+                <span class="skill-tag">VS Code</span>
+                <span class="skill-tag">Git</span>
+                <span class="skill-tag">GitHub Pages</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="section" id="timeline">
+          <div class="section-divider">
+            <span>经历时间线</span>
+          </div>
+          <div class="about-timeline">
+            <ul class="timeline timeline--detailed">
+              <li>
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <span class="timeline-date">2026 - 现在</span>
+                  <h3>自由职业 / 个人项目</h3>
+                  <p>专注于个人项目开发与内容创作，探索产品设计与前端工程的最佳实践。持续写作，分享技术思考与经验。</p>
+                </div>
+              </li>
+              <li>
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <span class="timeline-date">2023 - 2026</span>
+                  <h3>前端开发者 @ 某科技公司</h3>
+                  <p>负责公司核心产品的前端开发，参与多个大型项目的架构设计与性能优化。与产品、设计团队紧密协作。</p>
+                </div>
+              </li>
+              <li>
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <span class="timeline-date">2021 - 2023</span>
+                  <h3>UI 设计师 @ 某创业公司</h3>
+                  <p>从 0 到 1 设计公司产品线，建立设计系统。积累了大量用户体验设计与产品思维方面的经验。</p>
+                </div>
+              </li>
+              <li>
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <span class="timeline-date">2017 - 2021</span>
+                  <h3>计算机科学 @ 大学</h3>
+                  <p>学习计算机科学基础知识，培养编程能力与逻辑思维。开始对前端开发产生浓厚兴趣。</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="section" id="contact">
+          <div class="section-divider">
+            <span>联系方式</span>
+          </div>
+          <div class="contact-grid">
+            <div class="contact-card-large">
+              <h3>邮件</h3>
+              <p>最推荐的联系方式，会尽快回复。</p>
+              <a href="mailto:alex@example.com" class="button button-primary">发送邮件</a>
+            </div>
+            <div class="contact-card-large">
+              <h3>GitHub</h3>
+              <p>查看我的开源项目与代码贡献。</p>
+              <a href="https://github.com/Alex-Shen1121" target="_blank" class="button button-secondary">访问 GitHub</a>
+            </div>
+            <div class="contact-card-large">
+              <h3>LinkedIn</h3>
+              <p>职业履历与专业连接。</p>
+              <a href="https://www.linkedin.com/" target="_blank" class="button button-ghost">访问 LinkedIn</a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="site-footer__grid">
+          <div class="site-footer__section site-footer__section--brand">
+            <h4>沈晨玙</h4>
+            <p>产品设计师 / 前端开发者</p>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">站内导航</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="/">首页</a></li>
+              <li><a href="/blog/">文章列表</a></li>
+              <li><a href="/projects/">项目作品</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">联系</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="mailto:alex@example.com">发送邮件</a></li>
+              <li><a href="https://github.com/Alex-Shen1121" target="_blank">GitHub</a></li>
+              <li><a href="/rss.xml">RSS 订阅</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bar">
+          <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

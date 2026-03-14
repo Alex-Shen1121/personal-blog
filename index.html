@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="A clean personal profile site for Alex Shen with intro, experience highlights, selected projects, and contact links."
+      content="沈晨玙的个人主页与博客，记录产品、设计、工程和生活观察，分享正在做的项目、近期近况与长期思考。"
     />
-    <meta property="og:title" content="Alex Shen | Personal Profile" />
+    <meta property="og:title" content="沈晨玙｜个人主页与博客" />
     <meta
       property="og:description"
-      content="Static personal homepage template with sections for intro, about, projects, and contact information."
+      content="沈晨玙的个人主页与博客，记录产品、设计、工程和生活观察。"
     />
     <meta property="og:type" content="website" />
-    <title>Alex Shen | Personal Profile</title>
+    <title>沈晨玙｜个人主页、项目与博客</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -23,160 +23,372 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Reading Progress Bar -->
+    <div class="reading-progress" aria-hidden="true">
+      <div class="reading-progress__bar"></div>
+    </div>
+
+    <!-- Page Loader -->
+    <div class="page-loader" aria-hidden="true">
+      <div class="page-loader__frame">
+        <div class="page-loader__pill"></div>
+        <div class="page-loader__headline"></div>
+        <div class="page-loader__line page-loader__line--long"></div>
+        <div class="page-loader__line page-loader__line--medium"></div>
+        <div class="page-loader__grid">
+          <div class="page-loader__card"></div>
+          <div class="page-loader__card"></div>
+          <div class="page-loader__card"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="site-shell">
-      <header class="site-header">
-        <a class="brand" href="#hero">Alex Shen</a>
-        <nav class="site-nav" aria-label="Primary">
-          <a href="#about">About</a>
-          <a href="#highlights">Highlights</a>
-          <a href="#projects">Projects</a>
-          <a href="#contact">Contact</a>
-        </nav>
+      <!-- Header -->
+      <header class="site-header" id="site-header">
+        <div class="site-header__inner">
+          <a class="brand" href="/">
+            <span class="brand-mark">S</span>
+            <div class="brand-copy">
+              <strong>沈晨玙</strong>
+              <small>产品与前端</small>
+            </div>
+          </a>
+          
+          <div class="header-actions">
+            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"></circle>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+              </svg>
+            </button>
+            <button class="nav-toggle" id="nav-toggle" aria-label="展开导航" aria-expanded="false">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+          
+          <nav class="site-nav" id="site-nav" aria-label="Primary">
+            <a href="/" aria-current="page">首页</a>
+            <a href="/blog/">文章</a>
+            <a href="/projects/">项目</a>
+            <a href="/tags/">标签</a>
+            <a href="/archive/">归档</a>
+            <a href="/about/">关于</a>
+          </nav>
+        </div>
       </header>
 
+      <!-- Main Content -->
       <main>
-        <section class="hero section" id="hero">
-          <div class="hero-copy">
-            <p class="eyebrow">Personal profile / easy to customize</p>
-            <h1>Building clear, useful digital experiences.</h1>
-            <p class="hero-text">
-              Hi, I’m <strong>Alex Shen</strong>. This site is a lightweight personal
-              homepage template for introducing who I am, what I care about, and what I’m
-              currently building.
-            </p>
-            <div class="hero-actions">
-              <a class="button button-primary" href="#projects">View selected work</a>
-              <a class="button button-secondary" href="#contact">Get in touch</a>
+        <!-- Hero Section with 3-column layout -->
+        <section class="hero hero--complex" id="hero">
+          <!-- Left: Info Card -->
+          <aside class="hero-card" aria-label="个人简介">
+            <div class="profile-card">
+              <div class="profile-card__avatar">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect fill='%2338bdf8' width='120' height='120' rx='60'/%3E%3Ctext x='60' y='75' font-size='48' text-anchor='middle' fill='white' font-family='Inter'%3ES%3C/text%3E%3C/svg%3E" alt="沈晨玙" />
+              </div>
+              <h3 class="profile-card__name">沈晨玙</h3>
+              <p class="profile-card__title">产品设计师 / 前端开发者</p>
+              <div class="profile-card__links">
+                <a href="https://github.com/Alex-Shen1121" target="_blank" rel="noreferrer">GitHub</a>
+                <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
+                <a href="mailto:alex@example.com">Email</a>
+              </div>
+              <div class="profile-card__stats">
+                <div class="profile-stat">
+                  <strong>24</strong>
+                  <span>文章</span>
+                </div>
+                <div class="profile-stat">
+                  <strong>5</strong>
+                  <span>项目</span>
+                </div>
+                <div class="profile-stat">
+                  <strong>12</strong>
+                  <span>标签</span>
+                </div>
+              </div>
             </div>
-            <p class="hero-note">Tip: every sentence here is placeholder copy and can be swapped directly in <code>index.html</code>.</p>
+          </aside>
+
+          <!-- Center: Main Content Stream -->
+          <div class="hero-main">
+            <div class="hero-intro">
+              <p class="eyebrow">个人主页 / 2026</p>
+              <h1>探索产品、设计与工程的交汇点</h1>
+              <p class="hero-text">
+                你好，我是沈晨玙。这里记录我对<span class="highlight">产品思维</span>、<span class="highlight">界面设计</span>与<span class="highlight">前端工程</span>的思考与实践。我热衷于构建清晰、高效的数字体验，持续探索技术与用户的平衡点。
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="/blog/">阅读文章</a>
+                <a class="button button-secondary" href="/projects/">查看项目</a>
+                <a class="button button-ghost" href="/about/">了解更多</a>
+              </div>
+            </div>
+
+            <!-- Featured Posts Stream -->
+            <div class="featured-stream">
+              <div class="section-divider">
+                <span>热门文章</span>
+              </div>
+              <div class="post-stream">
+                <article class="post-card post-card--compact">
+                  <div class="post-card__meta">
+                    <span class="post-date">2026-03-10</span>
+                    <span class="post-read-time">8 分钟阅读</span>
+                  </div>
+                  <h3><a href="/posts/designing-a-personal-homepage/">设计个人主页的思考</a></h3>
+                  <p>从信息架构到视觉设计，探讨如何打造既专业又个人化的个人主页。</p>
+                  <div class="post-card__tags">
+                    <span class="tag">设计</span>
+                    <span class="tag">前端</span>
+                  </div>
+                </article>
+                <article class="post-card post-card--compact">
+                  <div class="post-card__meta">
+                    <span class="post-date">2026-02-28</span>
+                    <span class="post-read-time">6 分钟阅读</span>
+                  </div>
+                  <h3><a href="/posts/the-value-of-calm-interfaces/">宁静界面的价值</a></h3>
+                  <p>为什么简洁的界面设计更能承载信息传达的有效性。</p>
+                  <div class="post-card__tags">
+                    <span class="tag">设计思考</span>
+                    <span class="tag">用户体验</span>
+                  </div>
+                </article>
+                <article class="post-card post-card--compact">
+                  <div class="post-card__meta">
+                    <span class="post-date">2026-02-15</span>
+                    <span class="post-read-time">10 分钟阅读</span>
+                  </div>
+                  <h3><a href="/posts/writing-as-infrastructure/">写作作为基础设施</a></h3>
+                  <p>将写作视为一种思维整理与知识沉淀的基础设施建设。</p>
+                  <div class="post-card__tags">
+                    <span class="tag">思考方式</span>
+                    <span class="tag">知识管理</span>
+                  </div>
+                </article>
+              </div>
+            </div>
           </div>
-          <aside class="hero-card" aria-label="Profile summary">
-            <span class="hero-card-label">Quick snapshot</span>
-            <ul>
-              <li>Focus: product-minded web development</li>
-              <li>Style: simple systems, polished details</li>
-              <li>Open to: collaboration, writing, side projects</li>
-            </ul>
+
+          <!-- Right: Sidebar / Index -->
+          <aside class="hero-sidebar" aria-label="快速导航">
+            <div class="sidebar-section">
+              <h4>文章分类</h4>
+              <ul class="category-list">
+                <li><a href="/tags/design/">设计思考 <span class="count">8</span></a></li>
+                <li><a href="/tags/frontend/">前端工程 <span class="count">6</span></a></li>
+                <li><a href="/tags/product/">产品思维 <span class="count">5</span></a></li>
+                <li><a href="/tags/life/">生活观察 <span class="count">5</span></a></li>
+              </ul>
+            </div>
+            <div class="sidebar-section">
+              <h4>标签云</h4>
+              <div class="tag-cloud">
+                <a href="/tags/ux/" class="tag tag--large">用户体验</a>
+                <a href="/tags/css/" class="tag">CSS</a>
+                <a href="/tags/architecture/" class="tag tag--large">架构</a>
+                <a href="/tags/tools/" class="tag">工具</a>
+                <a href="/tags/thinking/" class="tag">思考</a>
+                <a href="/tags/react/" class="tag tag--small">React</a>
+                <a href="/tags/notes/" class="tag">笔记</a>
+              </div>
+            </div>
+            <div class="sidebar-section">
+              <h4>快速链接</h4>
+              <ul class="quick-links">
+                <li><a href="/archive/">📚 内容归档</a></li>
+                <li><a href="/sitemap/">🗺️ 站点地图</a></li>
+                <li><a href="/rss.xml">📖 RSS 订阅</a></li>
+              </ul>
+            </div>
           </aside>
         </section>
 
-        <section class="section" id="about">
-          <div class="section-heading">
-            <p class="eyebrow">About me</p>
-            <h2>A calm, modern introduction section.</h2>
-          </div>
-          <div class="about-grid">
-            <article class="panel">
-              <p>
-                I like turning rough ideas into clean, maintainable experiences. This page
-                uses neutral placeholder copy so it can be quickly adapted into a real
-                portfolio, blog landing page, or personal introduction site.
-              </p>
-            </article>
-            <article class="panel">
-              <p>
-                Replace this block with your background, interests, current role, tech
-                stack, or short personal story. The layout is intentionally minimal so the
-                content can stay front and center.
-              </p>
-            </article>
-          </div>
-        </section>
+        <!-- Section Divider -->
+        <div class="section-divider">
+          <span>项目作品</span>
+        </div>
 
-        <section class="section" id="highlights">
-          <div class="section-heading">
-            <p class="eyebrow">Experience highlights</p>
-            <h2>Three simple areas to show strengths or milestones.</h2>
-          </div>
-          <div class="card-grid">
-            <article class="panel card">
-              <h3>Product thinking</h3>
-              <p>
-                Translate goals into practical pages, flows, and features that feel easy to
-                use.
-              </p>
-            </article>
-            <article class="panel card">
-              <h3>Execution</h3>
-              <p>
-                Favor small, complete solutions that are straightforward to deploy and
-                maintain.
-              </p>
-            </article>
-            <article class="panel card">
-              <h3>Communication</h3>
-              <p>
-                Use writing, demos, and clear structure to make work more understandable.
-              </p>
-            </article>
-          </div>
-        </section>
-
+        <!-- Projects Grid -->
         <section class="section" id="projects">
-          <div class="section-heading">
-            <p class="eyebrow">Selected work</p>
-            <h2>Placeholder project cards ready for real links.</h2>
-          </div>
-          <div class="project-list">
-            <article class="panel project-card">
-              <div>
-                <p class="project-tag">Project / Case study</p>
-                <h3>Personal website starter</h3>
-                <p>
-                  A fast, static personal homepage designed for GitHub Pages deployment and
-                  easy future editing.
-                </p>
+          <div class="project-portfolio-grid">
+            <article class="project-portfolio-card">
+              <div class="project-portfolio-card__hero">
+                <div class="project-portfolio-card__cover">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%231e293b' width='400' height='300'/%3E%3Ctext x='200' y='150' font-size='24' text-anchor='middle' fill='%2394a3b8' font-family='Inter'%3EPersonal Blog%3C/text%3E%3C/svg%3E" alt="个人博客系统" />
+                </div>
+                <div class="project-portfolio-card__content">
+                  <span class="project-tag">个人项目</span>
+                  <h3>静态博客系统</h3>
+                  <p class="project-portfolio-card__context">使用现代前端技术构建的高性能静态博客，支持 Markdown 内容管理与响应式设计。</p>
+                  <div class="project-facts">
+                    <div>
+                      <dt>技术栈</dt>
+                      <dd>Astro, React, CSS</dd>
+                    </div>
+                    <div>
+                      <dt>状态</dt>
+                      <dd><span class="status-badge status-badge--live">维护中</span></dd>
+                    </div>
+                    <div>
+                      <dt>时间</dt>
+                      <dd>2026.01 - 进行中</dd>
+                    </div>
+                    <div>
+                      <dt>链接</dt>
+                      <dd><a href="#" class="text-link">查看详情 →</a></dd>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <a href="#contact">Add final project URL →</a>
-            </article>
-            <article class="panel project-card">
-              <div>
-                <p class="project-tag">Writing / Notes</p>
-                <h3>Ideas worth sharing</h3>
-                <p>
-                  Use this space for articles, essays, learning notes, or reflections on the
-                  craft of building.
-                </p>
-              </div>
-              <a href="#contact">Add final article URL →</a>
-            </article>
-            <article class="panel project-card">
-              <div>
-                <p class="project-tag">Collaboration / Side project</p>
-                <h3>Something new in progress</h3>
-                <p>
-                  Describe an ongoing experiment, a collaboration, or a product you’re
-                  exploring next.
-                </p>
-              </div>
-              <a href="#contact">Add final detail URL →</a>
             </article>
           </div>
         </section>
 
-        <section class="section" id="contact">
-          <div class="contact-panel panel">
-            <div>
-              <p class="eyebrow">Contact</p>
-              <h2>Make it easy for people to reach you.</h2>
-              <p>
-                Update the placeholder links below with your real email, GitHub, LinkedIn,
-                newsletter, or other preferred channels.
-              </p>
+        <!-- Section Divider -->
+        <div class="section-divider">
+          <span>近期近况</span>
+        </div>
+
+        <!-- About Preview -->
+        <section class="section" id="about">
+          <div class="about-preview">
+            <div class="about-timeline">
+              <h3>近期动态</h3>
+              <ul class="timeline">
+                <li>
+                  <span class="timeline-date">2026.03</span>
+                  <div class="timeline-content">
+                    <h4>博客重构进行中</h4>
+                    <p>正在优化站点布局与信息架构，提升阅读体验。</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="timeline-date">2026.02</span>
+                  <div class="timeline-content">
+                    <h4>学习 Rust 基础</h4>
+                    <p>开始系统学习 Rust 编程语言，探索系统级编程。</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="timeline-date">2026.01</span>
+                  <div class="timeline-content">
+                    <h4>新年计划</h4>
+                    <p>制定 2026 年学习与写作计划，重点关注前端性能优化。</p>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <div class="contact-links">
-              <a href="mailto:alex@example.com">alex@example.com</a>
-              <a href="https://github.com/Alex-Shen1121" target="_blank" rel="noreferrer">GitHub</a>
-              <a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a>
+            <div class="about-skills">
+              <h3>技能图谱</h3>
+              <div class="skills-visual">
+                <div class="skill-ring">
+                  <span class="skill-level">熟练</span>
+                  <ul class="skill-list">
+                    <li>HTML/CSS</li>
+                    <li>JavaScript</li>
+                    <li>React</li>
+                  </ul>
+                </div>
+                <div class="skill-ring skill-ring--middle">
+                  <span class="skill-level">中级</span>
+                  <ul class="skill-list">
+                    <li>TypeScript</li>
+                    <li>Node.js</li>
+                    <li>设计基础</li>
+                  </ul>
+                </div>
+                <div class="skill-ring skill-ring--outer">
+                  <span class="skill-level">学习中</span>
+                  <ul class="skill-list">
+                    <li>Rust</li>
+                    <li>系统设计</li>
+                    <li>产品策略</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Newsletter / Subscribe -->
+        <section class="section" id="subscribe">
+          <div class="subscribe-card">
+            <div class="subscribe-card__content">
+              <h3>订阅更新</h3>
+              <p>获取最新文章与项目动态，不错过任何更新。</p>
+            </div>
+            <div class="subscribe-card__form">
+              <form class="subscribe-form" onsubmit="event.preventDefault(); alert('订阅功能演示');">
+                <input type="email" placeholder="your@email.com" required />
+                <button type="submit" class="button button-primary">订阅</button>
+              </form>
             </div>
           </div>
         </section>
       </main>
 
+      <!-- Footer -->
       <footer class="site-footer">
-        <p>© <span id="current-year"></span> Alex Shen. Built as a static site for easy deployment.</p>
+        <div class="site-footer__grid">
+          <div class="site-footer__section site-footer__section--brand">
+            <h4>沈晨玙</h4>
+            <p>产品设计师 / 前端开发者<br />探索产品、设计与工程的交汇点</p>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">站内导航</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="/">首页</a></li>
+              <li><a href="/blog/">文章列表</a></li>
+              <li><a href="/projects/">项目作品</a></li>
+              <li><a href="/about/">关于页面</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">联系与链接</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="mailto:alex@example.com">发送邮件</a></li>
+              <li><a href="https://github.com/Alex-Shen1121" target="_blank" rel="noreferrer">GitHub</a></li>
+              <li><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer">LinkedIn</a></li>
+              <li><a href="/rss.xml">RSS 订阅</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">访问统计</h4>
+            <div class="site-analytics">
+              <ul class="site-analytics__list">
+                <li class="site-analytics__item">
+                  <span>累计访问</span>
+                  <strong>1,234</strong>
+                </li>
+                <li class="site-analytics__item">
+                  <span>访客数</span>
+                  <strong>567</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="site-footer__bar">
+          <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
+          <a href="#" class="site-footer__top-link">↑ 返回顶部</a>
+        </div>
       </footer>
     </div>
+
+    <!-- Modal / Lightbox -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+      <button class="lightbox__close" aria-label="关闭">&times;</button>
+      <img class="lightbox__img" src="" alt="预览图片" />
+    </div>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
 
     <script src="script.js"></script>
   </body>

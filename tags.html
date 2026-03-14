@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="文章标签 - 沈晨玙的个人网站" />
+    <title>标签导航｜沈晨玙</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="reading-progress" aria-hidden="true">
+      <div class="reading-progress__bar"></div>
+    </div>
+
+    <div class="page-loader">
+      <div class="page-loader__frame">
+        <div class="page-loader__pill"></div>
+        <div class="page-loader__headline"></div>
+      </div>
+    </div>
+
+    <div class="site-shell">
+      <!-- Header -->
+      <header class="site-header" id="site-header">
+        <div class="site-header__inner">
+          <a class="brand" href="/">
+            <span class="brand-mark">S</span>
+            <div class="brand-copy">
+              <strong>沈晨玙</strong>
+              <small>产品与前端</small>
+            </div>
+          </a>
+          <div class="header-actions">
+            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题"></button>
+            <button class="nav-toggle" id="nav-toggle" aria-label="展开导航" aria-expanded="false">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+          <nav class="site-nav" id="site-nav" aria-label="Primary">
+            <a href="/">首页</a>
+            <a href="/blog/">文章</a>
+            <a href="/projects/">项目</a>
+            <a href="/tags/" aria-current="page">标签</a>
+            <a href="/archive/">归档</a>
+            <a href="/about/">关于</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <!-- Page Hero -->
+        <div class="page-hero">
+          <p class="eyebrow">标签</p>
+          <h1>标签导航</h1>
+          <p class="section-intro">按标签浏览文章，快速找到感兴趣的内容主题。</p>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" aria-label="面包屑导航">
+          <ol>
+            <li><a href="/">首页</a></li>
+            <li aria-current="page">标签</li>
+          </ol>
+        </nav>
+
+        <!-- Tag Cloud -->
+        <section class="tag-cloud-section">
+          <div class="tag-cloud-large">
+            <a href="/tags/design/" class="tag tag--xlarge" style="--tag-size: 1.3;">
+              设计思考
+              <span class="tag-count">8</span>
+            </a>
+            <a href="/tags/frontend/" class="tag tag--xlarge" style="--tag-size: 1.2;">
+              前端工程
+              <span class="tag-count">6</span>
+            </a>
+            <a href="/tags/product/" class="tag tag--large" style="--tag-size: 1.1;">
+              产品思维
+              <span class="tag-count">5</span>
+            </a>
+            <a href="/tags/ux/" class="tag tag--large" style="--tag-size: 1.15;">
+              用户体验
+              <span class="tag-count">4</span>
+            </a>
+            <a href="/tags/css/" class="tag">
+              CSS
+              <span class="tag-count">3</span>
+            </a>
+            <a href="/tags/architecture/" class="tag tag--large" style="--tag-size: 1.1;">
+              架构
+              <span class="tag-count">3</span>
+            </a>
+            <a href="/tags/tools/" class="tag">
+              工具
+              <span class="tag-count">3</span>
+            </a>
+            <a href="/tags/thinking/" class="tag">
+              思考
+              <span class="tag-count">2</span>
+            </a>
+            <a href="/tags/react/" class="tag">
+              React
+              <span class="tag-count">2</span>
+            </a>
+            <a href="/tags/life/" class="tag">
+              生活观察
+              <span class="tag-count">2</span>
+            </a>
+            <a href="/tags/notes/" class="tag">
+              笔记
+              <span class="tag-count">1</span>
+            </a>
+            <a href="/tags/js/" class="tag tag--small">
+              JavaScript
+              <span class="tag-count">1</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Tag Categories -->
+        <section class="section">
+          <div class="section-divider">
+            <span>按分类查看</span>
+          </div>
+          <div class="tag-categories">
+            <div class="tag-category">
+              <h3>技术类</h3>
+              <div class="tag-cloud">
+                <a href="/tags/frontend/" class="tag">前端工程</a>
+                <a href="/tags/css/" class="tag">CSS</a>
+                <a href="/tags/react/" class="tag">React</a>
+                <a href="/tags/js/" class="tag">JavaScript</a>
+                <a href="/tags/architecture/" class="tag">架构</a>
+              </div>
+            </div>
+            <div class="tag-category">
+              <h3>设计类</h3>
+              <div class="tag-cloud">
+                <a href="/tags/design/" class="tag">设计思考</a>
+                <a href="/tags/ux/" class="tag">用户体验</a>
+              </div>
+            </div>
+            <div class="tag-category">
+              <h3>产品类</h3>
+              <div class="tag-cloud">
+                <a href="/tags/product/" class="tag">产品思维</a>
+                <a href="/tags/thinking/" class="tag">思考</a>
+              </div>
+            </div>
+            <div class="tag-category">
+              <h3>其他</h3>
+              <div class="tag-cloud">
+                <a href="/tags/tools/" class="tag">工具</a>
+                <a href="/tags/life/" class="tag">生活观察</a>
+                <a href="/tags/notes/" class="tag">笔记</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Popular Tags with Articles -->
+        <section class="section">
+          <div class="section-divider">
+            <span>热门标签</span>
+          </div>
+          <div class="popular-tags-list">
+            <article class="popular-tag-card">
+              <div class="popular-tag-header">
+                <h3><a href="/tags/design/">设计思考</a></h3>
+                <span class="tag-count-badge">8 篇文章</span>
+              </div>
+              <ul class="popular-tag-posts">
+                <li><a href="#">设计个人主页的思考</a></li>
+                <li><a href="#">宁静界面的价值</a></li>
+                <li><a href="#">移动优先的设计思维</a></li>
+              </ul>
+            </article>
+            <article class="popular-tag-card">
+              <div class="popular-tag-header">
+                <h3><a href="/tags/frontend/">前端工程</a></h3>
+                <span class="tag-count-badge">6 篇文章</span>
+              </div>
+              <ul class="popular-tag-posts">
+                <li><a href="#">CSS Grid 与 Flexbox 的选择</a></li>
+                <li><a href="#">响应式设计的最佳实践</a></li>
+                <li><a href="#">Web 性能优化实战</a></li>
+              </ul>
+            </article>
+            <article class="popular-tag-card">
+              <div class="popular-tag-header">
+                <h3><a href="/tags/product/">产品思维</a></h3>
+                <span class="tag-count-badge">5 篇文章</span>
+              </div>
+              <ul class="popular-tag-posts">
+                <li><a href="#">产品思维的技术实践</a></li>
+                <li><a href="#">写作作为基础设施</a></li>
+                <li><a href="#">技术人的产品素养</a></li>
+              </ul>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="site-footer__grid">
+          <div class="site-footer__section site-footer__section--brand">
+            <h4>沈晨玙</h4>
+            <p>产品设计师 / 前端开发者</p>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">站内导航</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="/">首页</a></li>
+              <li><a href="/blog/">文章列表</a></li>
+              <li><a href="/projects/">项目作品</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__section">
+            <h4 class="site-footer__heading">联系</h4>
+            <ul class="footer-links footer-links--stack">
+              <li><a href="mailto:alex@example.com">发送邮件</a></li>
+              <li><a href="https://github.com/Alex-Shen1121" target="_blank">GitHub</a></li>
+              <li><a href="/rss.xml">RSS 订阅</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="site-footer__bar">
+          <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
