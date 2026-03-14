@@ -10,7 +10,7 @@ const outDir = path.join(rootDir, 'dist');
 const postsDir = path.join(rootDir, 'content', 'posts');
 const assetsDir = path.join(rootDir, 'src', 'assets');
 const publicDir = path.join(rootDir, 'public');
-const criticalCssSource = readFileSync(path.join(rootDir, 'critical.css'), 'utf8');
+const rawCriticalCssSource = readFileSync(path.join(rootDir, 'critical.css'), 'utf8');
 const canonicalConfig = validateCanonicalConfig(site);
 
 if (canonicalConfig.errors.length > 0) {
@@ -21,10 +21,54 @@ const IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gi
 const imageMetadata = new Map();
 
 const ensureDir = (dirPath) => mkdirSync(dirPath, { recursive: true });
+const minifyCss = (content) =>
+  content
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*([{}:;,])\s*/g, '$1')
+    .replace(/;}/g, '}')
+    .trim();
+
+const minifySvg = (content) =>
+  content
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/>\s+</g, '><')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+const minifyHtml = (content) =>
+  content
+    .replace(/>\s*\n\s*</g, '><')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+
+const optimizeTextContent = (targetPath, content) => {
+  const extension = path.extname(targetPath).toLowerCase();
+
+  if (extension === '.html') return minifyHtml(content);
+  if (extension === '.css') return minifyCss(content);
+  if (extension === '.svg') return minifySvg(content);
+  return content;
+};
+
 const writeText = (targetPath, content) => {
   ensureDir(path.dirname(targetPath));
-  writeFileSync(targetPath, content);
+  writeFileSync(targetPath, optimizeTextContent(targetPath, content));
 };
+
+const copyStaticAsset = (sourcePath, targetPath) => {
+  const extension = path.extname(sourcePath).toLowerCase();
+  ensureDir(path.dirname(targetPath));
+
+  if (extension === '.css' || extension === '.svg') {
+    writeFileSync(targetPath, optimizeTextContent(targetPath, readFileSync(sourcePath, 'utf8')));
+    return;
+  }
+
+  copyFileSync(sourcePath, targetPath);
+};
+
+const criticalCssSource = minifyCss(rawCriticalCssSource);
 
 const normalizeImagePath = (assetPath = '') => {
   if (!assetPath || /^(?:[a-z]+:)?\/\//i.test(assetPath) || assetPath.startsWith('data:') || assetPath.startsWith('#')) {
@@ -1212,18 +1256,7 @@ const renderLayout = ({
     .filter(Boolean)
     .join('\n    ');
   const currentHref = currentPath === '/' ? '/' : currentPath;
-  const themeBootScript = `(() => {
-  const storageKey = 'personal-blog-theme';
-  const savedTheme = localStorage.getItem(storageKey);
-  const theme = savedTheme === 'light' || savedTheme === 'dark'
-    ? savedTheme
-    : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-  document.documentElement.dataset.theme = theme;
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeColorMeta) {
-    themeColorMeta.setAttribute('content', theme === 'light' ? '#f4f7fb' : '#07111f');
-  }
-})();`;
+  const themeBootScript = `(()=>{const storageKey='personal-blog-theme';const savedTheme=localStorage.getItem(storageKey);const theme=savedTheme==='light'||savedTheme==='dark'?savedTheme:(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=theme;const themeColorMeta=document.querySelector('meta[name="theme-color"]');if(themeColorMeta){themeColorMeta.setAttribute('content',theme==='light'?'#f4f7fb':'#07111f')}})();`;
   const criticalCss = criticalCssSource.replaceAll('</style>', '<\\/style>');
 
   return `<!DOCTYPE html>
@@ -2352,16 +2385,16 @@ registerImagesFromDirectory(publicDir, '/');
 
 ensureDir(outDir);
 ensureDir(path.join(outDir, 'assets'));
-copyFileSync(path.join(rootDir, 'styles.css'), path.join(outDir, 'styles.css'));
-copyFileSync(path.join(rootDir, 'script.js'), path.join(outDir, 'script.js'));
-copyFileSync(path.join(rootDir, 'enhancements.js'), path.join(outDir, 'enhancements.js'));
+copyStaticAsset(path.join(rootDir, 'styles.css'), path.join(outDir, 'styles.css'));
+copyStaticAsset(path.join(rootDir, 'script.js'), path.join(outDir, 'script.js'));
+copyStaticAsset(path.join(rootDir, 'enhancements.js'), path.join(outDir, 'enhancements.js'));
 
 for (const file of readdirSync(assetsDir)) {
-  copyFileSync(path.join(assetsDir, file), path.join(outDir, 'assets', file));
+  copyStaticAsset(path.join(assetsDir, file), path.join(outDir, 'assets', file));
 }
 
 for (const file of readdirSync(publicDir)) {
-  copyFileSync(path.join(publicDir, file), path.join(outDir, file));
+  copyStaticAsset(path.join(publicDir, file), path.join(outDir, file));
 }
 
 const posts = loadPosts();
