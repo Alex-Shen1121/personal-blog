@@ -4,12 +4,12 @@
 #        node scripts/web-vitals.mjs --url <url> --key <api-key> --threshold <lcp:2.5,cls:0.1,fid:100>
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const outDir = join(rootDir, 'dist');
+const outDir = path.join(rootDir, 'dist');
 
 const args = process.argv.slice(2);
 let siteUrl = '';
@@ -116,7 +116,7 @@ const runWebVitalsCheck = async () => {
   if (!metrics) {
     // Write placeholder results
     writeFileSync(
-      join(outDir, 'web-vitals.json'),
+      path.join(outDir, 'web-vitals.json'),
       JSON.stringify({ status: 'skipped', reason: 'No API key provided' }, null, 2)
     );
     return;
@@ -153,7 +153,7 @@ const runWebVitalsCheck = async () => {
   
   // Write results to file
   writeFileSync(
-    join(outDir, 'web-vitals.json'),
+    path.join(outDir, 'web-vitals.json'),
     JSON.stringify(results, null, 2)
   );
   

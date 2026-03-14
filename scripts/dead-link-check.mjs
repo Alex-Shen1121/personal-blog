@@ -1,10 +1,10 @@
 import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const outDir = join(rootDir, 'dist');
+const outDir = path.path.join(rootDir, 'dist');
 
 // Site configuration
 const siteUrl = 'https://alex-shen1121.github.io/personal-blog/';
@@ -97,9 +97,9 @@ const fileExistsForPath = (path) => {
   
   // Check various possible locations
   const possiblePaths = [
-    join(outDir, filePath),
-    join(outDir, filePath, 'index.html'),
-    join(outDir, filePath.replace(/\/$/, '') + '.html'),
+    path.join(outDir, filePath),
+    path.join(outDir, filePath, 'index.html'),
+    path.join(outDir, filePath.replace(/\/$/, '') + '.html'),
   ];
   
   return possiblePaths.some(p => existsSync(p));
@@ -114,7 +114,7 @@ const checkDeadLinks = () => {
     try {
       const entries = readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        const fullPath = join(dir, entry.name);
+        const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
           collectHtmlFiles(fullPath);
         } else if (entry.name.endsWith('.html')) {

@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const outDir = join(rootDir, 'dist');
-const postsDir = join(rootDir, 'content', 'posts');
-const postsEnDir = join(rootDir, 'content', 'posts-en');
+const outDir = path.join(rootDir, 'dist');
+const postsDir = path.join(rootDir, 'content', 'posts');
+const postsEnDir = path.join(rootDir, 'content', 'posts-en');
 
 // Site configuration - matching site.mjs
 const siteUrl = 'https://alex-shen1121.github.io/personal-blog/';
@@ -59,7 +59,7 @@ const loadPosts = (dir) => {
   return readdirSync(dir)
     .filter(file => file.endsWith('.md'))
     .map(fileName => {
-      const raw = readFileSync(join(dir, fileName), 'utf8');
+      const raw = readFileSync(path.join(dir, fileName), 'utf8');
       const { meta } = parseFrontmatter(raw);
       return {
         slug: meta.slug || fileName.replace('.md', ''),
@@ -163,7 +163,7 @@ ${urlEntries}
 </urlset>`;
   
   // Write sitemap.xml
-  writeFileSync(join(outDir, 'sitemap.xml'), sitemap);
+  writeFileSync(path.join(outDir, 'sitemap.xml'), sitemap);
   console.log(`✓ Generated sitemap.xml with ${urls.length} URLs`);
 };
 
