@@ -16,10 +16,102 @@ if (canonicalConfig.errors.length > 0) {
   throw new Error(canonicalConfig.errors.join('\n'));
 }
 
+const IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif']);
+const imageMetadata = new Map();
+
 const ensureDir = (dirPath) => mkdirSync(dirPath, { recursive: true });
 const writeText = (targetPath, content) => {
   ensureDir(path.dirname(targetPath));
   writeFileSync(targetPath, content);
+};
+
+const normalizeImagePath = (assetPath = '') => {
+  if (!assetPath || /^(?:[a-z]+:)?\/\//i.test(assetPath) || assetPath.startsWith('data:') || assetPath.startsWith('#')) {
+    return '';
+  }
+
+  const [cleanPath] = assetPath.split(/[?#]/);
+  const normalizedRepoBasePath = site.repoBasePath.replace(/\/$/, '');
+
+  if (normalizedRepoBasePath && cleanPath.startsWith(normalizedRepoBasePath)) {
+    const trimmedPath = cleanPath.slice(normalizedRepoBasePath.length);
+    return trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`;
+  }
+
+  if (cleanPath.startsWith('/')) {
+    return cleanPath;
+  }
+
+  return `/${cleanPath.replace(/^\.?\/+/, '')}`;
+};
+
+const parseSvgDimensions = (filePath) => {
+  const source = readFileSync(filePath, 'utf8');
+  const svgTag = source.match(/<svg\b[^>]*>/i)?.[0] ?? '';
+  const widthMatch = svgTag.match(/\bwidth=["']([\d.]+)(?:px)?["']/i);
+  const heightMatch = svgTag.match(/\bheight=["']([\d.]+)(?:px)?["']/i);
+
+  if (widthMatch && heightMatch) {
+    return {
+      width: Number(widthMatch[1]),
+      height: Number(heightMatch[1])
+    };
+  }
+
+  const viewBoxMatch = svgTag.match(/\bviewBox=["'][-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)["']/i);
+  if (!viewBoxMatch) return null;
+
+  return {
+    width: Number(viewBoxMatch[1]),
+    height: Number(viewBoxMatch[2])
+  };
+};
+
+const registerImageMetadata = (assetPath, filePath) => {
+  const extension = path.extname(filePath).toLowerCase();
+  if (!IMAGE_EXTENSIONS.has(extension)) return;
+
+  const normalizedPath = normalizeImagePath(assetPath);
+  if (!normalizedPath) return;
+
+  let dimensions = null;
+  if (extension === '.svg') {
+    dimensions = parseSvgDimensions(filePath);
+  }
+
+  if (!dimensions?.width || !dimensions?.height) return;
+  imageMetadata.set(normalizedPath, dimensions);
+};
+
+const registerImagesFromDirectory = (directoryPath, publicPathPrefix = '/') => {
+  for (const file of readdirSync(directoryPath)) {
+    const filePath = path.join(directoryPath, file);
+    const publicPath = `${publicPathPrefix.replace(/\/$/, '')}/${file}`;
+    registerImageMetadata(publicPath, filePath);
+  }
+};
+
+const getImageAttributes = ({ src = '', loading = '', decoding = 'async', fetchpriority = '' } = {}) => {
+  const attributes = [];
+  const metadataEntry = imageMetadata.get(normalizeImagePath(src));
+
+  if (metadataEntry) {
+    attributes.push(`width="${metadataEntry.width}"`, `height="${metadataEntry.height}"`);
+  }
+
+  if (loading) {
+    attributes.push(`loading="${loading}"`);
+  }
+
+  if (decoding) {
+    attributes.push(`decoding="${decoding}"`);
+  }
+
+  if (fetchpriority) {
+    attributes.push(`fetchpriority="${fetchpriority}"`);
+  }
+
+  return attributes.length ? ` ${attributes.join(' ')}` : '';
 };
 
 const formatDate = (dateString) =>
@@ -241,7 +333,7 @@ const renderProjectMediaFigure = (media, prefix = '') => {
 
   const alt = escapeHtml(media.alt || media.caption || '项目截图或演示图');
   const caption = media.caption ? `<figcaption>${escapeHtml(media.caption)}</figcaption>` : '';
-  return `<figure class="project-media-card"><img src="${src}" alt="${alt}" loading="lazy" />${caption}</figure>`;
+  return `<figure class="project-media-card"><img src="${src}" alt="${alt}"${getImageAttributes({ src: media?.src, loading: 'lazy' })} />${caption}</figure>`;
 };
 
 const estimateReadingTime = (content) => {
@@ -528,10 +620,10 @@ const renderImageBlock = ({ alt, src, title }) => {
   const titleAttr = heading ? ` title="${escapeHtml(heading)}"` : '';
 
   if (!heading && !note) {
-    return `<p class="prose-image"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy" /></p>`;
+    return `<p class="prose-image"><img src="${safeSrc}" alt="${safeAlt}"${getImageAttributes({ src, loading: 'lazy' })} /></p>`;
   }
 
-  return `<figure class="prose-figure"><img src="${safeSrc}" alt="${safeAlt}" loading="lazy"${titleAttr} /><figcaption>${heading ? `<strong>${escapeHtml(heading)}</strong>` : ''}${note ? `<span>${escapeHtml(note)}</span>` : ''}</figcaption></figure>`;
+  return `<figure class="prose-figure"><img src="${safeSrc}" alt="${safeAlt}"${getImageAttributes({ src, loading: 'lazy' })}${titleAttr} /><figcaption>${heading ? `<strong>${escapeHtml(heading)}</strong>` : ''}${note ? `<span>${escapeHtml(note)}</span>` : ''}</figcaption></figure>`;
 };
 
 const inlineMarkdown = (value) => {
@@ -1254,7 +1346,7 @@ const renderHomePage = (posts) => {
           <p class="kicker">现在的关注点</p>
           <p>${site.author.intro}</p>
         </div>
-        <img src="assets/illustration-wave.svg" alt="抽象波形风格插画" />
+        <img src="assets/illustration-wave.svg" alt="抽象波形风格插画"${getImageAttributes({ src: '/assets/illustration-wave.svg', fetchpriority: 'high' })} />
         <ul class="list-card">
           ${home.tools.map((tool) => `<li>${tool}</li>`).join('')}
         </ul>
@@ -1379,7 +1471,7 @@ const renderHomePage = (posts) => {
       </div>
       <div class="featured-posts">
         ${primaryPost
-          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画" /></div><div class="post-card__body">${primaryPost.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : `<span class="feature-label">${home.featuredPosts.primaryLabel}</span>`}<div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
+          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画"${getImageAttributes({ src: primaryPost.cover, fetchpriority: 'high' })} /></div><div class="post-card__body">${primaryPost.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : `<span class="feature-label">${home.featuredPosts.primaryLabel}</span>`}<div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
           : ''}
         <div class="featured-posts__sidebar">
           <div class="featured-posts__intro panel">
@@ -1404,7 +1496,7 @@ const renderHomePage = (posts) => {
       <div class="post-grid">
         ${recentUpdates
           .map(
-            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${post.updated && post.updated !== post.date ? `<span>更新于 ${formatDate(post.updated)}</span>` : ''}<span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="button button-ghost" href="blog/${post.slug}/">阅读详情</a></article>`
+            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${post.updated && post.updated !== post.date ? `<span>更新于 ${formatDate(post.updated)}</span>` : ''}<span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="button button-ghost" href="blog/${post.slug}/">阅读详情</a></article>`
           )
           .join('')}
       </div>
@@ -1495,7 +1587,7 @@ const renderProjectCard = (item, { assetPrefix = '', filterable = false } = {}) 
     ? ` data-project-card data-search-index="${escapeHtml(searchIndex)}" data-category="${escapeHtml(normalizeFilterValue(item.category ?? ''))}" data-status="${escapeHtml(normalizeFilterValue(getProjectStatusLabel(item.status)))}"`
     : '';
 
-  return `<article class="project-panel project-card"${filterAttributes}>${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}" loading="lazy" /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
+  return `<article class="project-panel project-card"${filterAttributes}>${previewMedia ? `<div class="project-card__cover"><img src="${resolveStaticAssetPath(previewMedia.src, assetPrefix)}" alt="${escapeHtml(previewMedia.alt || `${item.title ?? '项目'} 预览图`)}"${getImageAttributes({ src: previewMedia.src, loading: 'lazy' })} /></div>` : ''}<div class="project-card__header"><span class="kicker">${item.category ?? item.meta ?? '更新中'}</span>${metaItems ? `<div class="project-card__meta">${metaItems}</div>` : ''}</div><h3>${item.title ?? '阶段记录'}</h3><p>${item.summary ?? item.text ?? item}</p>${facts.length ? `<dl class="project-facts">${facts
     .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
     .join('')}</dl>` : ''}${item.stack?.length ? `<ul class="tag-list">${item.stack.map((tech) => `<li class="tag">${tech}</li>`).join('')}</ul>` : ''}${actionLinks.length ? `<div class="project-actions">${actionLinks.join('')}</div>` : ''}</article>`;
 };
@@ -1818,7 +1910,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
           ].join(' ').toLowerCase());
           const dateValue = new Date(`${post.date}T00:00:00+08:00`).getTime();
           const updatedValue = new Date(`${(post.updated ?? post.date)}T00:00:00+08:00`).getTime();
-          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
+          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
         })
         .join('')}
     </div>
@@ -1917,7 +2009,7 @@ const renderCategoryPage = (category, posts) => `
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -2017,7 +2109,7 @@ const renderTagDetailPage = (tag) => `
     <div class="post-grid">
       ${tag.posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画" /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -2068,7 +2160,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
     </section>
     <section class="post-layout reveal">
       <article>
-        <div class="post-cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的配图" /></div>
+        <div class="post-cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的配图"${getImageAttributes({ src: post.cover, fetchpriority: 'high' })} /></div>
         <div class="prose panel">${post.html}</div>
         ${renderPostNavigation(navigationPosts)}
       </article>
@@ -2247,6 +2339,9 @@ const render404 = (posts = []) => {
 if (existsSync(outDir)) {
   rmSync(outDir, { recursive: true, force: true });
 }
+
+registerImagesFromDirectory(assetsDir, '/assets');
+registerImagesFromDirectory(publicDir, '/');
 
 ensureDir(outDir);
 ensureDir(path.join(outDir, 'assets'));
