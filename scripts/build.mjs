@@ -388,7 +388,8 @@ const formatDate = (dateString) =>
   new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    timeZone: 'Asia/Shanghai'
   }).format(new Date(`${dateString}T00:00:00+08:00`));
 
 const formatWordCount = (count) => `${count.toLocaleString('zh-CN')} 字`;
@@ -396,7 +397,8 @@ const formatDateEn = (dateString) =>
   new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    timeZone: 'Asia/Shanghai'
   }).format(new Date(`${dateString}T00:00:00+08:00`));
 const formatWordCountEn = (count) => `${count.toLocaleString('en-US')} words`;
 const estimateReadingTimeEn = (content) => {
