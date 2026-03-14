@@ -681,6 +681,23 @@ const trimLocalPrefix = (value) => value.replace(/^\.\//, '');
 
 const withBase = (relativePath) => new URL(relativePath.replace(/^\//, ''), site.siteUrl).toString();
 
+const toIsoDateTime = (dateString) => {
+  if (!dateString) return '';
+  return new Date(`${dateString}T00:00:00+08:00`).toISOString();
+};
+
+const detectImageMimeType = (assetPath = '') => {
+  const normalizedPath = assetPath.split('?')[0].toLowerCase();
+
+  if (normalizedPath.endsWith('.svg')) return 'image/svg+xml';
+  if (normalizedPath.endsWith('.png')) return 'image/png';
+  if (normalizedPath.endsWith('.jpg') || normalizedPath.endsWith('.jpeg')) return 'image/jpeg';
+  if (normalizedPath.endsWith('.webp')) return 'image/webp';
+  if (normalizedPath.endsWith('.gif')) return 'image/gif';
+
+  return '';
+};
+
 const defaultCoverPool = [
   '/assets/illustration-wave.svg',
   '/assets/illustration-orbit.svg',
@@ -712,18 +729,51 @@ const renderNav = (currentPath, prefix) => {
 
 const formatMetaTitle = (...segments) => segments.filter(Boolean).join('｜');
 
-const renderLayout = ({ title, description, currentPath, outputPath, body, image = site.brand.ogImage }) => {
+const renderLayout = ({ title, description, currentPath, outputPath, body, image = site.brand.ogImage, openGraph = {} }) => {
   const prefix = getRelativePrefix(outputPath);
   const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
   const canonical = withBase(currentPath.replace(/^\//, '').replace(/index\.html$/, ''));
   const stylesheetHref = trimLocalPrefix(`${prefix}/styles.css`);
   const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
-  const ogImage = withBase(image);
+  const resolvedOpenGraph = {
+    title: openGraph.title ?? title,
+    description: openGraph.description ?? description,
+    type: openGraph.type ?? 'website',
+    image: openGraph.image ?? image,
+    imageAlt: openGraph.imageAlt ?? '',
+    article: openGraph.article ?? null
+  };
+  const ogImage = withBase(resolvedOpenGraph.image);
+  const ogImageType = detectImageMimeType(resolvedOpenGraph.image);
   const metaTitle = escapeHtml(title);
   const metaDescription = escapeHtml(description);
   const metaCanonical = escapeHtml(canonical);
+  const metaOgTitle = escapeHtml(resolvedOpenGraph.title);
+  const metaOgDescription = escapeHtml(resolvedOpenGraph.description);
+  const metaOgType = escapeHtml(resolvedOpenGraph.type);
   const metaOgImage = escapeHtml(ogImage);
+  const metaOgImageAlt = resolvedOpenGraph.imageAlt ? escapeHtml(resolvedOpenGraph.imageAlt) : '';
+  const openGraphExtras = [
+    ogImageType ? `<meta property="og:image:type" content="${escapeHtml(ogImageType)}" />` : '',
+    '<meta property="og:image:width" content="1200" />',
+    '<meta property="og:image:height" content="630" />',
+    metaOgImageAlt ? `<meta property="og:image:alt" content="${metaOgImageAlt}" />` : '',
+    resolvedOpenGraph.type === 'article' && resolvedOpenGraph.article?.publishedTime
+      ? `<meta property="article:published_time" content="${escapeHtml(resolvedOpenGraph.article.publishedTime)}" />`
+      : '',
+    resolvedOpenGraph.type === 'article' && resolvedOpenGraph.article?.modifiedTime
+      ? `<meta property="article:modified_time" content="${escapeHtml(resolvedOpenGraph.article.modifiedTime)}" />`
+      : '',
+    resolvedOpenGraph.type === 'article' && resolvedOpenGraph.article?.section
+      ? `<meta property="article:section" content="${escapeHtml(resolvedOpenGraph.article.section)}" />`
+      : '',
+    ...(resolvedOpenGraph.type === 'article'
+      ? (resolvedOpenGraph.article?.tags ?? []).map((tag) => `<meta property="article:tag" content="${escapeHtml(tag)}" />`)
+      : [])
+  ]
+    .filter(Boolean)
+    .join('\n    ');
   const currentHref = currentPath === '/' ? '/' : currentPath;
   const themeBootScript = `(() => {
   const storageKey = 'personal-blog-theme';
@@ -746,15 +796,13 @@ const renderLayout = ({ title, description, currentPath, outputPath, body, image
     <meta name="theme-color" content="#07111f" />
     <title>${metaTitle}</title>
     <meta name="description" content="${metaDescription}" />
-    <meta property="og:title" content="${metaTitle}" />
-    <meta property="og:description" content="${metaDescription}" />
-    <meta property="og:type" content="website" />
+    <meta property="og:title" content="${metaOgTitle}" />
+    <meta property="og:description" content="${metaOgDescription}" />
+    <meta property="og:type" content="${metaOgType}" />
     <meta property="og:site_name" content="${escapeHtml(site.shortName)}" />
     <meta property="og:url" content="${metaCanonical}" />
     <meta property="og:image" content="${metaOgImage}" />
-    <meta property="og:image:type" content="image/svg+xml" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    ${openGraphExtras}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${metaTitle}" />
     <meta name="twitter:description" content="${metaDescription}" />
@@ -1274,6 +1322,9 @@ const loadPosts = () => {
         date: meta.date,
         updated: meta.updated,
         summary: resolvePostSummary(meta.summary, body),
+        ogTitle: meta.ogTitle,
+        ogDescription: meta.ogDescription,
+        ogImage: meta.ogImage,
         tags: meta.tags ?? [],
         category: {
           name: meta.category,
@@ -1951,7 +2002,20 @@ for (const [index, post] of posts.entries()) {
       currentPath: `/blog/${post.slug}/`,
       outputPath: path.join(outDir, 'blog', post.slug, 'index.html'),
       body: renderPostPage(post, relatedPosts, navigationPosts, series),
-      image: post.cover
+      image: post.cover,
+      openGraph: {
+        title: post.ogTitle ?? post.title,
+        description: post.ogDescription ?? post.summary,
+        image: post.ogImage ?? post.cover,
+        imageAlt: `${post.title} 的文章封面图`,
+        type: 'article',
+        article: {
+          publishedTime: toIsoDateTime(post.date),
+          modifiedTime: toIsoDateTime(post.updated ?? post.date),
+          section: post.category.name,
+          tags: post.tags
+        }
+      }
     })
   );
 }
