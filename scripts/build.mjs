@@ -2991,6 +2991,29 @@ ${itemXml}
 </rss>`;
 };
 
+const renderAiAssistWorkflowCard = () => `
+  <article class="note-card ai-workflow-card">
+    <div class="section-heading">
+      <p class="kicker">AI 辅助工作流</p>
+      <h2>先让 AI 给摘要 / 标签提案，再安全回填到 frontmatter。</h2>
+      <p class="section-intro">这个流程不会直接改正文，而是先根据当前文章、模板和已有标签池生成 prompt，等你确认 AI 返回的 JSON 后再回填。</p>
+    </div>
+    <ol class="list-card ai-workflow-card__steps">
+      <li><strong>1. 生成 prompt</strong><span><code>npm run ai:assist -- suggest content/posts/your-post.md</code></span></li>
+      <li><strong>2. 让 AI 只返回 JSON</strong><span>脚本会在 <code>.openclaw/ai-assist/</code> 下生成 prompt 和 response 模板。</span></li>
+      <li><strong>3. 回填 summary / tags</strong><span><code>npm run ai:assist -- apply content/posts/your-post.md</code></span></li>
+    </ol>
+    <div class="ai-workflow-card__meta">
+      <span class="tag">复用已有标签池</span>
+      <span class="tag">保留模板上下文</span>
+      <span class="tag">只改 frontmatter</span>
+    </div>
+    <div class="post-list__filters">
+      <a class="button button-secondary button-small" href="templates/">先选内容模板</a>
+      <a class="button button-ghost button-small" href="../projects/writing-workflow-system/">查看写作工作流项目</a>
+    </div>
+  </article>`;
+
 const renderBlogListPage = (posts, tags, categories, seriesList, templates) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
@@ -3020,6 +3043,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList, templates) => `
           ${site.emailSubscription?.note ? `<p class="muted">${escapeHtml(site.emailSubscription.note)}</p>` : ''}
         </article>`
       : ''}
+    ${renderAiAssistWorkflowCard()}
     <div class="post-discovery panel">
       <div class="post-discovery__intro">
         <p class="kicker">站内搜索</p>

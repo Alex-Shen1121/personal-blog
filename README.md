@@ -150,6 +150,7 @@ npm run preview
 ```bash
 npm run validate     # 校验内容与构建输入
 npm run build        # 生成静态站点到 dist/
+npm run ai:assist -- suggest content/posts/your-post.md # 生成 AI 辅助摘要 / 标签 prompt
 npm run precommit    # 执行提交前的完整检查（validate + build）
 npm run setup:hooks  # 手动配置本地 Git hooks 到 .githooks
 npm run preview      # 启动本地静态预览服务
@@ -246,6 +247,27 @@ draft: true # 可选；为 true 时生成 noindex 草稿预览页，但不会进
 - `field-note`：阶段记录，适合项目迭代、复盘和近况类内容
 
 站点构建时会读取 frontmatter 中的 `template` 字段，并自动生成模板索引页、模板详情页，以及博客列表里的模板筛选入口。
+
+### AI 辅助摘要 / 标签工作流
+
+如果正文已经写完，但还没决定要不要手写 `summary` / `tags`，可以先走一遍 AI 辅助工作流：
+
+```bash
+npm run ai:assist -- suggest content/posts/your-post.md
+```
+
+执行后会在 `.openclaw/ai-assist/` 下生成两份文件：
+
+- `your-post.prompt.md`：已经带上标题、分类、模板、自动摘要兜底、命中的已有标签池与正文内容，可直接发给常用 AI
+- `your-post.response.json`：AI 需要回填的 JSON 模板，格式固定为 `{ "summary": "...", "tags": ["...", "..."] }`
+
+等你确认 AI 返回的 JSON 没问题后，再执行：
+
+```bash
+npm run ai:assist -- apply content/posts/your-post.md
+```
+
+这个步骤只会回填 frontmatter 里的 `summary` 和 `tags`，不会改动正文，方便把 AI 当成“提案助手”而不是直接接管内容。
 
 ### 草稿预览流程
 

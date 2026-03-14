@@ -11,6 +11,7 @@ const requiredSourceFiles = [
   'script.js',
   '.githooks/pre-commit',
   'scripts/build.mjs',
+  'scripts/ai-assist.mjs',
   'scripts/frontmatter.mjs',
   'scripts/html-audit.mjs',
   'scripts/markdown-quality.mjs',

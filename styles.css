@@ -1790,6 +1790,39 @@ body.has-reading-progress .reading-progress {
   margin-bottom: 22px;
 }
 
+.ai-workflow-card {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.ai-workflow-card__steps li {
+  display: grid;
+  gap: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--surface-border);
+}
+
+.ai-workflow-card__steps strong {
+  color: var(--text);
+}
+
+.ai-workflow-card__steps code {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--surface-soft-strong);
+  color: var(--soft);
+  word-break: break-all;
+}
+
+.ai-workflow-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .post-subscribe-card__actions {
   display: flex;
   flex-wrap: wrap;

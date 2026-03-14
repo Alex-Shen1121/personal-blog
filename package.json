@@ -10,6 +10,7 @@
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "build": "node scripts/build.mjs",
+    "ai:assist": "node scripts/ai-assist.mjs",
     "precommit": "npm run validate && npm run build",
     "setup:hooks": "node scripts/setup-git-hooks.mjs",
     "prepare": "node scripts/setup-git-hooks.mjs",

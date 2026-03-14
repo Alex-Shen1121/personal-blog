@@ -8,6 +8,7 @@
 
 ### Added
 
+- 新增 AI 辅助摘要 / 标签工作流：增加 `npm run ai:assist -- suggest|apply` 命令，支持为文章生成 AI prompt、复用现有标签池，并在确认 JSON 后安全回填 frontmatter；博客列表页同步增加工作流说明入口。
 - 新增“现在在做什么”动态流：首页近况与 `/now/` 页面改为复用同一份时间流数据，支持展示最近更新、阶段主轴与后续推进方向。
 - 新增内容模板系统：Markdown frontmatter 支持 `template` 字段，博客列表页增加模板筛选，构建时自动生成 `/blog/templates/` 模板索引页与各模板详情页。
 - 新增 `content/templates/` 内容起稿模板，提供观点文章、方法清单与阶段记录三种起步骨架。
