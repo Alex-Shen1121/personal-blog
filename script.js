@@ -1501,6 +1501,416 @@ function initSectionIndicator() {
   updateIndicator();
 }
 
+/* ========================================
+   Content Presentation Enhancements (46-60)
+   ======================================== */
+
+// 50. Word Count & Reading Time Display
+function initWordCount() {
+  const postMain = document.querySelector('.post-main');
+  if (!postMain) return;
+  
+  const prose = postMain.querySelector('.prose');
+  if (!prose) return;
+  
+  // Get meta stats container
+  const metaContainer = document.querySelector('.post-header__meta');
+  if (!metaContainer) return;
+  
+  // Calculate word count
+  const text = prose.textContent || '';
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  const wordCount = words.length;
+  
+  // Calculate reading time (average 200 words per minute for Chinese, 250 for English)
+  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = words.filter(w => /^[a-zA-Z]+$/.test(w)).length;
+  const totalChars = chineseChars + englishWords * 5; // average English word ~5 chars
+  const readingTimeMinutes = Math.max(1, Math.ceil(totalChars / 400));
+  
+  // Find or create stats container
+  let statsContainer = metaContainer.querySelector('.post-meta__stats');
+  if (!statsContainer) {
+    statsContainer = document.createElement('div');
+    statsContainer.className = 'post-meta__stats';
+    metaContainer.appendChild(statsContainer);
+  }
+  
+  // Add word count
+  const wordCountEl = document.createElement('span');
+  wordCountEl.className = 'post-meta__stat';
+  wordCountEl.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+    ${wordCount.toLocaleString()} 字
+  `;
+  
+  // Add divider
+  const divider = document.createElement('span');
+  divider.className = 'post-meta__divider';
+  
+  // Append elements
+  statsContainer.appendChild(wordCountEl);
+  statsContainer.appendChild(divider);
+}
+
+// 49/51. Enhanced Code Block with Line Numbers
+function initCodeBlockEnhancements() {
+  const codeBlocks = document.querySelectorAll('.code-block');
+  
+  codeBlocks.forEach(block => {
+    // Check if already processed
+    if (block.dataset.processed) return;
+    block.dataset.processed = 'true';
+    
+    const pre = block.querySelector('pre');
+    if (!pre) return;
+    
+    // Get code content
+    const code = pre.textContent || '';
+    const lines = code.split('\n');
+    
+    // Create line numbers and content
+    const lineNumbers = [];
+    const lineContents = [];
+    
+    lines.forEach((line, index) => {
+      lineNumbers.push(`<span class="code-block__line-number">${index + 1}</span>`);
+      lineContents.push(`<span class="code-block__line-content">${escapeHtml(line)}</span>`);
+    });
+    
+    // Build new structure
+    const lineHtml = lines.map((line, index) => {
+      return `<div class="code-block__line">
+        <span class="code-block__line-number">${index + 1}</span>
+        <span class="code-block__line-content">${escapeHtml(line)}</span>
+      </div>`;
+    }).join('');
+    
+    // Replace content
+    const newPre = document.createElement('div');
+    newPre.className = 'code-block__pre';
+    newPre.innerHTML = lineHtml;
+    
+    // Clear and append
+    pre.innerHTML = '';
+    pre.appendChild(newPre);
+  });
+}
+
+// Escape HTML entities
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Copy code functionality
+function initCodeCopy() {
+  document.addEventListener('click', (e) => {
+    const copyBtn = e.target.closest('.code-block__copy');
+    if (!copyBtn) return;
+    
+    const codeBlock = copyBtn.closest('.code-block');
+    if (!codeBlock) return;
+    
+    // Get code content
+    const codeContent = codeBlock.querySelector('.code-block__line-content');
+    if (!codeContent) return;
+    
+    const text = Array.from(codeBlock.querySelectorAll('.code-block__line-content'))
+      .map(el => el.textContent)
+      .join('\n');
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('is-copied');
+      copyBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        已复制
+      `;
+      
+      setTimeout(() => {
+        copyBtn.classList.remove('is-copied');
+        copyBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          复制
+        `;
+      }, 2000);
+    });
+  });
+}
+
+// 58. Footnote Handling
+function initFootnotes() {
+  const prose = document.querySelector('.prose');
+  if (!prose) return;
+  
+  // Find all footnote references
+  const footnoteRefs = prose.querySelectorAll('.footnote-ref');
+  if (footnoteRefs.length === 0) return;
+  
+  // Find footnotes section
+  const footnotes = prose.querySelector('.footnotes');
+  if (!footnotes) return;
+  
+  // Add click handlers for footnote refs (scroll to footnote)
+  footnoteRefs.forEach(ref => {
+    ref.addEventListener('click', (e) => {
+      e.preventDefault();
+      const link = ref.querySelector('a');
+      if (!link) return;
+      
+      const href = link.getAttribute('href');
+      if (!href) return;
+      
+      const targetId = href.slice(1);
+      const target = document.getElementById(targetId);
+      
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the footnote
+        target.classList.add('is-highlighted');
+        setTimeout(() => target.classList.remove('is-highlighted'), 2000);
+      }
+    });
+  });
+  
+  // Add back links for footnotes
+  const footnoteItems = footnotes.querySelectorAll('.footnote-item');
+  footnoteItems.forEach(item => {
+    const backLink = item.querySelector('.footnote-back');
+    if (!backLink) return;
+    
+    const href = backLink.getAttribute('href');
+    if (!href) return;
+    
+    const targetId = href.slice(1);
+    const target = document.getElementById(targetId);
+    
+    if (target) {
+      backLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+  });
+}
+
+// 60. Enhanced TOC with Active Class
+function initEnhancedToc() {
+  const tocItems = document.querySelectorAll('.toc-item');
+  if (tocItems.length === 0) return;
+  
+  // Get all heading elements referenced by TOC
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const headings = Array.from(tocLinks).map(link => {
+    const id = link.getAttribute('href')?.slice(1);
+    return id ? document.getElementById(id) : null;
+  }).filter(Boolean);
+  
+  if (headings.length === 0) return;
+  
+  function updateActiveItem() {
+    const scrollY = window.scrollY;
+    const headerOffset = 120;
+    
+    let currentIndex = 0;
+    headings.forEach((heading, index) => {
+      const rect = heading.getBoundingClientRect();
+      if (rect.top <= headerOffset) {
+        currentIndex = index;
+      }
+    });
+    
+    tocItems.forEach((item, index) => {
+      if (index === currentIndex) {
+        item.classList.add('is-active');
+      } else {
+        item.classList.remove('is-active');
+      }
+    });
+  }
+  
+  // Initial update
+  updateActiveItem();
+  
+  // Update on scroll with throttle
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        updateActiveItem();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
+// 57. Video Embed Handling
+function initVideoEmbeds() {
+  // Auto-convert video links to embeds
+  const prose = document.querySelector('.prose');
+  if (!prose) return;
+  
+  // Find Bilibili links and convert to embed
+  const bilibiliLinks = prose.querySelectorAll('a[href*="bilibili.com"]');
+  bilibiliLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const match = href.match(/bilibili\.com\/video\/(BV[\w]+)/);
+    
+    if (match) {
+      const bvid = match[1];
+      const embed = document.createElement('div');
+      embed.className = 'prose-embed prose-embed--bilibili';
+      embed.innerHTML = `<iframe src="//player.bilibili.com/player.html?bvid=${bvid}&page=1" scrolling="no" allowfullscreen></iframe>`;
+      link.parentNode?.insertBefore(embed, link);
+    }
+  });
+  
+  // Find YouTube links and convert to embed
+  const youtubeLinks = prose.querySelectorAll('a[href*="youtube.com"], a[href*="youtu.be"]');
+  youtubeLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    let videoId = '';
+    
+    if (href.includes('youtu.be/')) {
+      videoId = href.split('youtu.be/')[1]?.split('?')[0];
+    } else if (href.includes('youtube.com/watch')) {
+      const url = new URL(href);
+      videoId = url.searchParams.get('v');
+    }
+    
+    if (videoId) {
+      const embed = document.createElement('div');
+      embed.className = 'prose-embed prose-embed--youtube';
+      embed.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
+      link.parentNode?.insertBefore(embed, link);
+    }
+  });
+}
+
+// 56. Image Alignment
+function initImageAlignment() {
+  const prose = document.querySelector('.prose');
+  if (!prose) return;
+  
+  // Find images with alignment classes
+  const alignedImages = prose.querySelectorAll('img[align="left"], img[align="right"], img[align="center"]');
+  
+  alignedImages.forEach(img => {
+    const align = img.getAttribute('align');
+    const wrapper = document.createElement('figure');
+    wrapper.className = `align-${align}`;
+    
+    // If there's a caption
+    const caption = img.getAttribute('alt');
+    if (caption) {
+      wrapper.innerHTML = `<figcaption>${caption}</figcaption>`;
+    }
+    
+    img.parentNode?.insertBefore(wrapper, img);
+    wrapper.appendChild(img);
+    img.removeAttribute('align');
+  });
+}
+
+// 59. Chinese-English Spacing
+function initTextSpacing() {
+  const prose = document.querySelector('.prose');
+  if (!prose) return;
+  
+  // Add spacing class to prose for mixed content
+  const textElements = prose.querySelectorAll('p, li, td, th, span, a');
+  
+  textElements.forEach(el => {
+    const text = el.textContent || '';
+    // Check if contains both Chinese and English
+    const hasChinese = /[\u4e00-\u9fa5]/.test(text);
+    const hasEnglish = /[a-zA-Z]/.test(text);
+    
+    if (hasChinese && hasEnglish) {
+      el.classList.add('text-spacing');
+    }
+  });
+}
+
+// 47. Excerpt Read More Enhancement
+function initExcerptReadMore() {
+  const excerpts = document.querySelectorAll('.post-card__excerpt');
+  
+  excerpts.forEach(excerpt => {
+    // Check if already has read more button
+    if (excerpt.querySelector('.excerpt__read-more')) return;
+    
+    const card = excerpt.closest('.post-card');
+    if (!card) return;
+    
+    const link = card.querySelector('h3 a');
+    if (!link) return;
+    
+    const readMore = document.createElement('a');
+    readMore.className = 'excerpt__read-more';
+    readMore.href = link.href;
+    readMore.innerHTML = '阅读全文 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    
+    excerpt.appendChild(readMore);
+  });
+}
+
+// 53. Alert/Notice Box Processing
+function initAlertBoxes() {
+  const prose = document.querySelector('.prose');
+  if (!prose) return;
+  
+  // Find blockquotes or divs with alert classes
+  const alertElements = prose.querySelectorAll('blockquote.alert, div.alert, blockquote[data-type]');
+  
+  alertElements.forEach(el => {
+    // Determine alert type
+    let alertType = 'info';
+    if (el.classList.contains('alert--warning') || el.dataset.type === 'warning') {
+      alertType = 'warning';
+    } else if (el.classList.contains('alert--error') || el.dataset.type === 'error') {
+      alertType = 'error';
+    } else if (el.classList.contains('alert--success') || el.dataset.type === 'success') {
+      alertType = 'success';
+    }
+    
+    // Add alert class if not present
+    if (!el.classList.contains('alert')) {
+      el.classList.add('alert', `alert--${alertType}`);
+    }
+    
+    // Add icon based on type
+    const icons = {
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+      warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+    };
+    
+    // Add icon if not present
+    if (!el.querySelector('.alert__icon')) {
+      const icon = document.createElement('span');
+      icon.className = 'alert__icon';
+      icon.innerHTML = icons[alertType] || icons.info;
+      el.insertBefore(icon, el.firstChild);
+    }
+  });
+}
+
 // Initialize all features
 document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
@@ -1528,4 +1938,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initPrefetchAdjacent();
   initPrintStyles();
   initSectionIndicator();
+  
+  // Content presentation enhancements (46-60)
+  initWordCount();
+  initCodeBlockEnhancements();
+  initCodeCopy();
+  initFootnotes();
+  initEnhancedToc();
+  initVideoEmbeds();
+  initImageAlignment();
+  initTextSpacing();
+  initExcerptReadMore();
+  initAlertBoxes();
 });
