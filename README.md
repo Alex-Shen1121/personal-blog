@@ -67,6 +67,13 @@
 npm install
 ```
 
+安装完成后会自动执行一次 `prepare`，将仓库内置的 Git hooks 路径配置到 `.githooks`，默认启用提交前检查。
+如果本地 hooks 因环境原因未生效，可手动执行：
+
+```bash
+npm run setup:hooks
+```
+
 ### 2. 本地校验
 
 ```bash
@@ -90,9 +97,11 @@ npm run preview
 ## 可用脚本
 
 ```bash
-npm run validate   # 校验内容与构建输入
-npm run build      # 生成静态站点到 dist/
-npm run preview    # 启动本地静态预览服务
+npm run validate     # 校验内容与构建输入
+npm run build        # 生成静态站点到 dist/
+npm run precommit    # 执行提交前的完整检查（validate + build）
+npm run setup:hooks  # 手动配置本地 Git hooks 到 .githooks
+npm run preview      # 启动本地静态预览服务
 ```
 
 ## 贡献说明
@@ -106,11 +115,11 @@ npm run preview    # 启动本地静态预览服务
 
 1. 改动尽量保持小而清晰，避免把无关修改混在同一次提交中
 2. 如果涉及内容、导航或站点基础信息，请同步检查 `src/data/site.mjs` 与 `content/posts/`
-3. 提交前本地执行以下命令，确保校验和构建都能通过：
+3. 仓库默认会在 `git commit` 前自动执行 `npm run precommit`，也就是串行运行 `npm run validate` 与 `npm run build`
+4. 如果你想在正式提交前手动预跑一次，可执行：
 
 ```bash
-npm run validate
-npm run build
+npm run precommit
 ```
 
 如果你准备提交 PR，建议在描述中说明：

@@ -9,10 +9,12 @@ const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
 const requiredSourceFiles = [
   'styles.css',
   'script.js',
+  '.githooks/pre-commit',
   'scripts/build.mjs',
   'scripts/frontmatter.mjs',
   'scripts/html-audit.mjs',
   'scripts/markdown-quality.mjs',
+  'scripts/setup-git-hooks.mjs',
   'src/data/site.mjs',
   'src/utils/canonical.mjs',
   'public/favicon.svg'
