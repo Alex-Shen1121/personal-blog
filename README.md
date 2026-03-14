@@ -28,6 +28,7 @@
 - 深浅色主题切换
 - `prefers-reduced-motion` 兼容处理
 - 基础 SEO 元信息支持
+- 支持 RSS 订阅，并自动生成 `rss.xml`
 - 自动生成 `sitemap.xml`、`robots.txt`、`404.html`、`.nojekyll`
 - 适配 GitHub Pages 项目路径 `/personal-blog/`
 - GitHub Actions 自动校验与部署
@@ -239,6 +240,9 @@ cover: /assets/illustration-wave.svg
 1. 运行 `npm run validate`
 2. 运行 `npm run build`
 3. 将 `dist/` 目录作为 Pages artifact 发布
+
+构建完成后，站点根目录会额外生成 RSS 订阅地址：`/rss.xml`。
+例如当前 GitHub Pages 地址为：<https://alex-shen1121.github.io/personal-blog/rss.xml>
 
 如果仓库名、站点域名或部署路径发生变化，需要同步修改 `src/data/site.mjs` 中的：
 

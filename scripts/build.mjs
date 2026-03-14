@@ -987,6 +987,11 @@ const formatSitemapLastModified = (dateString) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(dateString) ? dateString : '';
 };
 
+const formatRssDate = (dateString) => {
+  if (!dateString) return '';
+  return new Date(`${dateString}T00:00:00+08:00`).toUTCString();
+};
+
 const toIsoDateTime = (dateString) => {
   if (!dateString) return '';
   return new Date(`${dateString}T00:00:00+08:00`).toISOString();
@@ -1318,6 +1323,7 @@ const renderLayout = ({
   const enhancementsHref = trimLocalPrefix(resolveStaticAssetPath('/enhancements.js', assetPrefix));
   const fontStylesheetHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap';
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
+  const rssHref = site.rss?.path ? trimLocalPrefix(resolveLinkHref(site.rss.path, `${prefix}/`)) : '';
   const resolvedOpenGraph = {
     title: openGraph.title ?? title,
     description: openGraph.description ?? description,
@@ -1415,6 +1421,7 @@ const renderLayout = ({
     <link rel="canonical" href="${metaCanonical}" />
     ${structuredDataScripts}
     <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
+    ${rssHref ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(site.rss?.title ?? `${site.shortName} RSS`)}" href="${escapeHtml(rssHref)}" />` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>${themeBootScript}</script>
@@ -1476,6 +1483,7 @@ const renderLayout = ({
             <span class="site-footer__heading">联系与链接</span>
             <div class="footer-links">
               ${site.author.links.map((link) => `<a href="${link.url}"${link.url.startsWith('http') ? ' target="_blank" rel="noreferrer"' : ''}>${link.label}</a>`).join('')}
+              ${rssHref ? `<a href="${rssHref}">RSS 订阅</a>` : ''}
             </div>
           </section>
         </div>
@@ -2007,11 +2015,57 @@ const getRelatedPosts = (currentPost, posts, limit = 2) => {
     .slice(0, limit);
 };
 
+const buildRssFeed = (posts) => {
+  const rssPosts = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const latestDate = rssPosts.reduce((latest, post) => {
+    const candidate = post.updated ?? post.date;
+    if (!latest) return candidate;
+    return new Date(`${candidate}T00:00:00+08:00`) > new Date(`${latest}T00:00:00+08:00`) ? candidate : latest;
+  }, '');
+  const feedPath = site.rss?.path ?? '/rss.xml';
+  const selfUrl = withBase(feedPath);
+  const blogUrl = buildCanonicalUrl(site, '/blog/');
+  const itemXml = rssPosts
+    .map((post) => {
+      const postUrl = buildCanonicalUrl(site, `/blog/${post.slug}/`);
+      const categoryNames = [post.category?.name, ...(post.tags ?? [])].filter(Boolean);
+
+      return [
+        '    <item>',
+        `      <title>${escapeHtml(post.title)}</title>`,
+        `      <link>${escapeHtml(postUrl)}</link>`,
+        `      <guid isPermaLink="true">${escapeHtml(postUrl)}</guid>`,
+        `      <pubDate>${escapeHtml(formatRssDate(post.date))}</pubDate>`,
+        `      <description>${escapeHtml(post.summary)}</description>`,
+        ...categoryNames.map((name) => `      <category>${escapeHtml(name)}</category>`),
+        '    </item>'
+      ].join('\n');
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escapeHtml(site.rss?.title ?? `${site.shortName} RSS`)}</title>
+    <link>${escapeHtml(blogUrl)}</link>
+    <description>${escapeHtml(site.rss?.description ?? site.description)}</description>
+    <language>zh-CN</language>
+    <lastBuildDate>${escapeHtml(formatRssDate(latestDate || rssPosts[0]?.date || ''))}</lastBuildDate>
+    <atom:link href="${escapeHtml(selfUrl)}" rel="self" type="application/rss+xml" />
+${itemXml}
+  </channel>
+</rss>`;
+};
+
 const renderBlogListPage = (posts, tags, categories, seriesList) => `
   <section class="page-hero reveal">
     <p class="kicker">文章</p>
     <h1>写下来的内容，会慢慢变成自己的方法库。</h1>
     <p>目前已支持文章标签与分类系统：文章列表、标签/分类索引页与详情页都会基于 Markdown frontmatter 自动生成。</p>
+    <div class="post-list__filters">
+      <a class="button button-secondary button-small" href="../rss.xml">RSS 订阅</a>
+      <a class="button button-ghost button-small" href="archive/">查看归档</a>
+    </div>
   </section>
   <section class="section reveal" data-post-search data-post-search-total="${posts.length}">
     <div class="post-discovery panel">
@@ -2843,6 +2897,8 @@ writeText(
     robots: site.seo?.robots?.notFound ?? 'noindex,follow'
   })
 );
+
+writeText(path.join(outDir, (site.rss?.path ?? '/rss.xml').replace(/^\//, '')), buildRssFeed(posts));
 
 const sitemapEntries = [
   { path: '/' },

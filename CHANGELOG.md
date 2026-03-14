@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增 RSS 订阅能力：构建时自动生成 `rss.xml`，并在页面中补充 RSS 自动发现与订阅入口。
+
 ### Changed
 
 - GitHub Pages 工作流增加 `npm` 依赖缓存与 `npm ci` 安装步骤，减少后续 CI 重复安装开销。

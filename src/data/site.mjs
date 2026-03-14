@@ -43,6 +43,11 @@ export const site = {
     favicon: '/favicon.svg',
     ogImage: '/og-cover.svg'
   },
+  rss: {
+    path: '/rss.xml',
+    title: '沈晨玙博客 RSS 订阅',
+    description: '订阅沈晨玙的博客更新，持续获取最新文章与长期写作内容。'
+  },
   license: {
     name: 'MIT License',
     url: 'https://github.com/Alex-Shen1121/personal-blog/blob/main/LICENSE'
