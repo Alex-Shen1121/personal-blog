@@ -94,6 +94,28 @@ npm run build      # 生成静态站点到 dist/
 npm run preview    # 启动本地静态预览服务
 ```
 
+## 贡献说明
+
+欢迎通过 Issue 或 Pull Request 一起改进这个项目。
+
+提交前建议先确认以下几点：
+
+1. 改动尽量保持小而清晰，避免把无关修改混在同一次提交中
+2. 如果涉及内容、导航或站点基础信息，请同步检查 `src/data/site.mjs` 与 `content/posts/`
+3. 提交前本地执行以下命令，确保校验和构建都能通过：
+
+```bash
+npm run validate
+npm run build
+```
+
+如果你准备提交 PR，建议在描述中说明：
+
+- 改动目的
+- 主要修改文件
+- 验证结果
+- 是否影响 GitHub Pages 部署产物
+
 ## 内容维护
 
 ### 修改站点基础信息

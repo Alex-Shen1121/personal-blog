@@ -74,7 +74,7 @@
 - [x] 62. 增加 frontmatter 字段校验
 - [x] 63. 增加 Markdown 内容质量校验
 - [x] 64. 优化构建失败提示信息
-- [ ] 65. 增加 README 贡献说明
+- [x] 65. 增加 README 贡献说明
 - [ ] 66. 增加 LICENSE 文件
 - [ ] 67. 增加 CHANGELOG
 - [ ] 68. 增加 GitHub Issue / PR 模板
