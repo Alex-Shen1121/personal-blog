@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { home, pages, site } from '../src/data/site.mjs';
+import { siteEn } from '../src/data/site.en.mjs';
 import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
 import { auditGeneratedHtml } from './html-audit.mjs';
 import { parseAndValidateFrontmatter } from './frontmatter.mjs';
@@ -12,10 +13,71 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 const outDir = path.join(rootDir, 'dist');
 const postsDir = path.join(rootDir, 'content', 'posts');
+const postsEnDir = path.join(rootDir, 'content', 'posts-en');
 const assetsDir = path.join(rootDir, 'src', 'assets');
 const publicDir = path.join(rootDir, 'public');
 const rawCriticalCssSource = readFileSync(path.join(rootDir, 'critical.css'), 'utf8');
 const canonicalConfig = validateCanonicalConfig(site);
+const englishRouteMap = new Map([
+  ['/', '/en/'],
+  ['/about/', '/en/about/'],
+  ['/projects/', '/en/projects/'],
+  ['/blog/', '/en/blog/'],
+  ['/now/', '/en/now/']
+]);
+
+const chineseRouteMap = new Map(Array.from(englishRouteMap.entries(), ([zhPath, enPath]) => [enPath, zhPath]));
+
+const normalizeLanguageRouteKey = (value = '') => {
+  if (!value) return '';
+  if (value === '/404.html' || value === '/en/404.html') return value;
+  return value.endsWith('/') ? value : `${value}/`;
+};
+
+const registerLanguagePair = (zhPath, enPath) => {
+  englishRouteMap.set(normalizeLanguageRouteKey(zhPath), normalizeLanguageRouteKey(enPath));
+  chineseRouteMap.set(normalizeLanguageRouteKey(enPath), normalizeLanguageRouteKey(zhPath));
+};
+
+const zhUi = {
+  skipToContent: '跳到正文',
+  toggleTheme: '切换主题',
+  openNavigation: '展开导航',
+  footerSite: '站内导航',
+  footerLinks: '联系与链接',
+  footerMeta: '以轻量静态站方式构建，持续更新中。',
+  backToTop: '返回顶部',
+  languageSwitchLabel: 'EN',
+  rssLabel: 'RSS 订阅',
+  emailLabel: '邮件订阅',
+  feedbackLabel: site.feedback?.footerLabel ?? '留言反馈',
+  analyticsTitle: '访问统计',
+  analyticsLoading: site.analytics?.loadingText ?? '访问统计加载中…',
+  analyticsReady: site.analytics?.readyText ?? '统计已更新，数据可能有短暂延迟。',
+  analyticsUnavailable: site.analytics?.unavailableText ?? '统计服务暂时不可用。'
+};
+
+const enUi = {
+  skipToContent: siteEn.ui?.skipToContent ?? 'Skip to content',
+  toggleTheme: siteEn.ui?.toggleTheme ?? 'Toggle theme',
+  openNavigation: siteEn.ui?.openNavigation ?? 'Open navigation',
+  footerSite: siteEn.ui?.footerSite ?? 'Site',
+  footerLinks: siteEn.ui?.footerLinks ?? 'Links',
+  footerMeta: siteEn.ui?.footerMeta ?? 'Built as a lightweight static site and updated continuously.',
+  backToTop: siteEn.ui?.backToTop ?? 'Back to top',
+  languageSwitchLabel: siteEn.ui?.languageSwitchLabel ?? '中文',
+  rssLabel: siteEn.ui?.rssLabel ?? 'RSS',
+  emailLabel: siteEn.ui?.emailLabel ?? 'Email subscription',
+  feedbackLabel: siteEn.feedback?.footerLabel ?? 'Feedback',
+  analyticsTitle: 'Analytics',
+  analyticsLoading: 'Loading analytics…',
+  analyticsReady: 'Analytics updated. Numbers may be slightly delayed.',
+  analyticsUnavailable: 'Analytics are temporarily unavailable.',
+  analyticsMetricLabels: {
+    site_pv: 'Page views',
+    site_uv: 'Visitors'
+  }
+};
 
 const normalizeFatalBuildError = (error) => {
   if (error instanceof Error) {
@@ -329,6 +391,28 @@ const formatDate = (dateString) =>
   }).format(new Date(`${dateString}T00:00:00+08:00`));
 
 const formatWordCount = (count) => `${count.toLocaleString('zh-CN')} 字`;
+const formatDateEn = (dateString) =>
+  new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(new Date(`${dateString}T00:00:00+08:00`));
+const formatWordCountEn = (count) => `${count.toLocaleString('en-US')} words`;
+const estimateReadingTimeEn = (content) => {
+  const plainText = content
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/^[-*]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+  const minutes = Math.max(1, Math.ceil(wordCount / 180));
+  return `${minutes} min read`;
+};
 
 const renderPostMeta = (post) => {
   const items = [formatDate(post.date)];
@@ -582,8 +666,8 @@ const normalizeAuthorLinks = (links = []) =>
     })
     .filter(Boolean);
 
-const getAuthorLinks = () => normalizeAuthorLinks(site.author.links ?? []);
-const getAuthorLinksByKind = (kind) => getAuthorLinks().filter((link) => link.kind === kind);
+const getAuthorLinks = (siteConfig = site) => normalizeAuthorLinks(siteConfig.author.links ?? []);
+const getAuthorLinksByKind = (kind, siteConfig = site) => getAuthorLinks(siteConfig).filter((link) => link.kind === kind);
 
 const renderAuthorLinkCards = (links) =>
   `<ul class="nav-guide-list">${links
@@ -605,48 +689,56 @@ const createMailtoHref = ({ email = '', subject = '', body = '' } = {}) => {
   return `mailto:${normalizedEmail}${query ? `?${query}` : ''}`;
 };
 
-const getEmailSubscriptionHref = () =>
+const getEmailSubscriptionHref = (siteConfig = site) =>
   createMailtoHref({
-    email: site.author.email,
-    subject: site.emailSubscription?.subject,
-    body: site.emailSubscription?.body
+    email: siteConfig.author.email,
+    subject: siteConfig.emailSubscription?.subject,
+    body: siteConfig.emailSubscription?.body
   });
 
 const renderEmailSubscriptionLink = ({
-  label = site.emailSubscription?.ctaLabel ?? '邮件订阅',
+  siteConfig = site,
+  label = siteConfig.emailSubscription?.ctaLabel ?? '邮件订阅',
   className = '',
   variant = 'secondary',
   small = false
 } = {}) => {
-  const href = getEmailSubscriptionHref();
+  const href = getEmailSubscriptionHref(siteConfig);
   if (!href) return '';
 
   const classes = ['button', `button-${variant}`, small ? 'button-small' : '', className].filter(Boolean).join(' ');
   return `<a class="${classes}" href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
 };
 
-const getFeedbackEmailHref = ({ pageTitle = '', pageUrl = '' } = {}) => {
-  const subjectBase = site.feedback?.email?.subject?.trim?.() || site.feedback?.title?.trim?.() || '留言 / 反馈';
-  const subject = pageTitle ? `${subjectBase}｜${pageTitle}` : subjectBase;
-  const bodyParts = [site.feedback?.email?.body?.trim?.() || '你好，我想反馈一些关于博客 / 站点的想法。'];
+const getFeedbackEmailHref = ({
+  siteConfig = site,
+  pageTitle = '',
+  pageUrl = '',
+  pageTitleLabel = '页面标题',
+  pageUrlLabel = '页面链接',
+  subjectSeparator = '｜'
+} = {}) => {
+  const subjectBase = siteConfig.feedback?.email?.subject?.trim?.() || siteConfig.feedback?.title?.trim?.() || '留言 / 反馈';
+  const subject = pageTitle ? `${subjectBase}${subjectSeparator}${pageTitle}` : subjectBase;
+  const bodyParts = [siteConfig.feedback?.email?.body?.trim?.() || '你好，我想反馈一些关于博客 / 站点的想法。'];
 
   if (pageTitle) {
-    bodyParts.push(`页面标题：${pageTitle}`);
+    bodyParts.push(`${pageTitleLabel}：${pageTitle}`);
   }
 
   if (pageUrl) {
-    bodyParts.push(`页面链接：${pageUrl}`);
+    bodyParts.push(`${pageUrlLabel}：${pageUrl}`);
   }
 
   return createMailtoHref({
-    email: site.author.email,
+    email: siteConfig.author.email,
     subject,
     body: bodyParts.filter(Boolean).join('\n\n')
   });
 };
 
-const getFeedbackIssueHref = ({ pageTitle = '', pageUrl = '' } = {}) => {
-  const baseUrl = site.feedback?.issue?.url?.trim?.();
+const getFeedbackIssueHref = ({ siteConfig = site, pageTitle = '', pageUrl = '' } = {}) => {
+  const baseUrl = siteConfig.feedback?.issue?.url?.trim?.();
   if (!baseUrl) return '';
 
   const url = new URL(baseUrl);
@@ -668,7 +760,8 @@ const getFeedbackIssueHref = ({ pageTitle = '', pageUrl = '' } = {}) => {
   return url.toString();
 };
 
-const getPrimaryFeedbackHref = () => getFeedbackEmailHref() || getFeedbackIssueHref();
+const getPrimaryFeedbackHref = (siteConfig = site) =>
+  getFeedbackEmailHref({ siteConfig }) || getFeedbackIssueHref({ siteConfig });
 
 const renderFeedbackEntry = ({
   title = site.feedback?.title ?? '留言 / 反馈',
@@ -1519,14 +1612,14 @@ const resolvePostCover = (post) => {
   return defaultCoverPool[hash % defaultCoverPool.length];
 };
 
-const renderNav = (currentPath, prefix) => {
+const renderNav = (currentPath, prefix, navigation = site.navigation) => {
   const normalize = (href) => (href.endsWith('/') ? href : `${href}/`);
   const resolveHref = (href) => {
     if (href === '/') return trimLocalPrefix(`${prefix}/index.html`);
     return trimLocalPrefix(`${prefix}/${href.replace(/^\//, '')}`);
   };
 
-  return site.navigation
+  return navigation
     .map(({ label, href }) => {
       const isCurrent = normalize(currentPath) === normalize(href);
       return `<a href="${resolveHref(href)}"${isCurrent ? ' aria-current="page"' : ''}>${label}</a>`;
@@ -1536,30 +1629,30 @@ const renderNav = (currentPath, prefix) => {
 
 const formatMetaTitle = (...segments) => segments.filter(Boolean).join('｜');
 
-const renderSiteAnalyticsCard = () => {
+const renderSiteAnalyticsCard = (siteConfig = site, uiText = zhUi) => {
   if (site.analytics?.provider !== 'busuanzi' || !site.analytics?.siteMetrics?.length) {
     return '';
   }
 
   const metrics = site.analytics.siteMetrics
     .map(
-      (metric) => `<li class="site-analytics__item"><span>${escapeHtml(metric.label)}</span><strong id="busuanzi_value_${escapeHtml(metric.key)}" data-busuanzi-value="${escapeHtml(metric.key)}">--</strong></li>`
+      (metric) => `<li class="site-analytics__item"><span>${escapeHtml(uiText.analyticsMetricLabels?.[metric.key] ?? metric.label)}</span><strong id="busuanzi_value_${escapeHtml(metric.key)}" data-busuanzi-value="${escapeHtml(metric.key)}">--</strong></li>`
     )
     .join('');
 
-  return `<div class="site-analytics" data-analytics-card data-analytics-loading="${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span class="site-footer__heading">访问统计</span><ul class="site-analytics__list">${metrics}</ul><p class="muted site-analytics__status" data-analytics-status>${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}</p></div>`;
+  return `<div class="site-analytics" data-analytics-card data-analytics-loading="${escapeHtml(uiText.analyticsLoading ?? site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(uiText.analyticsReady ?? site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(uiText.analyticsUnavailable ?? site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span class="site-footer__heading">${escapeHtml(uiText.analyticsTitle ?? '访问统计')}</span><ul class="site-analytics__list">${metrics}</ul><p class="muted site-analytics__status" data-analytics-status>${escapeHtml(uiText.analyticsLoading ?? site.analytics.loadingText ?? '访问统计加载中…')}</p></div>`;
 };
 
-const renderPostPageAnalytics = () => {
+const renderPostPageAnalytics = (uiText = zhUi) => {
   if (site.analytics?.provider !== 'busuanzi' || !site.analytics?.pageMetric?.key) {
     return '';
   }
 
-  return `<div class="meta-row" data-analytics-card data-analytics-loading="${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span>${escapeHtml(site.analytics.pageMetric.label ?? '访问统计')}</span><span><strong class="page-analytics__value" id="busuanzi_value_${escapeHtml(site.analytics.pageMetric.key)}" data-busuanzi-value="${escapeHtml(site.analytics.pageMetric.key)}">--</strong> 次阅读</span><span class="meta-row__hint" data-analytics-status>${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}</span></div>`;
+  return `<div class="meta-row" data-analytics-card data-analytics-loading="${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span>${escapeHtml(site.analytics.pageMetric.label ?? uiText.analyticsTitle ?? '访问统计')}</span><span><strong class="page-analytics__value" id="busuanzi_value_${escapeHtml(site.analytics.pageMetric.key)}" data-busuanzi-value="${escapeHtml(site.analytics.pageMetric.key)}">--</strong> 次阅读</span><span class="meta-row__hint" data-analytics-status>${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}</span></div>`;
 };
 
-const renderAnnouncementBanner = () => {
-  const announcement = site.announcement;
+const renderAnnouncementBanner = (siteConfig = site, prefix = '') => {
+  const announcement = siteConfig.announcement;
   if (!announcement?.title?.trim?.()) {
     return '';
   }
@@ -1568,7 +1661,7 @@ const renderAnnouncementBanner = () => {
   const actions = [announcement.primaryAction, announcement.secondaryAction]
     .filter((action) => action?.label?.trim?.() && action?.href?.trim?.())
     .map((action, index) => {
-      const resolvedHref = resolveLinkHref(action.href.trim());
+      const resolvedHref = resolveLinkHref(action.href.trim(), prefix ? `${prefix}/` : '');
       const variant = index === 0 ? 'primary' : 'ghost';
       return `<a class="button button-${variant} button-small" href="${escapeHtml(resolvedHref)}"${getLinkTargetAttributes(resolvedHref)}>${escapeHtml(action.label.trim())}</a>`;
     })
@@ -1589,7 +1682,13 @@ const renderLayout = ({
   pageType = 'WebPage',
   breadcrumbs = [],
   structuredData = [],
-  mainEntityId = ''
+  mainEntityId = '',
+  siteConfig = site,
+  uiText = zhUi,
+  documentLang = 'zh-CN',
+  languageSwitch = null,
+  alternateLinks = [],
+  includeDefaultStructuredData = true
 }) => {
   const prefix = getRelativePrefix(outputPath);
   const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
@@ -1633,18 +1732,22 @@ const renderLayout = ({
   const metaTwitterImageAlt = resolvedTwitter.imageAlt ? escapeHtml(resolvedTwitter.imageAlt) : '';
   const metaRobots = robots ? escapeHtml(robots) : '';
   const structuredDataScripts = [
-    buildWebsiteStructuredData(),
-    buildPersonStructuredData(),
-    buildPageStructuredData({
-      title,
-      description,
-      canonical,
-      image: resolvedOpenGraph.image,
-      pageType,
-      breadcrumbs,
-      mainEntityId
-    }),
-    buildBreadcrumbStructuredData(canonical, breadcrumbs),
+    ...(includeDefaultStructuredData
+      ? [
+          buildWebsiteStructuredData(),
+          buildPersonStructuredData(),
+          buildPageStructuredData({
+            title,
+            description,
+            canonical,
+            image: resolvedOpenGraph.image,
+            pageType,
+            breadcrumbs,
+            mainEntityId
+          }),
+          buildBreadcrumbStructuredData(canonical, breadcrumbs)
+        ]
+      : []),
     ...normalizeStructuredData(structuredData)
   ]
     .filter(Boolean)
@@ -1673,9 +1776,17 @@ const renderLayout = ({
   const currentHref = currentPath === '/' ? '/' : currentPath;
   const themeBootScript = `(()=>{const storageKey='personal-blog-theme';const savedTheme=localStorage.getItem(storageKey);const theme=savedTheme==='light'||savedTheme==='dark'?savedTheme:(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=theme;const themeColorMeta=document.querySelector('meta[name="theme-color"]');if(themeColorMeta){themeColorMeta.setAttribute('content',theme==='light'?'#f4f7fb':'#07111f')}})();`;
   const criticalCss = criticalCssSource.replaceAll('</style>', '<\\/style>');
+  const alternateLinkTags = alternateLinks
+    .filter((item) => item?.href && item?.hreflang)
+    .map((item) => `<link rel="alternate" hreflang="${escapeHtml(item.hreflang)}" href="${escapeHtml(buildCanonicalUrl(site, item.href))}" />`)
+    .join('\n    ');
+  const languageSwitchHtml = languageSwitch?.href
+    ? `<a class="button button-ghost button-small language-switch" href="${trimLocalPrefix(resolveLinkHref(languageSwitch.href, `${prefix}/`))}" lang="${escapeHtml(languageSwitch.lang ?? '')}">${escapeHtml(languageSwitch.label ?? uiText.languageSwitchLabel ?? 'EN')}</a>`
+    : '';
+  const brandHref = currentPath.startsWith('/en/') ? `${prefix}/index.html` : `${prefix}/index.html`;
 
   return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="${escapeHtml(documentLang)}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1685,7 +1796,7 @@ const renderLayout = ({
     <meta property="og:title" content="${metaOgTitle}" />
     <meta property="og:description" content="${metaOgDescription}" />
     <meta property="og:type" content="${metaOgType}" />
-    <meta property="og:site_name" content="${escapeHtml(site.shortName)}" />
+    <meta property="og:site_name" content="${escapeHtml(siteConfig.shortName)}" />
     <meta property="og:url" content="${metaCanonical}" />
     <meta property="og:image" content="${metaOgImage}" />
     ${openGraphExtras}
@@ -1696,9 +1807,10 @@ const renderLayout = ({
     ${metaTwitterImageAlt ? `<meta name="twitter:image:alt" content="${metaTwitterImageAlt}" />` : ''}
     ${metaRobots ? `<meta name="robots" content="${metaRobots}" />` : ''}
     <link rel="canonical" href="${metaCanonical}" />
+    ${alternateLinkTags}
     ${structuredDataScripts}
     <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
-    ${rssHref ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(site.rss?.title ?? `${site.shortName} RSS`)}" href="${escapeHtml(rssHref)}" />` : ''}
+    ${rssHref ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(documentLang.startsWith('en') ? `${siteConfig.shortName} RSS` : site.rss?.title ?? `${siteConfig.shortName} RSS`)}" href="${escapeHtml(rssHref)}" />` : ''}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>${themeBootScript}</script>
@@ -1709,72 +1821,264 @@ const renderLayout = ({
     <noscript><link rel="stylesheet" href="${stylesheetHref}" /></noscript>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">跳到正文</a>
+    <a class="skip-link" href="#main-content">${escapeHtml(uiText.skipToContent ?? '跳到正文')}</a>
     <div class="reading-progress" data-reading-progress>
       <span class="reading-progress__bar" data-reading-progress-bar></span>
     </div>
     <div class="site-shell">
       <header class="site-header">
         <div class="site-header__inner">
-          <a class="brand" href="${prefix}/index.html">
-            <span class="brand-mark">昱</span>
+          <a class="brand" href="${brandHref}">
+            <span class="brand-mark">${escapeHtml(siteConfig.brandMark ?? '昱')}</span>
             <span class="brand-copy">
-              <strong>${site.author.name}</strong>
-              <small>${site.author.role}</small>
+              <strong>${siteConfig.author.name}</strong>
+              <small>${siteConfig.author.role}</small>
             </span>
           </a>
           <div class="header-actions">
-            <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换主题">☾</button>
-            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-label="展开导航">
+            ${languageSwitchHtml}
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="${escapeHtml(uiText.toggleTheme ?? '切换主题')}">☾</button>
+            <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-label="${escapeHtml(uiText.openNavigation ?? '展开导航')}">
               <span></span><span></span><span></span>
             </button>
           </div>
-          <nav class="site-nav" data-nav aria-label="主导航">
-            ${renderNav(currentHref, prefix)}
+          <nav class="site-nav" data-nav aria-label="Main navigation">
+            ${renderNav(currentHref, prefix, siteConfig.navigation)}
           </nav>
         </div>
       </header>
-      ${renderAnnouncementBanner()}
+      ${renderAnnouncementBanner(siteConfig, prefix)}
       <main id="main-content" tabindex="-1">
         ${body}
       </main>
-      <button class="back-to-top" type="button" data-back-to-top aria-label="返回顶部" aria-hidden="true" tabindex="-1">
+      <button class="back-to-top" type="button" data-back-to-top aria-label="${escapeHtml(uiText.backToTop ?? '返回顶部')}" aria-hidden="true" tabindex="-1">
         <span class="back-to-top__icon" aria-hidden="true">↑</span>
-        <span>返回顶部</span>
+        <span>${escapeHtml(uiText.backToTop ?? '返回顶部')}</span>
       </button>
       <footer class="site-footer">
         <div class="site-footer__grid">
-          <section class="site-footer__section site-footer__section--brand" aria-label="站点信息">
-            <strong>${site.shortName}</strong>
-            <p>${site.author.role} · ${site.author.city}</p>
-            <p>${site.description}</p>
-            ${renderSiteAnalyticsCard()}
+          <section class="site-footer__section site-footer__section--brand" aria-label="Site information">
+            <strong>${siteConfig.shortName}</strong>
+            <p>${siteConfig.author.role} · ${siteConfig.author.city}</p>
+            <p>${siteConfig.description}</p>
+            ${renderSiteAnalyticsCard(siteConfig, uiText)}
           </section>
-          <section class="site-footer__section" aria-label="站内导航">
-            <span class="site-footer__heading">站内导航</span>
+          <section class="site-footer__section" aria-label="Site navigation">
+            <span class="site-footer__heading">${escapeHtml(uiText.footerSite ?? '站内导航')}</span>
             <div class="footer-links">
-              ${site.navigation
-                .map(({ label, href }) => `<a href="${href === '/' ? trimLocalPrefix(`${prefix}/index.html`) : trimLocalPrefix(`${prefix}/${href.replace(/^\//, '')}`)}">${label}</a>`)
+              ${siteConfig.navigation
+                .map(({ label, href }) => `<a href="${trimLocalPrefix(resolveLinkHref(href, `${prefix}/`))}">${label}</a>`)
                 .join('')}
             </div>
           </section>
-          <section class="site-footer__section" aria-label="联系与链接">
-            <span class="site-footer__heading">联系与链接</span>
+          <section class="site-footer__section" aria-label="Links">
+            <span class="site-footer__heading">${escapeHtml(uiText.footerLinks ?? '联系与链接')}</span>
             <div class="footer-links">
-              ${getAuthorLinks().map((link) => `<a href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
-              ${rssHref ? `<a href="${rssHref}">RSS 订阅</a>` : ''}
-              ${getEmailSubscriptionHref() ? `<a href="${escapeHtml(getEmailSubscriptionHref())}">邮件订阅</a>` : ''}
-              ${getPrimaryFeedbackHref() ? `<a href="${escapeHtml(getPrimaryFeedbackHref())}"${getLinkTargetAttributes(getPrimaryFeedbackHref())}>${escapeHtml(site.feedback?.footerLabel ?? '留言反馈')}</a>` : ''}
+              ${getAuthorLinks(siteConfig).map((link) => `<a href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
+              ${rssHref ? `<a href="${rssHref}">${escapeHtml(uiText.rssLabel ?? 'RSS 订阅')}</a>` : ''}
+              ${getEmailSubscriptionHref(siteConfig) ? `<a href="${escapeHtml(getEmailSubscriptionHref(siteConfig))}">${escapeHtml(uiText.emailLabel ?? '邮件订阅')}</a>` : ''}
+              ${getPrimaryFeedbackHref(siteConfig) ? `<a href="${escapeHtml(getPrimaryFeedbackHref(siteConfig))}"${getLinkTargetAttributes(getPrimaryFeedbackHref(siteConfig))}>${escapeHtml(uiText.feedbackLabel ?? '留言反馈')}</a>` : ''}
             </div>
           </section>
         </div>
-        <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源，变更记录见 <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a>。</span>
+        <span class="site-footer__meta">© <span data-current-year></span> ${siteConfig.author.name} · ${escapeHtml(uiText.footerMeta ?? '以轻量静态站方式构建，持续更新中。')} ${documentLang.startsWith('en') ? `Source code is released under <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a>. See <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a> for site updates.` : `源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源，变更记录见 <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a>。`}</span>
       </footer>
     </div>
     <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}"${analyticsScriptHref ? ` data-analytics-src="${escapeHtml(analyticsScriptHref)}"` : ''} defer></script>
   </body>
 </html>`;
 };
+
+const getLanguageSwitch = (currentPath, locale = 'zh') => {
+  const normalizedPath = normalizeLanguageRouteKey(currentPath);
+  if (locale === 'zh') {
+    const target = englishRouteMap.get(normalizedPath);
+    return target ? { href: target, label: zhUi.languageSwitchLabel, lang: 'en' } : null;
+  }
+
+  const target = chineseRouteMap.get(normalizedPath);
+  return target ? { href: target, label: enUi.languageSwitchLabel, lang: 'zh-CN' } : null;
+};
+
+const createAlternateLinks = (zhPath, enPath) => [
+  { hreflang: 'zh-CN', href: zhPath },
+  { hreflang: 'en', href: enPath },
+  { hreflang: 'x-default', href: zhPath }
+];
+
+const normalizeEnglishPost = (post) => {
+  const plainText = post.body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[[^\]]+\]\([^)]*\)/g, ' ')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+
+  return {
+    ...post,
+    wordCount,
+    readingTime: estimateReadingTimeEn(post.body)
+  };
+};
+
+const renderEnglishHomePage = (posts) => {
+  const featuredPosts = posts.slice(0, 3);
+  const page = siteEn.home;
+
+  return `
+    <section class="hero">
+      <div class="hero-copy reveal">
+        <p class="kicker">${page.hero.eyebrow}</p>
+        <h1>${page.hero.title}</h1>
+        <p>${page.hero.description}</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="blog/">${page.hero.primaryCta.label}</a>
+          <a class="button button-secondary" href="about/">${page.hero.secondaryCta.label}</a>
+        </div>
+        <div class="metrics">
+          ${page.hero.metrics.map((metric) => `<div class="metric"><strong>${metric.value}</strong><span>${metric.label}</span></div>`).join('')}
+        </div>
+      </div>
+      <aside class="hero-visual reveal">
+        <div>
+          <p class="kicker">Current focus</p>
+          <p>${siteEn.author.intro}</p>
+        </div>
+        <img src="${resolveStaticAssetPath('/assets/illustration-wave.svg')}" alt="Abstract wave illustration"${getImageAttributes({ src: '/assets/illustration-wave.svg', fetchpriority: 'high' })} />
+        <ul class="list-card">
+          <li>Product structure</li>
+          <li>Frontend experience</li>
+          <li>Writing systems</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="section reveal" id="about">
+      <div class="section-heading">
+        <p class="kicker">${siteEn.pages.about.title}</p>
+        <h2>${page.sections.aboutTitle}</h2>
+        <p class="section-intro">${page.sections.aboutText}</p>
+      </div>
+      <div class="card-grid">
+        ${siteEn.pages.about.sections.map((section) => `<article class="panel"><h3>${section.title}</h3><p>${section.text}</p></article>`).join('')}
+      </div>
+    </section>
+
+    <section class="section reveal" id="projects">
+      <div class="section-heading">
+        <p class="kicker">${siteEn.pages.projects.title}</p>
+        <h2>${page.sections.projectsTitle}</h2>
+        <p class="section-intro">${page.sections.projectsText}</p>
+      </div>
+      <div class="project-grid">
+        ${siteEn.pages.projects.items
+          .map(
+            (item) => `<article class="project-panel project-card"><h3>${item.title}</h3><p>${item.summary}</p><a class="button button-ghost" href="${item.href.replace(/^\/en\//, '')}">${siteEn.ui.readMore}</a></article>`
+          )
+          .join('')}
+      </div>
+    </section>
+
+    <section class="section reveal" id="blog">
+      <div class="post-list__header">
+        <div class="section-heading">
+          <p class="kicker">${siteEn.pages.blog.title}</p>
+          <h2>${page.sections.postsTitle}</h2>
+          <p class="section-intro">${page.sections.postsText}</p>
+        </div>
+        <a class="button button-ghost" href="blog/">${siteEn.ui.readMore}</a>
+      </div>
+      <div class="post-grid">
+        ${featuredPosts
+          .map(
+            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover)}" alt="${escapeHtml(post.title)} cover illustration"${getImageAttributes({ src: post.cover })} /></div><div class="post-card__meta"><span>${formatDateEn(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="button button-ghost" href="blog/${post.slug}/">${siteEn.ui.readPost}</a></article>`
+          )
+          .join('')}
+      </div>
+    </section>`;
+};
+
+const renderEnglishInfoPage = (pageKey) => {
+  const page = siteEn.pages[pageKey];
+
+  if (pageKey === 'projects') {
+    return `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
+      <section class="section reveal"><div class="project-grid">${page.items
+        .map(
+          (item) => `<article class="project-panel project-card"><h3>${item.title}</h3><p>${item.summary}</p><a class="button button-ghost" href="${item.href.replace(/^\/en\//, '../')}">${siteEn.ui.readMore}</a></article>`
+        )
+        .join('')}</div></section>`;
+  }
+
+  if (pageKey === 'now') {
+    return `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
+      <section class="section reveal"><div class="project-grid">${page.items
+        .map((item) => `<article class="project-panel project-card"><div class="project-card__header"><span class="kicker">In progress</span></div><p>${item}</p></article>`)
+        .join('')}</div></section>`;
+  }
+
+  return `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p></section>
+    <section class="section reveal"><div class="card-grid">${page.sections
+      .map((section) => `<article class="panel"><h3>${section.title}</h3><p>${section.text}</p></article>`)
+      .join('')}</div></section>`;
+};
+
+const renderEnglishBlogIndex = (posts) => `
+  <section class="page-hero reveal">
+    <p class="kicker">${siteEn.pages.blog.title}</p>
+    <h1>${siteEn.pages.blog.title}</h1>
+    <p>${siteEn.pages.blog.intro}</p>
+  </section>
+  <section class="section reveal">
+    <div class="post-grid">
+      ${posts
+        .map(
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover)}" alt="${escapeHtml(post.title)} cover illustration"${getImageAttributes({ src: post.cover })} /></div><div class="post-card__meta">${post.updated && post.updated !== post.date ? `<span>Updated ${formatDateEn(post.updated)}</span>` : ''}<span>${formatDateEn(post.date)}</span><span>${post.readingTime}</span><span>${formatWordCountEn(post.wordCount)}</span></div><p class="kicker">${post.category.name}</p><h2>${post.title}</h2><p>${post.summary}</p><ul class="tag-list">${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="button button-ghost" href="${post.slug}/">${siteEn.ui.readPost}</a></article>`
+        )
+        .join('')}
+    </div>
+  </section>`;
+
+const renderEnglishPostPage = (post, relatedPosts = [], navigationPosts = {}) => `
+  <article class="post-detail" data-reading-progress-target>
+    <section class="post-header reveal">
+      <p class="kicker">Post</p>
+      ${post.pinned ? '<span class="feature-label feature-label--pinned">Featured</span>' : ''}
+      <h1>${post.title}</h1>
+      <div class="post-header__meta"><span>${formatDateEn(post.date)}</span>${post.updated && post.updated !== post.date ? `<span>Updated ${formatDateEn(post.updated)}</span>` : ''}<span>${post.readingTime}</span><span>${formatWordCountEn(post.wordCount)}</span></div>
+      <p>${post.summary}</p>
+      <ul class="tag-list"><li class="tag">${post.category.name}</li>${post.series ? `<li class="tag">Series · ${post.series.name}</li>` : ''}${post.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul>
+    </section>
+    <section class="post-layout reveal">
+      <article>
+        <div class="post-cover"><img src="${resolveStaticAssetPath(post.cover, '../../')}" alt="${escapeHtml(post.title)} cover illustration"${getImageAttributes({ src: post.cover, loading: 'eager', fetchpriority: 'high' })} /></div>
+        <div class="prose panel">${post.html}</div>
+        <nav class="post-pagination reveal" aria-label="Previous and next posts">
+          ${navigationPosts.previous ? `<a class="post-nav-card" href="../${navigationPosts.previous.slug}/"><span class="kicker">Previous</span><strong>${navigationPosts.previous.title}</strong><small>${navigationPosts.previous.summary}</small></a>` : `<div class="state-card state-card--quiet state-card--compact post-nav-card post-nav-card--empty"><div class="state-card__icon" aria-hidden="true">←</div><div class="state-card__body"><p class="kicker">Previous</p><strong class="state-card__title">This is the first post</strong></div></div>`}
+          ${navigationPosts.next ? `<a class="post-nav-card" href="../${navigationPosts.next.slug}/"><span class="kicker">Next</span><strong>${navigationPosts.next.title}</strong><small>${navigationPosts.next.summary}</small></a>` : `<div class="state-card state-card--quiet state-card--compact post-nav-card post-nav-card--empty"><div class="state-card__icon" aria-hidden="true">→</div><div class="state-card__body"><p class="kicker">Next</p><strong class="state-card__title">This is the latest post</strong></div></div>`}
+        </nav>
+      </article>
+      <aside class="post-aside">
+        ${post.toc?.length ? `<div class="note-card toc-card"><h3>Contents</h3><nav class="toc-nav" aria-label="Table of contents"><ol class="toc-list">${post.toc
+          .map((item) => `<li class="toc-item toc-item--level-${item.level}"><a href="#${item.id}">${item.text}</a></li>`)
+          .join('')}</ol></nav></div>` : ''}
+        <div class="note-card"><h3>Post information</h3><div class="meta-row"><span>Published</span><span>${formatDateEn(post.date)}</span></div>${post.updated && post.updated !== post.date ? `<div class="meta-row"><span>Updated</span><span>${formatDateEn(post.updated)}</span></div>` : ''}<div class="meta-row"><span>Reading</span><span>${post.readingTime} · ${formatWordCountEn(post.wordCount)}</span></div><div class="meta-row"><span>Category</span><span>${post.category.name}</span></div></div>
+        <div class="note-card"><h3>Feedback</h3><p>${siteEn.feedback.description}</p><div class="contact-links"><a class="button button-primary" href="${escapeHtml(
+          getFeedbackEmailHref({
+            siteConfig: siteEn,
+            pageTitle: post.title,
+            pageUrl: buildCanonicalUrl(site, `/en/blog/${post.slug}/`),
+            pageTitleLabel: 'Page title',
+            pageUrlLabel: 'Page URL',
+            subjectSeparator: ' | '
+          })
+        )}">${siteEn.feedback.email.label}</a><a class="button button-secondary" href="${escapeHtml(siteEn.feedback.issue.url)}" target="_blank" rel="noreferrer">${siteEn.feedback.issue.label}</a></div></div>
+        ${relatedPosts.length ? `<div class="note-card"><h3>Related posts</h3><ul class="list-card">${relatedPosts.map((item) => `<li><a class="text-link" href="../${item.slug}/">${item.title}</a><br /><span class="muted">${item.summary}</span></li>`).join('')}</ul></div>` : ''}
+      </aside>
+    </section>
+  </article>`;
 
 const renderHomePage = (posts) => {
   const recentPosts = posts.slice(0, 3);
@@ -2217,11 +2521,15 @@ const renderInfoPage = (pageKey) => {
   return body;
 };
 
-const loadPosts = () => {
-  const posts = readdirSync(postsDir)
+const loadPosts = (directoryPath = postsDir) => {
+  if (!existsSync(directoryPath)) {
+    return [];
+  }
+
+  const posts = readdirSync(directoryPath)
     .filter((file) => file.endsWith('.md'))
     .map((fileName) => {
-      const raw = readFileSync(path.join(postsDir, fileName), 'utf8');
+      const raw = readFileSync(path.join(directoryPath, fileName), 'utf8');
       const { meta, body } = parseAndValidateFrontmatter(raw, { fileName });
       validateMarkdownContentQuality(body, { fileName });
       const slug = resolvePostSlug({
@@ -2925,6 +3233,8 @@ for (const file of readdirSync(publicDir)) {
 }
 
 const posts = await attachPopularityMetrics(loadPosts());
+const postsEn = loadPosts(postsEnDir).map(normalizeEnglishPost);
+postsEn.forEach((post) => registerLanguagePair(`/blog/${post.slug}/`, `/en/blog/${post.slug}/`));
 const tags = Array.from(new Map(posts.flatMap((post) => post.tags.map((tag) => [tag, tag]))).values())
   .sort((a, b) => a.localeCompare(b, 'zh-CN'))
   .map((tag) => ({
@@ -2943,7 +3253,9 @@ writeText(
     currentPath: '/',
     outputPath: path.join(outDir, 'index.html'),
     body: renderHomePage(posts),
-    mainEntityId: personSchemaId
+    mainEntityId: personSchemaId,
+    languageSwitch: getLanguageSwitch('/', 'zh'),
+    alternateLinks: createAlternateLinks('/', '/en/')
   })
 );
 
@@ -2976,7 +3288,9 @@ for (const [key, page] of Object.entries(pages).filter(([key]) => key !== 'blog'
               )
             ]
           : [],
-      mainEntityId: key === 'about' ? personSchemaId : ''
+      mainEntityId: key === 'about' ? personSchemaId : '',
+      languageSwitch: getLanguageSwitch(`/${key}/`, 'zh'),
+      alternateLinks: createAlternateLinks(`/${key}/`, `/en/${key}/`)
     })
   );
 }
@@ -3019,7 +3333,9 @@ writeText(
       { name: '首页', path: '/' },
       { name: '文章', path: '/blog/' }
     ]),
-    structuredData: [buildPostListStructuredData('/blog/', posts)]
+    structuredData: [buildPostListStructuredData('/blog/', posts)],
+    languageSwitch: getLanguageSwitch('/blog/', 'zh'),
+    alternateLinks: createAlternateLinks('/blog/', '/en/blog/')
   })
 );
 
@@ -3220,6 +3536,105 @@ for (const [index, post] of posts.entries()) {
           section: post.category.name,
           tags: post.tags
         }
+      },
+      languageSwitch: englishRouteMap.has(`/blog/${post.slug}/`) ? getLanguageSwitch(`/blog/${post.slug}/`, 'zh') : null,
+      alternateLinks: englishRouteMap.has(`/blog/${post.slug}/`)
+        ? createAlternateLinks(`/blog/${post.slug}/`, `/en/blog/${post.slug}/`)
+        : []
+    })
+  );
+}
+
+writeText(
+  path.join(outDir, 'en', 'index.html'),
+  renderLayout({
+    title: siteEn.seo?.home?.title ?? siteEn.title,
+    description: siteEn.seo?.home?.description ?? siteEn.description,
+    currentPath: '/en/',
+    outputPath: path.join(outDir, 'en', 'index.html'),
+    body: renderEnglishHomePage(postsEn),
+    image: postsEn[0]?.cover ?? site.brand.ogImage,
+    siteConfig: siteEn,
+    uiText: enUi,
+    documentLang: 'en',
+    includeDefaultStructuredData: false,
+    languageSwitch: getLanguageSwitch('/en/', 'en'),
+    alternateLinks: createAlternateLinks('/', '/en/')
+  })
+);
+
+for (const pageKey of ['about', 'projects', 'now']) {
+  const page = siteEn.pages[pageKey];
+  writeText(
+    path.join(outDir, 'en', pageKey, 'index.html'),
+    renderLayout({
+      title: formatMetaTitle(page.title, siteEn.shortName),
+      description: page.description,
+      currentPath: `/en/${pageKey}/`,
+      outputPath: path.join(outDir, 'en', pageKey, 'index.html'),
+      body: renderEnglishInfoPage(pageKey),
+      siteConfig: siteEn,
+      uiText: enUi,
+      documentLang: 'en',
+      includeDefaultStructuredData: false,
+      languageSwitch: getLanguageSwitch(`/en/${pageKey}/`, 'en'),
+      alternateLinks: createAlternateLinks(`/${pageKey}/`, `/en/${pageKey}/`)
+    })
+  );
+}
+
+writeText(
+  path.join(outDir, 'en', 'blog', 'index.html'),
+  renderLayout({
+    title: siteEn.seo?.blog?.title ?? formatMetaTitle(siteEn.pages.blog.title, siteEn.shortName),
+    description: siteEn.seo?.blog?.description ?? siteEn.pages.blog.description,
+    currentPath: '/en/blog/',
+    outputPath: path.join(outDir, 'en', 'blog', 'index.html'),
+    body: renderEnglishBlogIndex(postsEn),
+    image: postsEn[0]?.cover ?? site.brand.ogImage,
+    siteConfig: siteEn,
+    uiText: enUi,
+    documentLang: 'en',
+    includeDefaultStructuredData: false,
+    languageSwitch: getLanguageSwitch('/en/blog/', 'en'),
+    alternateLinks: createAlternateLinks('/blog/', '/en/blog/')
+  })
+);
+
+for (const [index, post] of postsEn.entries()) {
+  const relatedPosts = getRelatedPosts(post, postsEn);
+  const navigationPosts = {
+    previous: postsEn[index - 1] ?? null,
+    next: postsEn[index + 1] ?? null
+  };
+
+  writeText(
+    path.join(outDir, 'en', 'blog', post.slug, 'index.html'),
+    renderLayout({
+      title: formatMetaTitle(post.title, 'Blog', siteEn.shortName),
+      description: post.summary,
+      currentPath: `/en/blog/${post.slug}/`,
+      outputPath: path.join(outDir, 'en', 'blog', post.slug, 'index.html'),
+      body: renderEnglishPostPage(post, relatedPosts, navigationPosts),
+      image: post.cover,
+      siteConfig: siteEn,
+      uiText: enUi,
+      documentLang: 'en',
+      includeDefaultStructuredData: false,
+      languageSwitch: getLanguageSwitch(`/en/blog/${post.slug}/`, 'en'),
+      alternateLinks: createAlternateLinks(`/blog/${post.slug}/`, `/en/blog/${post.slug}/`),
+      openGraph: {
+        title: post.title,
+        description: post.summary,
+        image: post.cover,
+        imageAlt: `${post.title} cover illustration`,
+        type: 'article',
+        article: {
+          publishedTime: toIsoDateTime(post.date),
+          modifiedTime: toIsoDateTime(post.updated ?? post.date),
+          section: post.category.name,
+          tags: post.tags
+        }
       }
     })
   );
@@ -3250,11 +3665,20 @@ const sitemapEntries = [
   { path: '/blog/series/' },
   { path: '/blog/archive/' },
   { path: '/now/' },
+  { path: '/en/' },
+  { path: '/en/about/' },
+  { path: '/en/projects/' },
+  { path: '/en/blog/' },
+  { path: '/en/now/' },
   ...tags.map((tag) => ({ path: `/blog/tags/${tag.slug}/` })),
   ...categories.map((category) => ({ path: `/blog/categories/${category.slug}/` })),
   ...seriesList.map((series) => ({ path: `/blog/series/${series.slug}/` })),
   ...posts.map((post) => ({
     path: `/blog/${post.slug}/`,
+    lastModified: formatSitemapLastModified(post.updated ?? post.date)
+  })),
+  ...postsEn.map((post) => ({
+    path: `/en/blog/${post.slug}/`,
     lastModified: formatSitemapLastModified(post.updated ?? post.date)
   }))
 ];

@@ -376,6 +376,12 @@ textarea {
   gap: 12px;
 }
 
+.language-switch {
+  min-height: 40px;
+  padding-inline: 14px;
+  white-space: nowrap;
+}
+
 .nav-toggle,
 .theme-toggle {
   display: inline-flex;

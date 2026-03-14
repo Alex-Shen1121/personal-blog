@@ -4,6 +4,8 @@ const nav = document.querySelector('[data-nav]');
 const themeToggle = document.querySelector('[data-theme-toggle]');
 const yearNode = document.querySelector('[data-current-year]');
 const themeStorageKey = 'personal-blog-theme';
+const pageLanguage = (root.lang || '').toLowerCase();
+const isEnglishPage = pageLanguage.startsWith('en');
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
 const prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -25,7 +27,13 @@ const getPreferredTheme = () => getSavedTheme() ?? (systemThemeQuery.matches ? '
 
 const syncThemeLabel = (theme) => {
   if (!themeToggle) return;
-  const nextLabel = theme === 'light' ? '切换到深色模式' : '切换到浅色模式';
+  const nextLabel = isEnglishPage
+    ? theme === 'light'
+      ? 'Switch to dark mode'
+      : 'Switch to light mode'
+    : theme === 'light'
+      ? '切换到深色模式'
+      : '切换到浅色模式';
   themeToggle.setAttribute('aria-label', nextLabel);
   themeToggle.setAttribute('title', nextLabel);
   themeToggle.textContent = theme === 'light' ? '☀︎' : '☾';
