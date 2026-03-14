@@ -11,11 +11,13 @@
 - GitHub Pages 工作流增加 `npm` 依赖缓存与 `npm ci` 安装步骤，减少后续 CI 重复安装开销。
 - 新增独立的 GitHub Actions 自动校验工作流，在 Pull Request 发往 `main` 和非 `main` 分支 push 时自动执行 `npm run validate` 与 `npm run build`。
 - 增加仓库级 Git pre-commit 检查：`npm install` 后会自动配置 `.githooks`，并在提交前执行 `npm run validate` 与 `npm run build`。
+- 新增 `.nvmrc` 并让 GitHub Actions 改为读取同一份 Node.js 版本基线，减少本地与 CI 环境不一致的风险。
 
 ### Documentation
 
 - 后续未发布的文档、构建、内容结构与部署相关变更，统一先记录在这里。
 - 增加 GitHub Issue 模板、Pull Request 模板与模板入口说明，统一贡献信息收集格式。
+- README 新增“环境与配置说明”，明确 Node.js 版本基线、无 `.env` 的配置方式，以及常见配置修改入口。
 
 ## [1.0.0] - 2026-03-14
 

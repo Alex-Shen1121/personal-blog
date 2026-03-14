@@ -46,6 +46,9 @@
 
 ```text
 .
+├─ .github/workflows/    # CI 校验与 GitHub Pages 部署流程
+├─ .githooks/            # 本地 Git hooks
+├─ .nvmrc                # 本地与 CI 共用的 Node.js 版本基线
 ├─ content/posts/        # Markdown 博客文章
 ├─ public/               # 直接拷贝到产物目录的静态资源
 ├─ scripts/              # 构建与校验脚本
@@ -61,11 +64,16 @@
 
 ### 1. 安装依赖
 
-本项目主要依赖 Node.js 运行构建脚本。
+本项目主要依赖 Node.js 运行构建脚本，当前推荐使用 **Node.js 22.x**（仓库根目录已提供 `.nvmrc`，`package.json` 也声明了 `engines`）。
+
+如果你本地使用 `nvm`，可以先执行：
 
 ```bash
+nvm use
 npm install
 ```
+
+如果不使用 `nvm`，请先确认本地 `node -v` 为 22.x 再安装依赖。
 
 安装完成后会自动执行一次 `prepare`，将仓库内置的 Git hooks 路径配置到 `.githooks`，默认启用提交前检查。
 如果本地 hooks 因环境原因未生效，可手动执行：
@@ -93,6 +101,45 @@ npm run preview
 ```
 
 默认预览地址：<http://127.0.0.1:4173>
+
+## 环境与配置说明
+
+### 开发环境基线
+
+- **Node.js：22.x**（本地通过 `.nvmrc` 对齐，CI 通过 `node-version-file: .nvmrc` 读取同一版本）
+- **npm：10+**
+- **Python 3：可选**，仅用于 `npm run preview` 启动本地静态预览服务
+- **Git：建议安装**，用于启用 `.githooks/pre-commit` 与本地提交前检查
+
+### 当前配置方式
+
+项目当前 **不依赖运行时 `.env` 文件**。因为这是一个面向 GitHub Pages 的静态站，绝大多数配置都直接保存在仓库内，便于构建脚本与部署流程稳定复现。
+
+| 配置位置 | 主要用途 |
+| --- | --- |
+| `src/data/site.mjs` | 站点标题、`siteUrl`、`repoBasePath`、导航、作者信息、品牌资源、页面文案 |
+| `content/posts/*.md` | 文章 frontmatter 与正文内容 |
+| `public/` | 直接发布的静态文件，如 favicon、robots、分享图等 |
+| `.github/workflows/*.yml` | CI 校验、Node 版本、GitHub Pages 部署流程 |
+| `.githooks/pre-commit` | 本地提交前自动执行 `npm run precommit` |
+
+### 最常改的配置项
+
+1. **仓库名、域名或 Pages 部署路径变化**
+   - 修改 `src/data/site.mjs` 中的 `siteUrl` 与 `repoBasePath`
+   - 两者的 pathname 需要保持一致，否则 `npm run validate` / `npm run build` 会在 canonical 校验阶段失败
+2. **站点标题、导航、作者信息、品牌资源变化**
+   - 统一修改 `src/data/site.mjs`
+3. **文章内容与文章元信息变化**
+   - 在 `content/posts/` 中维护 Markdown 与 frontmatter
+4. **Node.js 版本基线变化**
+   - 同步更新 `.nvmrc`、`package.json` 的 `engines`，并保留 GitHub Actions 对 `.nvmrc` 的读取方式
+
+### 环境调整建议
+
+- 新机器第一次拉起项目时，建议先执行 `node -v`、`npm -v`，再运行 `npm install`
+- 如果 `git commit` 前没有触发预提交检查，可手动执行 `npm run setup:hooks`
+- 如果只需要本地查看产物，不需要额外后端服务，直接执行 `npm run build && npm run preview` 即可
 
 ## 可用脚本
 

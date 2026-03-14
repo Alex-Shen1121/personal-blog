@@ -336,6 +336,10 @@ export const pages = {
           {
             title: '当前进展',
             text: '已经补齐文章列表、标签分类、归档、搜索筛选等基础能力，接下来会继续往项目案例、SEO 和工程化校验上推进。'
+          },
+          {
+            title: '环境与配置约定',
+            text: '开发与 CI 统一以 Node.js 22 作为基线，仓库通过 .nvmrc 固定版本；项目当前不依赖运行时 .env，站点链接、仓库基路径、导航、作者信息和品牌资源都集中维护在 src/data/site.mjs，文章内容则放在 content/posts/。如果仓库名、域名或 Pages 路径变化，只需要同步调整 siteUrl 与 repoBasePath。'
           }
         ]
       },

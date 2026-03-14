@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "中文个人主页与博客静态站，支持 Markdown 内容生成与 GitHub Pages 部署",
+  "engines": {
+    "node": "22.x",
+    "npm": ">=10"
+  },
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "build": "node scripts/build.mjs",
