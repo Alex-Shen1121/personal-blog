@@ -2088,6 +2088,12 @@ const renderLayout = ({
           </a>
           <div class="header-actions">
             ${languageSwitchHtml}
+            <button class="search-trigger" type="button" aria-label="搜索" data-search-trigger>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
             <button class="theme-toggle" type="button" data-theme-toggle aria-label="${escapeHtml(uiText.toggleTheme ?? '切换主题')}">☾</button>
             <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-label="${escapeHtml(uiText.openNavigation ?? '展开导航')}">
               <span></span><span></span><span></span>
