@@ -10,6 +10,7 @@ const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 const currentScript = document.currentScript || document.querySelector('script[data-site-main-script]');
 const currentScriptUrl = currentScript?.src || '';
 const enhancementsScriptUrl = currentScript?.dataset.enhancementsSrc || '';
+const analyticsScriptUrl = currentScript?.dataset.analyticsSrc || '';
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
@@ -150,6 +151,98 @@ if (postShareCard) {
     });
   }
 }
+
+const initAnalytics = () => {
+  const analyticsCards = [...document.querySelectorAll('[data-analytics-card]')];
+  const analyticsValues = [...document.querySelectorAll('[data-busuanzi-value]')];
+
+  if (!analyticsCards.length || !analyticsValues.length) {
+    return;
+  }
+
+  const loadingText = analyticsCards[0]?.dataset.analyticsLoading || '访问统计加载中…';
+  const readyText = analyticsCards[0]?.dataset.analyticsReady || '统计已更新，数据可能有短暂延迟。';
+  const unavailableText = analyticsCards[0]?.dataset.analyticsUnavailable || '统计服务暂时不可用。';
+  let finished = false;
+  let pollTimer = 0;
+  let fallbackTimer = 0;
+
+  const updateCardStatus = (message, state) => {
+    analyticsCards.forEach((card) => {
+      card.dataset.analyticsState = state;
+      const status = card.querySelector('[data-analytics-status]');
+      if (status) {
+        status.textContent = message;
+      }
+    });
+  };
+
+  const hasAnalyticsValue = () =>
+    analyticsValues.some((node) => {
+      const value = (node.textContent || '').trim();
+      return /^\d[\d,]*$/.test(value);
+    });
+
+  const finishWithReady = () => {
+    if (finished) return;
+    finished = true;
+    updateCardStatus(readyText, 'ready');
+    if (pollTimer) window.clearInterval(pollTimer);
+    if (fallbackTimer) window.clearTimeout(fallbackTimer);
+  };
+
+  const finishWithUnavailable = () => {
+    if (finished) return;
+    finished = true;
+    analyticsValues.forEach((node) => {
+      const value = (node.textContent || '').trim();
+      if (!/^\d[\d,]*$/.test(value)) {
+        node.textContent = '--';
+      }
+    });
+    updateCardStatus(unavailableText, 'unavailable');
+    if (pollTimer) window.clearInterval(pollTimer);
+    if (fallbackTimer) window.clearTimeout(fallbackTimer);
+  };
+
+  updateCardStatus(loadingText, 'loading');
+
+  if (hasAnalyticsValue()) {
+    finishWithReady();
+    return;
+  }
+
+  pollTimer = window.setInterval(() => {
+    if (hasAnalyticsValue()) {
+      finishWithReady();
+    }
+  }, 250);
+
+  fallbackTimer = window.setTimeout(() => {
+    finishWithUnavailable();
+  }, 5000);
+
+  if (!analyticsScriptUrl) {
+    finishWithUnavailable();
+    return;
+  }
+
+  const existingScript = document.querySelector('script[data-analytics-script="busuanzi"]');
+  if (existingScript) {
+    existingScript.addEventListener('error', finishWithUnavailable, { once: true });
+    return;
+  }
+
+  const analyticsScript = document.createElement('script');
+  analyticsScript.src = analyticsScriptUrl;
+  analyticsScript.async = true;
+  analyticsScript.defer = true;
+  analyticsScript.dataset.analyticsScript = 'busuanzi';
+  analyticsScript.addEventListener('error', finishWithUnavailable, { once: true });
+  document.head.append(analyticsScript);
+};
+
+initAnalytics();
 
 const revealItems = document.querySelectorAll('.reveal');
 const revealStepSelectors = [

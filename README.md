@@ -29,6 +29,7 @@
 - `prefers-reduced-motion` 兼容处理
 - 基础 SEO 元信息支持
 - 支持 RSS 订阅、邮件订阅与社交媒体跳转入口，并自动生成 `rss.xml`
+- 支持访问统计：页脚展示站点累计访问 / 访客数，文章详情页展示当前页访问次数
 - 自动生成 `sitemap.xml`、`robots.txt`、`404.html`、`.nojekyll`
 - 适配 GitHub Pages 项目路径 `/personal-blog/`
 - GitHub Actions 自动校验与部署
@@ -118,7 +119,7 @@ npm run preview
 
 | 配置位置 | 主要用途 |
 | --- | --- |
-| `src/data/site.mjs` | 站点标题、`siteUrl`、`repoBasePath`、导航、作者信息、品牌资源、页面文案 |
+| `src/data/site.mjs` | 站点标题、`siteUrl`、`repoBasePath`、导航、作者信息、品牌资源、页面文案、访问统计配置 |
 | `content/posts/*.md` | 文章 frontmatter 与正文内容 |
 | `public/` | 直接发布的静态文件，如 favicon、robots、分享图等 |
 | `.github/workflows/*.yml` | CI 校验、Node 版本、GitHub Pages 部署流程 |
@@ -129,7 +130,7 @@ npm run preview
 1. **仓库名、域名或 Pages 部署路径变化**
    - 修改 `src/data/site.mjs` 中的 `siteUrl` 与 `repoBasePath`
    - 两者的 pathname 需要保持一致，否则 `npm run validate` / `npm run build` 会在 canonical 校验阶段失败
-2. **站点标题、导航、作者信息、品牌资源变化**
+2. **站点标题、导航、作者信息、品牌资源、访问统计变化**
    - 统一修改 `src/data/site.mjs`
 3. **文章内容与文章元信息变化**
    - 在 `content/posts/` 中维护 Markdown 与 frontmatter

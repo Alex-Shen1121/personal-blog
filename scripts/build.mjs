@@ -1358,6 +1358,28 @@ const renderNav = (currentPath, prefix) => {
 
 const formatMetaTitle = (...segments) => segments.filter(Boolean).join('｜');
 
+const renderSiteAnalyticsCard = () => {
+  if (site.analytics?.provider !== 'busuanzi' || !site.analytics?.siteMetrics?.length) {
+    return '';
+  }
+
+  const metrics = site.analytics.siteMetrics
+    .map(
+      (metric) => `<li class="site-analytics__item"><span>${escapeHtml(metric.label)}</span><strong id="busuanzi_value_${escapeHtml(metric.key)}" data-busuanzi-value="${escapeHtml(metric.key)}">--</strong></li>`
+    )
+    .join('');
+
+  return `<div class="site-analytics" data-analytics-card data-analytics-loading="${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span class="site-footer__heading">访问统计</span><ul class="site-analytics__list">${metrics}</ul><p class="muted site-analytics__status" data-analytics-status>${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}</p></div>`;
+};
+
+const renderPostPageAnalytics = () => {
+  if (site.analytics?.provider !== 'busuanzi' || !site.analytics?.pageMetric?.key) {
+    return '';
+  }
+
+  return `<div class="meta-row" data-analytics-card data-analytics-loading="${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}" data-analytics-ready="${escapeHtml(site.analytics.readyText ?? '统计已更新，数据可能有短暂延迟。')}" data-analytics-unavailable="${escapeHtml(site.analytics.unavailableText ?? '统计服务暂时不可用。')}"><span>${escapeHtml(site.analytics.pageMetric.label ?? '访问统计')}</span><span><strong class="page-analytics__value" id="busuanzi_value_${escapeHtml(site.analytics.pageMetric.key)}" data-busuanzi-value="${escapeHtml(site.analytics.pageMetric.key)}">--</strong> 次阅读</span><span class="meta-row__hint" data-analytics-status>${escapeHtml(site.analytics.loadingText ?? '访问统计加载中…')}</span></div>`;
+};
+
 const renderLayout = ({
   title,
   description,
@@ -1378,6 +1400,7 @@ const renderLayout = ({
   const stylesheetHref = trimLocalPrefix(resolveStaticAssetPath('/styles.css', assetPrefix));
   const scriptHref = trimLocalPrefix(resolveStaticAssetPath('/script.js', assetPrefix));
   const enhancementsHref = trimLocalPrefix(resolveStaticAssetPath('/enhancements.js', assetPrefix));
+  const analyticsScriptHref = site.analytics?.provider === 'busuanzi' ? site.analytics.scriptUrl : '';
   const fontStylesheetHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap';
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
   const rssHref = site.rss?.path ? trimLocalPrefix(resolveLinkHref(site.rss.path, `${prefix}/`)) : '';
@@ -1527,6 +1550,7 @@ const renderLayout = ({
             <strong>${site.shortName}</strong>
             <p>${site.author.role} · ${site.author.city}</p>
             <p>${site.description}</p>
+            ${renderSiteAnalyticsCard()}
           </section>
           <section class="site-footer__section" aria-label="站内导航">
             <span class="site-footer__heading">站内导航</span>
@@ -1548,7 +1572,7 @@ const renderLayout = ({
         <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源，变更记录见 <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a>。</span>
       </footer>
     </div>
-    <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}" defer></script>
+    <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}"${analyticsScriptHref ? ` data-analytics-src="${escapeHtml(analyticsScriptHref)}"` : ''} defer></script>
   </body>
 </html>`;
 };
@@ -2505,6 +2529,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
           <div class="meta-row"><span>发布时间</span><span>${formatDate(post.date)}</span></div>
           ${post.updated ? `<div class="meta-row"><span>更新时间</span><span>${formatDate(post.updated)}</span></div>` : ''}
           <div class="meta-row"><span>阅读信息</span><span>${post.readingTime} · ${formatWordCount(post.wordCount)}</span></div>
+          ${renderPostPageAnalytics()}
           <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
           <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
         </div>

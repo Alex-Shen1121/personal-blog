@@ -48,6 +48,18 @@ export const site = {
     title: '沈晨玙博客 RSS 订阅',
     description: '订阅沈晨玙的博客更新，持续获取最新文章与长期写作内容。'
   },
+  analytics: {
+    provider: 'busuanzi',
+    scriptUrl: 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js',
+    siteMetrics: [
+      { key: 'site_pv', label: '累计访问' },
+      { key: 'site_uv', label: '访客数' }
+    ],
+    pageMetric: { key: 'page_pv', label: '当前页访问' },
+    loadingText: '访问统计加载中…',
+    readyText: '统计已更新，数据可能有短暂延迟。',
+    unavailableText: '统计服务暂时不可用。'
+  },
   emailSubscription: {
     title: '邮件订阅',
     description:
