@@ -1,4 +1,5 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { home, pages, site } from '../src/data/site.mjs';
@@ -19,6 +20,8 @@ if (canonicalConfig.errors.length > 0) {
 
 const IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif']);
 const imageMetadata = new Map();
+const assetManifest = new Map();
+const emittedAssetEntries = [];
 
 const ensureDir = (dirPath) => mkdirSync(dirPath, { recursive: true });
 const minifyCss = (content) =>
@@ -56,16 +59,38 @@ const writeText = (targetPath, content) => {
   writeFileSync(targetPath, optimizeTextContent(targetPath, content));
 };
 
-const copyStaticAsset = (sourcePath, targetPath) => {
+const createContentHash = (content) => createHash('sha256').update(content).digest('hex').slice(0, 10);
+
+const createHashedFileName = (fileName, content) => {
+  const extension = path.extname(fileName);
+  const baseName = extension ? fileName.slice(0, -extension.length) : fileName;
+  return `${baseName}.${createContentHash(content)}${extension}`;
+};
+
+const registerEmittedAsset = (sourcePublicPath, emittedPublicPath) => {
+  assetManifest.set(sourcePublicPath, emittedPublicPath);
+  emittedAssetEntries.push({ source: sourcePublicPath, output: emittedPublicPath });
+};
+
+const emitStaticAsset = (sourcePath, targetDirectoryPath, publicPathPrefix = '/') => {
   const extension = path.extname(sourcePath).toLowerCase();
+  const fileName = path.basename(sourcePath);
+  const rawContent = readFileSync(sourcePath);
+  const outputContent =
+    extension === '.css' || extension === '.svg'
+      ? Buffer.from(optimizeTextContent(sourcePath, rawContent.toString('utf8')))
+      : rawContent;
+  const hashedFileName = createHashedFileName(fileName, outputContent);
+  const targetPath = path.join(targetDirectoryPath, hashedFileName);
+  const normalizedPrefix = publicPathPrefix === '/' ? '' : publicPathPrefix.replace(/\/$/, '');
+  const sourcePublicPath = `${normalizedPrefix}/${fileName}`;
+  const emittedPublicPath = `${normalizedPrefix}/${hashedFileName}`;
+
   ensureDir(path.dirname(targetPath));
+  writeFileSync(targetPath, outputContent);
+  registerEmittedAsset(sourcePublicPath, emittedPublicPath);
 
-  if (extension === '.css' || extension === '.svg') {
-    writeFileSync(targetPath, optimizeTextContent(targetPath, readFileSync(sourcePath, 'utf8')));
-    return;
-  }
-
-  copyFileSync(sourcePath, targetPath);
+  return { targetPath, publicPath: emittedPublicPath };
 };
 
 const criticalCssSource = minifyCss(rawCriticalCssSource);
@@ -88,6 +113,23 @@ const normalizeImagePath = (assetPath = '') => {
   }
 
   return `/${cleanPath.replace(/^\.?\/+/, '')}`;
+};
+
+const getEmittedAssetPath = (assetPath = '') => {
+  if (!assetPath || /^(?:[a-z]+:)?\/\//i.test(assetPath) || assetPath.startsWith('data:') || assetPath.startsWith('#')) {
+    return assetPath;
+  }
+
+  const match = assetPath.match(/^([^?#]+)(.*)$/);
+  const cleanPath = match?.[1] ?? assetPath;
+  const suffix = match?.[2] ?? '';
+  const normalizedPath = normalizeImagePath(cleanPath);
+
+  if (!normalizedPath) {
+    return assetPath;
+  }
+
+  return `${assetManifest.get(normalizedPath) ?? normalizedPath}${suffix}`;
 };
 
 const parseSvgDimensions = (filePath) => {
@@ -279,11 +321,13 @@ const resolveStaticAssetPath = (assetPath, prefix = '') => {
     return assetPath;
   }
 
-  if (assetPath.startsWith('/')) {
-    return `${prefix}${assetPath.slice(1)}`;
+  const emittedAssetPath = getEmittedAssetPath(assetPath);
+
+  if (emittedAssetPath.startsWith('/')) {
+    return `${prefix}${emittedAssetPath.slice(1)}`;
   }
 
-  return `${prefix}${assetPath}`;
+  return `${prefix}${emittedAssetPath}`;
 };
 
 const resolveLinkHref = (href, prefix = '') => {
@@ -639,11 +683,13 @@ const resolveContentPath = (value = '') => {
     return value;
   }
 
-  if (value.startsWith('/')) {
-    return `${site.repoBasePath.replace(/\/$/, '')}${value}`;
+  const emittedValue = getEmittedAssetPath(value);
+
+  if (emittedValue.startsWith('/')) {
+    return `${site.repoBasePath.replace(/\/$/, '')}${emittedValue}`;
   }
 
-  return value;
+  return emittedValue;
 };
 
 const parseImageCaption = (title = '') => {
@@ -896,7 +942,9 @@ const resolveAbsoluteUrl = (value = '') => {
   if (/^(?:[a-z]+:)?\/\//i.test(value) || value.startsWith('data:')) {
     return value;
   }
-  return withBase(value.startsWith('/') ? value : `/${value}`);
+
+  const emittedValue = getEmittedAssetPath(value);
+  return withBase(emittedValue.startsWith('/') ? emittedValue : `/${emittedValue}`);
 };
 
 const createImageObject = (image, caption = '') => {
@@ -1182,8 +1230,9 @@ const renderLayout = ({
   const prefix = getRelativePrefix(outputPath);
   const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
   const canonical = buildCanonicalUrl(site, currentPath);
-  const stylesheetHref = trimLocalPrefix(`${prefix}/styles.css`);
-  const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
+  const stylesheetHref = trimLocalPrefix(resolveStaticAssetPath('/styles.css', assetPrefix));
+  const scriptHref = trimLocalPrefix(resolveStaticAssetPath('/script.js', assetPrefix));
+  const enhancementsHref = trimLocalPrefix(resolveStaticAssetPath('/enhancements.js', assetPrefix));
   const fontStylesheetHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap';
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
   const resolvedOpenGraph = {
@@ -1194,7 +1243,7 @@ const renderLayout = ({
     imageAlt: openGraph.imageAlt ?? '',
     article: openGraph.article ?? null
   };
-  const ogImage = withBase(resolvedOpenGraph.image);
+  const ogImage = resolveAbsoluteUrl(resolvedOpenGraph.image);
   const ogImageType = detectImageMimeType(resolvedOpenGraph.image);
   const resolvedTwitter = {
     card: ogImage ? 'summary_large_image' : 'summary',
@@ -1349,7 +1398,7 @@ const renderLayout = ({
         <span class="site-footer__meta">© <span data-current-year></span> ${site.author.name} · 以轻量静态站方式构建，持续更新中。</span>
       </footer>
     </div>
-    <script src="${scriptHref}" defer></script>
+    <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}" defer></script>
   </body>
 </html>`;
 };
@@ -1386,7 +1435,7 @@ const renderHomePage = (posts) => {
           <p class="kicker">现在的关注点</p>
           <p>${site.author.intro}</p>
         </div>
-        <img src="assets/illustration-wave.svg" alt="抽象波形风格插画"${getImageAttributes({ src: '/assets/illustration-wave.svg', fetchpriority: 'high' })} />
+        <img src="${resolveStaticAssetPath('/assets/illustration-wave.svg')}" alt="抽象波形风格插画"${getImageAttributes({ src: '/assets/illustration-wave.svg', fetchpriority: 'high' })} />
         <ul class="list-card">
           ${home.tools.map((tool) => `<li>${tool}</li>`).join('')}
         </ul>
@@ -1511,7 +1560,7 @@ const renderHomePage = (posts) => {
       </div>
       <div class="featured-posts">
         ${primaryPost
-          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${primaryPost.cover.replace(/^\//, '')}" alt="${primaryPost.title} 的封面插画"${getImageAttributes({ src: primaryPost.cover, fetchpriority: 'high' })} /></div><div class="post-card__body">${primaryPost.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : `<span class="feature-label">${home.featuredPosts.primaryLabel}</span>`}<div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
+          ? `<article class="post-card post-card--featured"><div class="post-card__cover"><img src="${resolveStaticAssetPath(primaryPost.cover)}" alt="${primaryPost.title} 的封面插画"${getImageAttributes({ src: primaryPost.cover, fetchpriority: 'high' })} /></div><div class="post-card__body">${primaryPost.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : `<span class="feature-label">${home.featuredPosts.primaryLabel}</span>`}<div class="post-card__meta">${renderPostMeta(primaryPost)}</div><h2>${primaryPost.title}</h2><p>${primaryPost.summary}</p><ul class="tag-list">${primaryPost.tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul><a class="text-link" href="blog/${primaryPost.slug}/">优先阅读 →</a></div></article>`
           : ''}
         <div class="featured-posts__sidebar">
           <div class="featured-posts__intro panel">
@@ -1536,7 +1585,7 @@ const renderHomePage = (posts) => {
       <div class="post-grid">
         ${recentUpdates
           .map(
-            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${post.updated && post.updated !== post.date ? `<span>更新于 ${formatDate(post.updated)}</span>` : ''}<span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="button button-ghost" href="blog/${post.slug}/">阅读详情</a></article>`
+            (post) => `<article class="post-card"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover)}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta">${post.updated && post.updated !== post.date ? `<span>更新于 ${formatDate(post.updated)}</span>` : ''}<span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, 'blog/')}<a class="button button-ghost" href="blog/${post.slug}/">阅读详情</a></article>`
           )
           .join('')}
       </div>
@@ -1950,7 +1999,7 @@ const renderBlogListPage = (posts, tags, categories, seriesList) => `
           ].join(' ').toLowerCase());
           const dateValue = new Date(`${post.date}T00:00:00+08:00`).getTime();
           const updatedValue = new Date(`${(post.updated ?? post.date)}T00:00:00+08:00`).getTime();
-          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
+          return `<article class="post-card" data-post-card data-search-index="${searchIndex}" data-category="${escapeHtml(post.category.name.toLowerCase())}" data-tags="${escapeHtml((post.tags ?? []).map((tag) => tag.toLowerCase()).join('|'))}" data-date="${dateValue}" data-updated="${updatedValue}"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover, '../')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}${post.series ? `<span class="feature-label feature-label--series">系列 · <a href="series/${post.series.slug}/">${post.series.name}</a></span>` : ''}<div class="post-card__meta">${renderPostMeta(post)}</div><p class="kicker"><a href="categories/${post.category.slug}/">${post.category.name}</a></p><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags)}<a class="button button-ghost" href="${post.slug}/">阅读详情</a></article>`;
         })
         .join('')}
     </div>
@@ -2049,7 +2098,7 @@ const renderCategoryPage = (category, posts) => `
     <div class="post-grid">
       ${posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover, '../../')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -2149,7 +2198,7 @@ const renderTagDetailPage = (tag) => `
     <div class="post-grid">
       ${tag.posts
         .map(
-          (post) => `<article class="post-card"><div class="post-card__cover"><img src="../../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
+          (post) => `<article class="post-card"><div class="post-card__cover"><img src="${resolveStaticAssetPath(post.cover, '../../../')}" alt="${post.title} 的封面插画"${getImageAttributes({ src: post.cover })} /></div>${post.pinned ? '<span class="feature-label feature-label--pinned">置顶文章</span>' : ''}<div class="post-card__meta"><span>${formatDate(post.date)}</span><span>${post.readingTime}</span></div><h2>${post.title}</h2><p>${post.summary}</p>${renderTagLinks(post.tags, '../../')}<a class="button button-ghost" href="../../${post.slug}/">阅读详情</a></article>`
         )
         .join('')}
     </div>
@@ -2200,7 +2249,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
     </section>
     <section class="post-layout reveal">
       <article>
-        <div class="post-cover"><img src="../../${post.cover.replace(/^\//, '')}" alt="${post.title} 的配图"${getImageAttributes({ src: post.cover, fetchpriority: 'high' })} /></div>
+        <div class="post-cover"><img src="${resolveStaticAssetPath(post.cover, '../../')}" alt="${post.title} 的配图"${getImageAttributes({ src: post.cover, fetchpriority: 'high' })} /></div>
         <div class="prose panel">${post.html}</div>
         ${renderPostNavigation(navigationPosts)}
       </article>
@@ -2385,16 +2434,16 @@ registerImagesFromDirectory(publicDir, '/');
 
 ensureDir(outDir);
 ensureDir(path.join(outDir, 'assets'));
-copyStaticAsset(path.join(rootDir, 'styles.css'), path.join(outDir, 'styles.css'));
-copyStaticAsset(path.join(rootDir, 'script.js'), path.join(outDir, 'script.js'));
-copyStaticAsset(path.join(rootDir, 'enhancements.js'), path.join(outDir, 'enhancements.js'));
+emitStaticAsset(path.join(rootDir, 'styles.css'), outDir);
+emitStaticAsset(path.join(rootDir, 'script.js'), outDir);
+emitStaticAsset(path.join(rootDir, 'enhancements.js'), outDir);
 
 for (const file of readdirSync(assetsDir)) {
-  copyStaticAsset(path.join(assetsDir, file), path.join(outDir, 'assets', file));
+  emitStaticAsset(path.join(assetsDir, file), path.join(outDir, 'assets'), '/assets');
 }
 
 for (const file of readdirSync(publicDir)) {
-  copyStaticAsset(path.join(publicDir, file), path.join(outDir, file));
+  emitStaticAsset(path.join(publicDir, file), outDir);
 }
 
 const posts = loadPosts();
@@ -2741,5 +2790,24 @@ writeText(
 );
 writeText(path.join(outDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${withBase('sitemap.xml')}\n`);
 writeText(path.join(outDir, '.nojekyll'), '');
+writeText(
+  path.join(outDir, 'asset-manifest.json'),
+  `${JSON.stringify(
+    {
+      generatedAt: new Date().toISOString(),
+      assets: emittedAssetEntries
+        .slice()
+        .sort((a, b) => a.source.localeCompare(b.source))
+        .reduce((manifest, entry) => {
+          manifest[entry.source] = entry.output;
+          return manifest;
+        }, {})
+    },
+    null,
+    2
+  )}\n`
+);
 
-console.log(`Build complete. Generated ${posts.length} posts and ${sitemapEntries.length} sitemap entries.`);
+console.log(
+  `Build complete. Generated ${posts.length} posts, ${sitemapEntries.length} sitemap entries, and ${emittedAssetEntries.length} fingerprinted assets.`
+);

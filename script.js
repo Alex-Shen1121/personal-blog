@@ -7,7 +7,9 @@ const themeStorageKey = 'personal-blog-theme';
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: light)');
 const prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-const currentScriptUrl = document.currentScript?.src || document.querySelector('script[src$="/script.js"], script[src="script.js"]')?.src || '';
+const currentScript = document.currentScript || document.querySelector('script[data-site-main-script]');
+const currentScriptUrl = currentScript?.src || '';
+const enhancementsScriptUrl = currentScript?.dataset.enhancementsSrc || '';
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
@@ -157,7 +159,7 @@ const loadEnhancements = () => {
   enhancementsRequested = true;
 
   const script = document.createElement('script');
-  script.src = new URL('enhancements.js', currentScriptUrl || window.location.href).toString();
+  script.src = enhancementsScriptUrl || new URL('enhancements.js', currentScriptUrl || window.location.href).toString();
   script.defer = true;
   script.dataset.siteEnhancements = 'true';
   document.head.append(script);
