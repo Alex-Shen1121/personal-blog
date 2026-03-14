@@ -1,10 +1,10 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const outDir = path.path.join(rootDir, 'dist');
+const outDir = path.join(rootDir, 'dist');
 
 // Site configuration
 const siteUrl = 'https://alex-shen1121.github.io/personal-blog/';
@@ -107,8 +107,6 @@ const fileExistsForPath = (path) => {
 
 // Check all HTML files for dead links
 const checkDeadLinks = () => {
-  const { readdirSync } = await import('node:fs');
-  
   const htmlFiles = [];
   const collectHtmlFiles = (dir) => {
     try {

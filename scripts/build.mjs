@@ -9,6 +9,7 @@ import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonic
 import { auditGeneratedHtml } from './html-audit.mjs';
 import { parseAndValidateFrontmatter } from './frontmatter.mjs';
 import { validateMarkdownContentQuality } from './markdown-quality.mjs';
+import { runDeadLinkCheck } from './dead-link-check.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -1567,6 +1568,7 @@ const detectImageMimeType = (assetPath = '') => {
 const siteHomeUrl = buildCanonicalUrl(site, '/');
 const personSchemaId = `${siteHomeUrl}#person`;
 const websiteSchemaId = `${siteHomeUrl}#website`;
+const organizationSchemaId = `${siteHomeUrl}#organization`;
 const BUSUANZI_POPULARITY_ENDPOINT = 'https://busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback';
 const POPULAR_POST_LIMIT = 3;
 
@@ -1660,9 +1662,28 @@ const buildWebsiteStructuredData = () => ({
   description: site.description,
   inLanguage: 'zh-CN',
   publisher: {
-    '@id': personSchemaId
+    '@id': organizationSchemaId
   }
 });
+
+const buildOrganizationStructuredData = () => {
+  const sameAs = (site.author.links ?? [])
+    .map((link) => link?.url?.trim?.())
+    .filter((url) => /^https?:\/\//i.test(url));
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': organizationSchemaId,
+    name: site.shortName,
+    url: siteHomeUrl,
+    description: site.description,
+    ...(sameAs.length ? { sameAs } : {}),
+    founder: {
+      '@id': personSchemaId
+    }
+  };
+};
 
 const buildBreadcrumbStructuredData = (canonical, items = []) => {
   if (!items.length) return null;
@@ -1964,6 +1985,7 @@ const renderLayout = ({
     ...(includeDefaultStructuredData
       ? [
           buildWebsiteStructuredData(),
+          buildOrganizationStructuredData(),
           buildPersonStructuredData(),
           buildPageStructuredData({
             title,
@@ -4689,6 +4711,14 @@ writeText(
 const htmlAudit = auditGeneratedHtml({ distDir: outDir });
 if (htmlAudit.issues.length > 0) {
   throw new Error(`HTML semantics/accessibility audit failed:\n- ${htmlAudit.issues.join('\n- ')}`);
+}
+
+// Run dead link check after HTML generation
+console.log('🔍 Checking for dead links...');
+const deadLinks = await runDeadLinkCheck();
+if (deadLinks.length > 0) {
+  console.log(`\n⚠️  Found ${deadLinks.length} potential dead link(s).`);
+  // Don't fail the build for dead links, just warn
 }
 
 console.log(
