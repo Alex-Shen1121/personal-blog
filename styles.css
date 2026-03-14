@@ -1443,6 +1443,66 @@ body.has-reading-progress .reading-progress {
   margin: 0;
 }
 
+.timeline-card .now-stream {
+  padding: 4px 24px 12px;
+}
+
+.now-stream__entry--compact .timeline-content {
+  padding-bottom: 18px;
+}
+
+.now-stream__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.now-stream__summary {
+  color: var(--soft);
+}
+
+.now-stream__body,
+.now-stream__aside,
+.now-stream__aside-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.now-stream__body {
+  margin-top: 14px;
+}
+
+.now-stream__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.now-stream__section-heading {
+  padding: 24px 24px 0;
+}
+
+.now-stream__focus-grid {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.now-focus-card {
+  display: grid;
+  gap: 10px;
+}
+
+.now-focus-card :where(h3, h4, p) {
+  margin: 0;
+}
+
+.now-page-grid {
+  align-items: start;
+}
+
 .timeline-date {
   font-size: 0.82rem;
   letter-spacing: 0.14em;

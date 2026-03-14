@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentTemplates, getContentTemplate } from '../src/data/content-templates.mjs';
-import { home, pages, site } from '../src/data/site.mjs';
+import { home, nowFeed, pages, site } from '../src/data/site.mjs';
 import { siteEn } from '../src/data/site.en.mjs';
 import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
 import { auditGeneratedHtml } from './html-audit.mjs';
@@ -835,6 +835,43 @@ const renderProjectActionLink = ({ href, label, prefix = '', variant = 'ghost', 
   const external = isExternalLink(resolvedHref);
   return `<a class="button button-${variant} button-small project-action${external ? ' project-action--external' : ''}" href="${resolvedHref}"${external ? ' target="_blank" rel="noreferrer"' : ''}><span>${escapeHtml(label)}</span>${external ? `<span class="project-action__meta">${externalLabel}</span><span class="project-action__arrow" aria-hidden="true">↗</span>` : ''}</a>`;
 };
+
+const renderNowStreamEntry = (item, { prefix = '', compact = false } = {}) => {
+  const tags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
+  const notes = compact ? [] : Array.isArray(item.notes) ? item.notes.filter(Boolean) : [];
+  const action = item.link?.href && item.link?.label
+    ? renderProjectActionLink({
+        href: item.link.href,
+        label: item.link.label,
+        prefix,
+        variant: item.link.variant ?? 'ghost'
+      })
+    : '';
+
+  return `<li class="now-stream__entry${compact ? ' now-stream__entry--compact' : ''}"><div class="timeline-marker" aria-hidden="true"></div><div class="timeline-content"><div class="now-stream__meta"><p class="timeline-date">${formatDate(item.date)}</p>${item.status ? renderProjectStatusBadge(item.status) : ''}</div><h3>${item.title}</h3><p class="now-stream__summary">${item.summary}</p>${notes.length ? `<div class="now-stream__body">${notes.map((note) => `<p>${note}</p>`).join('')}</div>` : ''}${tags.length ? `<ul class="tag-list">${tags.map((tag) => `<li class="tag">${tag}</li>`).join('')}</ul>` : ''}${action ? `<div class="now-stream__footer">${action}</div>` : ''}</div></li>`;
+};
+
+const renderHomeNowSection = () => {
+  const items = nowFeed.items.slice(0, home.updates.limit ?? 3);
+
+  return `<section class="section reveal" id="now"><div class="post-list__header"><div class="section-heading"><p class="kicker">${home.updates.eyebrow}</p><h2>${home.updates.title}</h2><p class="section-intro">${home.updates.description}</p></div><a class="button button-ghost" href="${home.updates.cta.href.slice(1)}">${home.updates.cta.label}</a></div><div class="split-grid split-grid--timeline"><article class="note-card timeline-card"><ol class="timeline timeline--detailed now-stream now-stream--compact">${items
+    .map((item) => renderNowStreamEntry(item, { compact: true }))
+    .join('')}</ol></article><article class="note-card now-stream__aside"><div class="section-heading"><p class="kicker">阶段主轴</p><h2>${nowFeed.snapshot.title}</h2><p class="section-intro">${nowFeed.snapshot.description}</p></div><div class="card-grid now-stream__focus-grid">${nowFeed.snapshot.items
+    .map((item) => `<article class="panel now-focus-card"><h3>${item.title}</h3><p>${item.text}</p></article>`)
+    .join('')}</div><div class="contact-links"><a class="button button-secondary" href="${home.updates.cta.href.slice(1)}">查看完整动态流</a><a class="button button-ghost" href="blog/">继续看文章</a></div></article></div></section>`;
+};
+
+const renderNowPage = (page) => `<section class="page-hero reveal"><p class="kicker">${page.title}</p><h1>${page.title}</h1><p>${page.intro}</p><div class="page-hero__meta"><span class="tag">最近更新：${formatDate(nowFeed.updatedAt)}</span><span class="tag">${nowFeed.items.length} 条阶段记录</span></div></section><section class="section reveal"><div class="split-grid split-grid--timeline now-page-grid"><article class="note-card timeline-card"><div class="section-heading now-stream__section-heading"><p class="kicker">动态流</p><h2>把最近正在推进的事，按时间顺序公开记下来。</h2><p class="section-intro">${nowFeed.intro}</p></div><ol class="timeline timeline--detailed now-stream">${nowFeed.items
+  .map((item) => renderNowStreamEntry(item, { prefix: '../' }))
+  .join('')}</ol></article><aside class="now-stream__aside-stack"><article class="note-card now-stream__aside"><h3>${nowFeed.snapshot.title}</h3><p>${nowFeed.snapshot.description}</p><div class="card-grid now-stream__focus-grid">${nowFeed.snapshot.items
+    .map((item) => `<article class="panel now-focus-card"><h4>${item.title}</h4><p>${item.text}</p></article>`)
+    .join('')}</div></article><article class="note-card now-stream__aside"><h3>我怎么使用这条动态流</h3><ul class="list-card">${nowFeed.principles.map((item) => `<li>${item}</li>`).join('')}</ul></article>${renderFeedbackEntry({
+      title: '如果你也在做类似的事',
+      description: '欢迎直接留言告诉我你现在在推进什么，或者你还想看到这条动态流继续记录哪些内容。',
+      note: '我会优先回复那些带着具体上下文的问题或项目。',
+      pageTitle: page.title,
+      pageUrl: buildCanonicalUrl(site, '/now/')
+    })}</aside></div></section>`;
 
 const renderStateCard = ({
   tag = 'div',
@@ -2292,41 +2329,7 @@ const renderHomePage = (posts) => {
       </div>
     </section>
 
-    <section class="section reveal" id="now">
-      <div class="post-list__header">
-        <div class="section-heading">
-          <p class="kicker">${home.updates.eyebrow}</p>
-          <h2>${home.updates.title}</h2>
-          <p class="section-intro">${home.updates.description}</p>
-        </div>
-        <a class="button button-ghost" href="${home.updates.cta.href.slice(1)}">${home.updates.cta.label}</a>
-      </div>
-      <div class="split-grid split-grid--timeline">
-        <article class="note-card timeline-card">
-          <ol class="timeline timeline--detailed">
-            ${home.updates.items
-              .map(
-                (item) => `<li><div class="timeline-marker" aria-hidden="true"></div><div class="timeline-content"><p class="timeline-date">${item.date}</p><h3>${item.label}</h3><p>${item.summary}</p><ul class="tag-list">${item.meta.map((meta) => `<li class="tag">${meta}</li>`).join('')}</ul></div></li>`
-              )
-              .join('')}
-          </ol>
-        </article>
-        <article class="note-card">
-          <div class="section-heading">
-            <p class="kicker">保持联系</p>
-            <h2>如果你也在做内容、产品或前端相关的事情，欢迎交流。</h2>
-            <p class="section-intro">我更喜欢基于具体项目、内容想法或正在解决的问题展开对话，这样会更快进入有效交流。</p>
-          </div>
-          <div class="contact-links">
-            ${getAuthorLinks().map((link) => `<a class="button button-secondary" href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
-          </div>
-          ${getAuthorLinksByKind('social').length
-            ? `<div class="social-links-group"><div class="section-heading"><p class="kicker">社交媒体</p><p class="section-intro">除了站内文章，我也会在这些平台同步代码更新、轻量近况和阶段性想法。</p></div>${renderAuthorLinkCards(getAuthorLinksByKind('social'))}</div>`
-            : ''}
-          <p>${site.author.city}</p>
-        </article>
-      </div>
-    </section>
+    ${renderHomeNowSection()}
 
     <section class="section reveal" id="feedback">
       ${renderFeedbackEntry({
@@ -2533,6 +2536,10 @@ const renderInfoPage = (pageKey) => {
 
   if (pageKey === 'projects') {
     return renderProjectsPage(page);
+  }
+
+  if (pageKey === 'now') {
+    return renderNowPage(page);
   }
 
   const body = page.items
