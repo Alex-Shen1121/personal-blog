@@ -233,30 +233,9 @@ export const home = {
     ]
   },
   navigationGuide: {
-    eyebrow: '导航导览',
-    title: '先看首页，再按主题进入对应页面，会更容易理解这个站点。',
-    description: '我把首页保留为总览层，把独立页面作为展开层。这样第一次访问时可以先扫一遍结构，再决定往哪个方向深入。',
-    groups: [
-      {
-        title: '先在首页快速浏览',
-        items: [
-          { label: '关于我', href: '#about', note: '快速理解我的工作方式与关注点。' },
-          { label: '技能 / 技术栈', href: '#skills', note: '看我擅长的问题类型与常用能力组合。' },
-          { label: '精选项目', href: '#projects', note: '先看当前重点与长期投入的项目方向。' },
-          { label: '精选文章', href: '#blog', note: '通过写作判断我的表达方式与思考路径。' },
-          { label: '时间线近况', href: '#now', note: '快速了解我最近在推进什么。' }
-        ]
-      },
-      {
-        title: '再进入独立页面展开看',
-        items: [
-          { label: '关于', href: '/about/', note: '看完整介绍、工作偏好与关注领域。' },
-          { label: '项目', href: '/projects/', note: '集中浏览项目主题与案例方向。' },
-          { label: '文章', href: '/blog/', note: '查看全部文章与详细内容。' },
-          { label: '近况', href: '/now/', note: '查看更完整的阶段性记录。' }
-        ]
-      }
-    ]
+    eyebrow: '内容模块',
+    title: '首页入口会直接跟着内容数据一起刷新。',
+    description: '关于、项目、文章和近况这些入口，会直接读取当前内容源生成摘要、数量和更新时间，减少首页额外维护。'
   },
   highlights: [
     {
@@ -279,36 +258,11 @@ export const home = {
   featuredProjects: {
     eyebrow: '精选项目',
     title: '这些是我现在持续投入、也最能代表做事方式的项目方向。',
-    description: '我更在意项目背后的判断与推进方式，而不只是一个名字。所以首页先展示 1 个当前重点项目和 2 个长期主题，方便快速理解我在做什么。',
+    description: '首页会直接从项目内容数据里读取排在前面的 3 个项目方向，并复用项目页里的状态、摘要与交付信息。',
     primaryLabel: '当前重点',
-    secondaryLabel: '长期主题',
+    secondaryLabel: '延伸项目',
     cta: { label: '查看全部项目', href: '/projects/' },
-    items: [
-      {
-        title: '个人内容站升级计划',
-        tag: '内容体系 / 静态站',
-        status: { label: '持续迭代中', tone: 'active' },
-        description: '把单页介绍站升级成可持续维护的内容站，补齐文章结构、信息架构与 SEO 基础设施。',
-        highlights: ['首页结构重做', '文章系统补齐', '信息架构持续梳理'],
-        href: '/projects/'
-      },
-      {
-        title: '轻量级文档展示系统',
-        tag: '前端工程 / 体验打磨',
-        status: { label: '方案沉淀中', tone: 'planning' },
-        description: '用更低复杂度的技术方案支持多页内容展示，兼顾部署稳定性与长期可维护性。',
-        highlights: ['原生技术栈', '低维护成本'],
-        href: '/projects/'
-      },
-      {
-        title: '写作者工作流整理',
-        tag: '方法论 / 内容生产',
-        status: { label: '长期维护', tone: 'maintained' },
-        description: '围绕选题、草稿、归档和复盘，构建一个适合个人长期使用的写作系统。',
-        highlights: ['选题到归档', '内容复用机制'],
-        href: '/now/'
-      }
-    ]
+    limit: 3
   },
   featuredPosts: {
     eyebrow: '精选文章',

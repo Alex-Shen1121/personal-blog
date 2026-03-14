@@ -1423,6 +1423,10 @@ body.has-reading-progress .reading-progress {
   gap: 18px;
 }
 
+.home-module-card {
+  align-content: start;
+}
+
 .nav-guide-list {
   display: grid;
   gap: 12px;

@@ -909,6 +909,93 @@ const renderProjectActionLink = ({ href, label, prefix = '', variant = 'ghost', 
   return `<a class="button button-${variant} button-small project-action${external ? ' project-action--external' : ''}" href="${resolvedHref}"${external ? ' target="_blank" rel="noreferrer"' : ''}><span>${escapeHtml(label)}</span>${external ? `<span class="project-action__meta">${externalLabel}</span><span class="project-action__arrow" aria-hidden="true">↗</span>` : ''}</a>`;
 };
 
+const getHomeFeaturedProjects = () =>
+  (pages.projects?.items ?? [])
+    .slice(0, home.featuredProjects.limit ?? 3)
+    .map((project) => {
+      const highlights = [...(project.portfolio?.deliverables ?? []), ...(project.portfolio?.outcomes ?? []), ...(project.stack ?? [])]
+        .filter(Boolean)
+        .filter((item, index, array) => array.indexOf(item) === index)
+        .slice(0, 3);
+
+      return {
+        title: project.title,
+        tag: project.category,
+        status: project.status,
+        description: project.summary || project.focus || project.portfolio?.context || '',
+        highlights,
+        href: `/projects/${project.slug}/`
+      };
+    });
+
+const getHomeContentModules = (posts) => {
+  const publishedPosts = Array.isArray(posts) ? posts : [];
+  const categoryCount = new Set(publishedPosts.map((post) => post.category?.name).filter(Boolean)).size;
+  const tagCount = new Set(
+    publishedPosts.flatMap((post) => (Array.isArray(post.tags) ? post.tags : [])).filter(Boolean)
+  ).size;
+  const latestPost = [...publishedPosts].sort(
+    (left, right) =>
+      new Date(`${right.updated ?? right.date}T00:00:00+08:00`) - new Date(`${left.updated ?? left.date}T00:00:00+08:00`)
+  )[0];
+  const projectItems = Array.isArray(pages.projects?.items) ? pages.projects.items : [];
+  const activeProjectCount = projectItems.filter((project) => {
+    const tone = normalizeProjectStatus(project.status)?.tone;
+    return ['live', 'active', 'maintained'].includes(tone);
+  }).length;
+  const aboutSections = Array.isArray(pages.about?.sections) ? pages.about.sections : [];
+  const nowItems = Array.isArray(nowFeed.items) ? nowFeed.items : [];
+  const latestNowDate = nowFeed.updatedAt ? formatDate(nowFeed.updatedAt) : '';
+
+  return [
+    {
+      title: pages.about.title,
+      href: '/about/',
+      description: pages.about.description,
+      stats: [`${aboutSections.length} 个介绍维度`, `${getAuthorLinks().length} 个联系入口`],
+      note: `${aboutSections.length} 个关于模块会随关于页内容一起刷新。`
+    },
+    {
+      title: pages.projects.title,
+      href: '/projects/',
+      description: pages.projects.description,
+      stats: [`${projectItems.length} 个项目方向`, `${activeProjectCount} 个持续推进中的主题`],
+      note: '支持继续切到作品集模式查看截图、职责与交付结果。'
+    },
+    {
+      title: pages.blog.title,
+      href: '/blog/',
+      description: pages.blog.description,
+      stats: [
+        `${publishedPosts.length} 篇公开文章`,
+        `${categoryCount} 个分类 · ${tagCount} 个标签`,
+        latestPost ? `最近更新 ${formatDate(latestPost.updated ?? latestPost.date)}` : `${contentTemplates.length} 个内容模板`
+      ],
+      note: `支持分类、标签、系列、模板与归档导航。`
+    },
+    {
+      title: pages.now.title,
+      href: '/now/',
+      description: pages.now.description,
+      stats: [
+        `${nowItems.length} 条动态记录`,
+        latestNowDate ? `最近更新 ${latestNowDate}` : `累计 ${nowItems.length} 条动态`
+      ],
+      note: '首页只截取最近几条，完整动态流集中维护在近况页。'
+    }
+  ];
+};
+
+const renderHomeContentModulesSection = (posts) => {
+  const modules = getHomeContentModules(posts);
+
+  return `<section class="section reveal" id="guide"><div class="section-heading"><p class="kicker">${home.navigationGuide.eyebrow}</p><h2>${home.navigationGuide.title}</h2><p class="section-intro">${home.navigationGuide.description}</p></div><div class="nav-guide-grid">${modules
+    .map(
+      (module) => `<article class="panel nav-guide-card home-module-card"><div><h3>${module.title}</h3><p>${module.description}</p></div><ul class="tag-list">${module.stats.map((stat) => `<li class="tag">${stat}</li>`).join('')}</ul><a class="nav-guide-link" href="${module.href.slice(1)}"><strong>查看完整页面</strong><span>${module.note}</span></a></article>`
+    )
+    .join('')}</div></section>`;
+};
+
 const renderNowStreamEntry = (item, { prefix = '', compact = false } = {}) => {
   const tags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
   const notes = compact ? [] : Array.isArray(item.notes) ? item.notes.filter(Boolean) : [];
@@ -2235,6 +2322,8 @@ const renderHomePage = (posts) => {
     })
     .slice(0, 3);
   const [primaryPost, ...secondaryPosts] = recentPosts;
+  const featuredProjects = getHomeFeaturedProjects();
+  const [primaryProject, ...secondaryProjects] = featuredProjects;
   return `
     <section class="hero">
       <div class="hero-copy reveal">
@@ -2281,24 +2370,7 @@ const renderHomePage = (posts) => {
       </article>
     </section>
 
-    <section class="section reveal" id="guide">
-      <div class="section-heading">
-        <p class="kicker">${home.navigationGuide.eyebrow}</p>
-        <h2>${home.navigationGuide.title}</h2>
-        <p class="section-intro">${home.navigationGuide.description}</p>
-      </div>
-      <div class="nav-guide-grid">
-        ${home.navigationGuide.groups
-          .map(
-            (group) => `<article class="panel nav-guide-card"><h3>${group.title}</h3><ul class="nav-guide-list">${group.items
-              .map(
-                (item) => `<li><a class="nav-guide-link" href="${item.href.startsWith('/') ? item.href.slice(1) : item.href}"><strong>${item.label}</strong><span>${item.note}</span></a></li>`
-              )
-              .join('')}</ul></article>`
-          )
-          .join('')}
-      </div>
-    </section>
+    ${renderHomeContentModulesSection(posts)}
 
     <section class="section reveal" id="about">
       <div class="section-heading">
@@ -2345,26 +2417,13 @@ const renderHomePage = (posts) => {
         <a class="button button-ghost" href="${home.featuredProjects.cta.href.slice(1)}">${home.featuredProjects.cta.label}</a>
       </div>
       <div class="featured-projects">
-        <article class="project-panel featured-project featured-project--primary">
-          <span class="feature-label">${home.featuredProjects.primaryLabel}</span>
-          <div class="featured-project__meta">
-            <span class="tag">${home.featuredProjects.items[0].tag}</span>
-            ${renderProjectStatusBadge(home.featuredProjects.items[0].status)}
-          </div>
-          <div>
-            <h3>${home.featuredProjects.items[0].title}</h3>
-            <p>${home.featuredProjects.items[0].description}</p>
-          </div>
-          <ul class="tag-list">
-            ${home.featuredProjects.items[0].highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}
-          </ul>
-          <a class="text-link" href="${home.featuredProjects.items[0].href.slice(1)}">继续查看 →</a>
-        </article>
+        ${primaryProject
+          ? `<article class="project-panel featured-project featured-project--primary"><span class="feature-label">${home.featuredProjects.primaryLabel}</span><div class="featured-project__meta"><span class="tag">${primaryProject.tag}</span>${renderProjectStatusBadge(primaryProject.status)}</div><div><h3>${primaryProject.title}</h3><p>${primaryProject.description}</p></div>${primaryProject.highlights.length ? `<ul class="tag-list">${primaryProject.highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}</ul>` : ''}<a class="text-link" href="${primaryProject.href.slice(1)}">查看项目详情 →</a></article>`
+          : ''}
         <div class="featured-projects__sidebar">
-          ${home.featuredProjects.items
-            .slice(1)
+          ${secondaryProjects
             .map(
-              (project) => `<article class="project-panel featured-project"><span class="feature-label">${home.featuredProjects.secondaryLabel}</span><div class="featured-project__meta"><span class="tag">${project.tag}</span>${renderProjectStatusBadge(project.status)}</div><div><h3>${project.title}</h3><p>${project.description}</p></div><ul class="tag-list">${project.highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}</ul><a class="text-link" href="${project.href.slice(1)}">继续查看 →</a></article>`
+              (project) => `<article class="project-panel featured-project"><span class="feature-label">${home.featuredProjects.secondaryLabel}</span><div class="featured-project__meta"><span class="tag">${project.tag}</span>${renderProjectStatusBadge(project.status)}</div><div><h3>${project.title}</h3><p>${project.description}</p></div>${project.highlights.length ? `<ul class="tag-list">${project.highlights.map((highlight) => `<li class="tag">${highlight}</li>`).join('')}</ul>` : ''}<a class="text-link" href="${project.href.slice(1)}">查看项目详情 →</a></article>`
             )
             .join('')}
         </div>
