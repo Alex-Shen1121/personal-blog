@@ -19,6 +19,33 @@ if (canonicalConfig.errors.length > 0) {
 }
 
 const IMAGE_EXTENSIONS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif']);
+const BUILD_TRACKED_RESOURCE_EXTENSIONS = new Set([
+  '.svg',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.gif',
+  '.css',
+  '.js',
+  '.mjs',
+  '.ico',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.otf',
+  '.eot',
+  '.pdf',
+  '.json',
+  '.txt',
+  '.xml',
+  '.mp4',
+  '.webm',
+  '.mp3',
+  '.wav',
+  '.ogg',
+  '.zip'
+]);
 const imageMetadata = new Map();
 const assetManifest = new Map();
 const emittedAssetEntries = [];
@@ -115,6 +142,11 @@ const normalizeImagePath = (assetPath = '') => {
   return `/${cleanPath.replace(/^\.?\/+/, '')}`;
 };
 
+const isBuildTrackedResourcePath = (assetPath = '') =>
+  BUILD_TRACKED_RESOURCE_EXTENSIONS.has(path.extname(assetPath.split(/[?#]/)[0]).toLowerCase());
+
+const getExpectedResourceLocation = (assetPath = '') => (assetPath.startsWith('/assets/') ? 'src/assets/' : 'public/');
+
 const getEmittedAssetPath = (assetPath = '') => {
   if (!assetPath || /^(?:[a-z]+:)?\/\//i.test(assetPath) || assetPath.startsWith('data:') || assetPath.startsWith('#')) {
     return assetPath;
@@ -129,7 +161,14 @@ const getEmittedAssetPath = (assetPath = '') => {
     return assetPath;
   }
 
-  return `${assetManifest.get(normalizedPath) ?? normalizedPath}${suffix}`;
+  const emittedPath = assetManifest.get(normalizedPath);
+  if (!emittedPath && isBuildTrackedResourcePath(normalizedPath)) {
+    throw new Error(
+      `Missing static resource: "${assetPath}" resolved to "${normalizedPath}". Add the file to ${getExpectedResourceLocation(normalizedPath)} before building.`
+    );
+  }
+
+  return `${emittedPath ?? normalizedPath}${suffix}`;
 };
 
 const parseSvgDimensions = (filePath) => {
