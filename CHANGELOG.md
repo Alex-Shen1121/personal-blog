@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- GitHub Pages 工作流增加 `npm` 依赖缓存与 `npm ci` 安装步骤，减少后续 CI 重复安装开销。
+
 ### Documentation
 
 - 后续未发布的文档、构建、内容结构与部署相关变更，统一先记录在这里。
