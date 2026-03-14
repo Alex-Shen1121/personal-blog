@@ -2,6 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync,
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { home, pages, site } from '../src/data/site.mjs';
+import { buildCanonicalUrl, validateCanonicalConfig } from '../src/utils/canonical.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -9,6 +10,11 @@ const outDir = path.join(rootDir, 'dist');
 const postsDir = path.join(rootDir, 'content', 'posts');
 const assetsDir = path.join(rootDir, 'src', 'assets');
 const publicDir = path.join(rootDir, 'public');
+const canonicalConfig = validateCanonicalConfig(site);
+
+if (canonicalConfig.errors.length > 0) {
+  throw new Error(canonicalConfig.errors.join('\n'));
+}
 
 const ensureDir = (dirPath) => mkdirSync(dirPath, { recursive: true });
 const writeText = (targetPath, content) => {
@@ -679,7 +685,7 @@ const getRelativePrefix = (outputPath) => {
 
 const trimLocalPrefix = (value) => value.replace(/^\.\//, '');
 
-const withBase = (relativePath) => new URL(relativePath.replace(/^\//, ''), site.siteUrl).toString();
+const withBase = (relativePath) => new URL(relativePath.replace(/^\//, ''), canonicalConfig.normalizedSiteUrl).toString();
 
 const toIsoDateTime = (dateString) => {
   if (!dateString) return '';
@@ -732,7 +738,7 @@ const formatMetaTitle = (...segments) => segments.filter(Boolean).join('｜');
 const renderLayout = ({ title, description, currentPath, outputPath, body, image = site.brand.ogImage, openGraph = {} }) => {
   const prefix = getRelativePrefix(outputPath);
   const assetPrefix = prefix === '.' ? './' : `${prefix}/`;
-  const canonical = withBase(currentPath.replace(/^\//, '').replace(/index\.html$/, ''));
+  const canonical = buildCanonicalUrl(site, currentPath);
   const stylesheetHref = trimLocalPrefix(`${prefix}/styles.css`);
   const scriptHref = trimLocalPrefix(`${prefix}/script.js`);
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));

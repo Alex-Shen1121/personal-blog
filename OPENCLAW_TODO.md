@@ -56,7 +56,7 @@
 - [x] 47. 完善页面级 title / description
 - [x] 48. 支持文章页独立 Open Graph 信息
 - [x] 49. 支持 Twitter Card
-- [ ] 50. 增加 canonical 规则校验
+- [x] 50. 增加 canonical 规则校验
 - [ ] 51. 自动生成结构化数据 JSON-LD
 - [ ] 52. 优化 sitemap / robots 控制
 - [ ] 53. 优化 404 页面引导

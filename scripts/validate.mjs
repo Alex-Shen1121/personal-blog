@@ -1,5 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { pages, site } from '../src/data/site.mjs';
+import { validateCanonicalConfig, validateCanonicalPath } from '../src/utils/canonical.mjs';
 
 const rootDir = path.resolve(new URL('..', import.meta.url).pathname);
 const requiredSourceFiles = [
@@ -7,9 +9,20 @@ const requiredSourceFiles = [
   'script.js',
   'scripts/build.mjs',
   'src/data/site.mjs',
+  'src/utils/canonical.mjs',
   'public/favicon.svg'
 ];
 const requiredPages = ['about', 'projects', 'blog', 'now'];
+
+const slugify = (value) =>
+  value
+    .replace(/\.md$/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/<[^>]+>/g, '')
+    .replace(/[^a-z0-9\u4e00-\u9fa5\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 
 for (const file of requiredSourceFiles) {
   const filePath = path.join(rootDir, file);
@@ -38,9 +51,23 @@ if (publishedPosts.length < 3) {
 }
 
 for (const page of requiredPages) {
-  const data = readFileSync(path.join(rootDir, 'src/data/site.mjs'), 'utf8');
-  if (!data.includes(`${page}:`)) {
+  if (!pages[page]) {
     console.error(`Missing page configuration for: ${page}`);
+    process.exit(1);
+  }
+}
+
+const canonicalConfig = validateCanonicalConfig(site);
+if (canonicalConfig.errors.length > 0) {
+  console.error(`Invalid canonical configuration:\n- ${canonicalConfig.errors.join('\n- ')}`);
+  process.exit(1);
+}
+
+const requiredCanonicalPaths = ['/', '/about/', '/projects/', '/blog/', '/blog/tags/', '/blog/categories/', '/blog/series/', '/blog/archive/', '/now/', '/404.html'];
+for (const canonicalPath of requiredCanonicalPaths) {
+  const errors = validateCanonicalPath(canonicalPath, { repoBasePath: canonicalConfig.normalizedRepoBasePath });
+  if (errors.length > 0) {
+    console.error(`Invalid canonical path ${canonicalPath}:\n- ${errors.join('\n- ')}`);
     process.exit(1);
   }
 }
@@ -78,6 +105,15 @@ for (const post of posts) {
     console.error(`Post ${post} has invalid seriesOrder field. Use a positive integer.`);
     process.exit(1);
   }
+
+  const canonicalPath = `/blog/${slugify(post)}/`;
+  const canonicalPathErrors = validateCanonicalPath(canonicalPath, {
+    repoBasePath: canonicalConfig.normalizedRepoBasePath
+  });
+  if (canonicalPathErrors.length > 0) {
+    console.error(`Post ${post} resolved to invalid canonical path ${canonicalPath}:\n- ${canonicalPathErrors.join('\n- ')}`);
+    process.exit(1);
+  }
 }
 
-console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected and required site files exist.`);
+console.log(`Validation passed. ${publishedPosts.length} published / ${posts.length} total markdown posts detected, required site files exist, and canonical rules are valid.`);
