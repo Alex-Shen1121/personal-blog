@@ -9,6 +9,7 @@
 ### Changed
 
 - GitHub Pages 工作流增加 `npm` 依赖缓存与 `npm ci` 安装步骤，减少后续 CI 重复安装开销。
+- 新增独立的 GitHub Actions 自动校验工作流，在 Pull Request 发往 `main` 和非 `main` 分支 push 时自动执行 `npm run validate` 与 `npm run build`。
 
 ### Documentation
 

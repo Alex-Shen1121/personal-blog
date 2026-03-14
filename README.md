@@ -100,6 +100,7 @@ npm run preview    # 启动本地静态预览服务
 欢迎通过 Issue 或 Pull Request 一起改进这个项目。
 
 仓库已提供标准化的 GitHub Issue / PR 模板，方便补充背景、验证结果与影响范围。
+同时已配置独立的 GitHub Actions 校验工作流：Pull Request 发往 `main` 时会自动执行 `npm run validate` 与 `npm run build`，非 `main` 分支的 push 也会自动跑同样的检查。
 
 提交前建议先确认以下几点：
 
@@ -172,7 +173,12 @@ cover: /assets/illustration-wave.svg
 
 项目面向 GitHub Pages 部署。
 
-推送到 `main` 分支后，GitHub Actions 会自动执行以下流程：
+仓库当前有两条 GitHub Actions 自动化流程：
+
+- **Validate site changes**：在 Pull Request 合并前，以及非 `main` 分支 push 时自动执行 `npm run validate` 与 `npm run build`
+- **Deploy static site to GitHub Pages**：在推送到 `main` 分支后负责校验、构建并发布 Pages
+
+推送到 `main` 分支后，GitHub Actions 会自动执行以下部署流程：
 
 1. 运行 `npm run validate`
 2. 运行 `npm run build`
