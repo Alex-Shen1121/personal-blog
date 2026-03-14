@@ -1912,6 +1912,21 @@ body.has-reading-progress .reading-progress {
   align-content: start;
 }
 
+.post-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.post-share-actions .button {
+  flex: 1 1 160px;
+}
+
+.post-share-feedback {
+  min-height: 1.6em;
+  margin: 0;
+}
+
 .meta-row--stack {
   align-items: start;
 }

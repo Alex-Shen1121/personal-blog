@@ -71,6 +71,86 @@ if (navToggle && nav) {
   });
 }
 
+const postShareCard = document.querySelector('[data-post-share]');
+const nativeShareButton = postShareCard?.querySelector('[data-share-native]');
+const copyShareButton = postShareCard?.querySelector('[data-share-copy]');
+const shareFeedback = postShareCard?.querySelector('[data-share-feedback]');
+let shareFeedbackTimer = 0;
+
+const setShareFeedback = (message) => {
+  if (!shareFeedback) return;
+
+  shareFeedback.textContent = message;
+  if (shareFeedbackTimer) {
+    window.clearTimeout(shareFeedbackTimer);
+  }
+
+  shareFeedbackTimer = window.setTimeout(() => {
+    shareFeedback.textContent = '也可以把链接直接发到聊天窗口。';
+  }, 2400);
+};
+
+const copyText = async (value) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', 'true');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  textarea.style.pointerEvents = 'none';
+  document.body.append(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  const success = document.execCommand('copy');
+  textarea.remove();
+
+  if (!success) {
+    throw new Error('copy_failed');
+  }
+};
+
+if (postShareCard) {
+  const shareTitle = postShareCard.dataset.shareTitle || document.title;
+  const shareText = postShareCard.dataset.shareText || shareTitle;
+  const shareUrl = postShareCard.dataset.shareUrl || window.location.href;
+
+  if (nativeShareButton) {
+    if (typeof navigator.share !== 'function') {
+      nativeShareButton.hidden = true;
+    } else {
+      nativeShareButton.addEventListener('click', async () => {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          setShareFeedback('已调用系统分享面板。');
+        } catch (error) {
+          if (error?.name === 'AbortError') return;
+          setShareFeedback('系统分享暂时不可用，请改用复制链接。');
+        }
+      });
+    }
+  }
+
+  if (copyShareButton) {
+    copyShareButton.addEventListener('click', async () => {
+      try {
+        await copyText(shareUrl);
+        setShareFeedback('链接已复制，可以直接发送给别人。');
+      } catch (error) {
+        setShareFeedback('复制失败，请手动复制浏览器地址栏链接。');
+      }
+    });
+  }
+}
+
 const revealItems = document.querySelectorAll('.reveal');
 const revealStepSelectors = [
   '.card-grid > *',

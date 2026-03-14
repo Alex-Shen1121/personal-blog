@@ -2419,6 +2419,29 @@ const renderTagDetailPage = (tag) => `
     </div>
   </section>`;
 
+const buildPostShareLinks = (post) => {
+  const canonical = buildCanonicalUrl(site, `/blog/${post.slug}/`);
+  const title = `${post.title}｜${site.shortName}`;
+  const encodedCanonical = encodeURIComponent(canonical);
+  const encodedTitle = encodeURIComponent(title);
+  const encodedSummary = encodeURIComponent(post.summary);
+  const mailBody = encodeURIComponent(`推荐你读这篇文章：${post.title}\n\n${post.summary}\n\n阅读链接：${canonical}`);
+
+  return {
+    canonical,
+    title,
+    weibo: `https://service.weibo.com/share/share.php?url=${encodedCanonical}&title=${encodedTitle}%20${encodedSummary}`,
+    x: `https://twitter.com/intent/tweet?url=${encodedCanonical}&text=${encodedTitle}`,
+    mail: `mailto:?subject=${encodedTitle}&body=${mailBody}`
+  };
+};
+
+const renderPostShareCard = (post) => {
+  const shareLinks = buildPostShareLinks(post);
+
+  return `<div class="note-card"><h3>分享这篇文章</h3><p>如果这篇内容对你有帮助，可以直接复制链接，或者转发到常用社交平台。</p><div class="post-share-actions" data-post-share data-share-title="${escapeHtml(post.title)}" data-share-text="${escapeHtml(shareLinks.title)}" data-share-url="${escapeHtml(shareLinks.canonical)}"><button class="button button-secondary button-small" type="button" data-share-native>系统分享</button><button class="button button-ghost button-small" type="button" data-share-copy>复制链接</button><a class="button button-ghost button-small" href="${escapeHtml(shareLinks.weibo)}" target="_blank" rel="noreferrer">分享到微博</a><a class="button button-ghost button-small" href="${escapeHtml(shareLinks.x)}" target="_blank" rel="noreferrer">分享到 X</a><a class="button button-ghost button-small" href="${escapeHtml(shareLinks.mail)}">邮件分享</a></div><p class="muted post-share-feedback" data-share-feedback role="status" aria-live="polite">也可以把链接直接发到聊天窗口。</p></div>`;
+};
+
 const renderPostNavigation = (navigationPosts) => {
   const items = [
     navigationPosts.previous
@@ -2485,6 +2508,7 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
           <div class="meta-row"><span>分类</span><span><a class="text-link" href="../categories/${post.category.slug}/">${post.category.name}</a></span></div>
           <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
         </div>
+        ${renderPostShareCard(post)}
         <div class="note-card">
           <h3>继续阅读</h3>
           <p>想看更多内容，可以回到文章列表，或者去看看我近期在做的项目与近况。</p>
