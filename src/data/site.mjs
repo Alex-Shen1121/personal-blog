@@ -31,6 +31,10 @@ export const site = {
     notFound: {
       title: '页面未找到｜沈晨玙',
       description: '你访问的页面不存在，可以返回首页继续浏览文章、项目与近况。'
+    },
+    robots: {
+      default: 'index,follow,max-image-preview:large',
+      notFound: 'noindex,follow'
     }
   },
   siteUrl: 'https://alex-shen1121.github.io/personal-blog/',

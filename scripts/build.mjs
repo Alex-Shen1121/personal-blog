@@ -686,6 +686,10 @@ const getRelativePrefix = (outputPath) => {
 const trimLocalPrefix = (value) => value.replace(/^\.\//, '');
 
 const withBase = (relativePath) => new URL(relativePath.replace(/^\//, ''), canonicalConfig.normalizedSiteUrl).toString();
+const formatSitemapLastModified = (dateString) => {
+  if (!dateString) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateString) ? dateString : '';
+};
 
 const toIsoDateTime = (dateString) => {
   if (!dateString) return '';
@@ -1002,6 +1006,7 @@ const renderLayout = ({
   body,
   image = site.brand.ogImage,
   openGraph = {},
+  robots = site.seo?.robots?.default ?? 'index,follow,max-image-preview:large',
   pageType = 'WebPage',
   breadcrumbs = [],
   structuredData = [],
@@ -1043,6 +1048,7 @@ const renderLayout = ({
   const metaTwitterDescription = escapeHtml(resolvedTwitter.description);
   const metaTwitterImage = resolvedTwitter.image ? escapeHtml(resolvedTwitter.image) : '';
   const metaTwitterImageAlt = resolvedTwitter.imageAlt ? escapeHtml(resolvedTwitter.imageAlt) : '';
+  const metaRobots = robots ? escapeHtml(robots) : '';
   const structuredDataScripts = [
     buildWebsiteStructuredData(),
     buildPersonStructuredData(),
@@ -1115,6 +1121,7 @@ const renderLayout = ({
     <meta name="twitter:description" content="${metaTwitterDescription}" />
     ${metaTwitterImage ? `<meta name="twitter:image" content="${metaTwitterImage}" />` : ''}
     ${metaTwitterImageAlt ? `<meta name="twitter:image:alt" content="${metaTwitterImageAlt}" />` : ''}
+    ${metaRobots ? `<meta name="robots" content="${metaRobots}" />` : ''}
     <link rel="canonical" href="${metaCanonical}" />
     ${structuredDataScripts}
     <link rel="icon" type="image/svg+xml" href="${escapeHtml(faviconHref)}" />
@@ -2452,32 +2459,41 @@ writeText(
     description: site.seo?.notFound?.description ?? '你访问的页面不存在。',
     currentPath: '/404.html',
     outputPath: path.join(outDir, '404.html'),
-    body: render404()
+    body: render404(),
+    robots: site.seo?.robots?.notFound ?? 'noindex,follow'
   })
 );
 
-const urls = [
-  '/',
-  '/about/',
-  '/projects/',
-  ...((pages.projects.items ?? []).filter((project) => project.slug).map((project) => `/projects/${project.slug}/`)),
-  '/blog/',
-  '/blog/tags/',
-  '/blog/categories/',
-  '/blog/series/',
-  '/now/',
-  ...tags.map((tag) => `/blog/tags/${tag.slug}/`),
-  ...categories.map((category) => `/blog/categories/${category.slug}/`),
-  ...seriesList.map((series) => `/blog/series/${series.slug}/`),
-  ...posts.map((post) => `/blog/${post.slug}/`)
+const sitemapEntries = [
+  { path: '/' },
+  { path: '/about/' },
+  { path: '/projects/' },
+  ...((pages.projects.items ?? []).filter((project) => project.slug).map((project) => ({ path: `/projects/${project.slug}/` }))),
+  { path: '/blog/' },
+  { path: '/blog/tags/' },
+  { path: '/blog/categories/' },
+  { path: '/blog/series/' },
+  { path: '/blog/archive/' },
+  { path: '/now/' },
+  ...tags.map((tag) => ({ path: `/blog/tags/${tag.slug}/` })),
+  ...categories.map((category) => ({ path: `/blog/categories/${category.slug}/` })),
+  ...seriesList.map((series) => ({ path: `/blog/series/${series.slug}/` })),
+  ...posts.map((post) => ({
+    path: `/blog/${post.slug}/`,
+    lastModified: formatSitemapLastModified(post.updated ?? post.date)
+  }))
 ];
 writeText(
   path.join(outDir, 'sitemap.xml'),
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((url) => `  <url><loc>${withBase(url === '/' ? '' : url.slice(1))}</loc></url>`)
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries
+    .map(({ path: url, lastModified }) => {
+      const loc = withBase(url === '/' ? '' : url.slice(1));
+      const lastmodTag = lastModified ? `<lastmod>${lastModified}</lastmod>` : '';
+      return `  <url><loc>${loc}</loc>${lastmodTag}</url>`;
+    })
     .join('\n')}\n</urlset>`
 );
 writeText(path.join(outDir, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${withBase('sitemap.xml')}\n`);
 writeText(path.join(outDir, '.nojekyll'), '');
 
-console.log(`Build complete. Generated ${posts.length} posts and ${urls.length} routes.`);
+console.log(`Build complete. Generated ${posts.length} posts and ${sitemapEntries.length} sitemap entries.`);
