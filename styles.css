@@ -1,3 +1,131 @@
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Visually hidden but screen reader accessible */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus ring styles - 符合 WCAG AA 标准 */
+*:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 自定义键盘焦点环 */
+*:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--accent-soft);
+}
+
+/* 增强焦点样式 */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--accent-soft-strong);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --panel-border: rgba(0, 0, 0, 0.3);
+    --surface-border: rgba(0, 0, 0, 0.2);
+    --accent-border: rgba(0, 0, 0, 0.4);
+  }
+  
+  [data-theme='light']:root {
+    --text: #000000;
+    --muted: #333333;
+  }
+}
+
+/* ===== LANGUAGE SWITCHER ===== */
+
+.language-switch-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--glass-surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--motion-ease);
+}
+
+.language-switch:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 120px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  background: var(--panel-strong);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--motion-fast) var(--motion-ease);
+  z-index: 100;
+}
+
+.language-switch-wrapper.is-open .language-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.language-dropdown li {
+  margin: 0;
+}
+
+.language-dropdown a {
+  display: block;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--soft);
+  text-decoration: none;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.language-dropdown a:hover,
+.language-dropdown a:focus {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
 :root {
   color-scheme: dark;
   --bg: #07111f;
@@ -130,6 +258,60 @@
     rgba(255, 255, 255, 0.9);
   --blockquote-text: #24405f;
 }
+
+/* ===== TYPOGRAPHY & READABILITY ===== */
+
+/* 优化字体可读性 - 行高和段落宽度 */
+body {
+  line-height: 1.7;
+  max-width: 75ch;
+}
+
+/* 正文内容优化 */
+.prose {
+  line-height: 1.8;
+  max-width: 70ch;
+}
+
+/* 移动端调整 */
+@media (max-width: 640px) {
+  body {
+    line-height: 1.75;
+    max-width: 100%;
+  }
+  
+  .prose {
+    line-height: 1.85;
+    max-width: 100%;
+  }
+}
+
+/* 确保标题也有足够的行高 */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+}
+
+/* ===== COLOR CONTRAST - WCAG AA ===== */
+
+/* 增强对比度 - 确保文本符合 WCAG AA 标准 */
+/* 已在 CSS 变量中优化 - 提升 text/muted/soft 的对比度 */
+
+/* 重要元素提升对比度 */
+.profile-card__name,
+.hero-copy h1,
+.post-card h3,
+.sidebar-section h4,
+.site-footer h4 {
+  color: var(--text);
+}
+
+/* 次要文本对比度增强 */
+.post-card p,
+.prose p,
+.muted {
+  color: var(--soft);
+}
+
 
 * {
   box-sizing: border-box;
@@ -6502,5 +6684,94 @@ html {
 @media (max-width: 980px) {
   html {
     scroll-padding-top: calc(var(--header-height) + var(--space-3));
+  }
+}
+
+/* ===== PRINT ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* 增强打印样式 - 优化可访问性 */
+@media print {
+  /* 打印时显示 Skip Link 目标 */
+  #main-content {
+    outline: none;
+  }
+  
+  /* 确保链接显示完整 URL */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+    word-break: break-all;
+  }
+  
+  /* 排除无链接和 JavaScript 链接 */
+  a[href^="#"]::after,
+  a[href^="javascript"]::after,
+  a[href^="mailto"]::after,
+  a[href^="tel"]::after {
+    content: "";
+  }
+  
+  /* 表格打印优化 */
+  .prose table {
+    page-break-inside: avoid;
+    font-size: 10pt;
+  }
+  
+  /* 图片打印优化 */
+  .prose img,
+  .prose-image img,
+  .post-cover img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  
+  /* 代码块打印优化 */
+  .prose pre,
+  .prose .code-block {
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  /* 块引用打印优化 */
+  .prose blockquote {
+    page-break-inside: avoid;
+    border-left: 3px solid #333 !important;
+  }
+  
+  /* 标题打印优化 - 避免分页 */
+  .prose h1,
+  .prose h2,
+  .prose h3 {
+    page-break-after: avoid;
+  }
+  
+  /* 列表打印优化 */
+  .prose ul,
+  .prose ol {
+    page-break-inside: avoid;
+  }
+  
+  /* 页眉页脚 */
+  @page {
+    margin: 2cm;
+  }
+  
+  /* 打印时显示语言切换器（可选）*/
+  .language-switch-wrapper {
+    display: none;
+  }
+  
+  /* 确保标题可见 */
+  h1, h2, h3, h4, h5, h6 {
+    color: black !important;
+    background: none !important;
+  }
+  
+  /* 去除动画 */
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }

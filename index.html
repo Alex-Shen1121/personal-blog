@@ -7,6 +7,10 @@
       name="description"
       content="沈晨玙的个人主页与博客，记录产品、设计、工程和生活观察，分享正在做的项目、近期近况与长期思考。"
     />
+    <!-- 多语言 SEO: hreflang 标签 -->
+    <link rel="alternate" hreflang="zh-CN" href="https://shenchenyu.com/" />
+    <link rel="alternate" hreflang="en" href="https://shenchenyu.com/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://shenchenyu.com/" />
     <meta property="og:title" content="沈晨玙｜个人主页与博客" />
     <meta
       property="og:description"
@@ -23,8 +27,11 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Skip Link: 方便键盘用户跳转到主要内容 -->
+    <a href="#main-content" class="skip-link">跳转到主要内容</a>
+
     <!-- Reading Progress Bar -->
-    <div class="reading-progress" aria-hidden="true">
+    <div class="reading-progress" aria-hidden="true" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
       <div class="reading-progress__bar"></div>
     </div>
 
@@ -56,19 +63,35 @@
           </a>
           
           <div class="header-actions">
+            <!-- 语言切换器 / Language Switcher -->
+            <div class="language-switch-wrapper">
+              <button 
+                class="language-switch" 
+                id="language-switch"
+                aria-label="切换语言 / Switch Language"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span aria-hidden="true">中文</span>
+              </button>
+              <ul class="language-dropdown" role="menu" aria-label="语言选择">
+                <li role="menuitem"><a href="/" hreflang="zh-CN" lang="zh-CN">中文</a></li>
+                <li role="menuitem"><a href="/en/" hreflang="en" lang="en">English</a></li>
+              </ul>
+            </div>
             <button class="search-trigger" id="search-trigger" aria-label="搜索" data-search-trigger>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
             </button>
-            <button class="theme-toggle" id="theme-toggle" aria-label="切换主题">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="theme-toggle" id="theme-toggle" aria-label="切换深色/浅色主题" aria-pressed="false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="5"></circle>
                 <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
               </svg>
             </button>
-            <button class="nav-toggle" id="nav-toggle" aria-label="展开导航" aria-expanded="false">
+            <button class="nav-toggle" id="nav-toggle" aria-label="展开或关闭导航菜单" aria-expanded="false" aria-controls="site-nav">
               <span></span>
               <span></span>
               <span></span>
@@ -87,7 +110,7 @@
       </header>
 
       <!-- Main Content -->
-      <main>
+      <main id="main-content" role="main" tabindex="-1">
         <!-- Hero Section with 3-column layout -->
         <section class="hero hero--complex" id="hero">
           <!-- Left: Info Card -->
@@ -330,8 +353,17 @@
               <p>获取最新文章与项目动态，不错过任何更新。</p>
             </div>
             <div class="subscribe-card__form">
-              <form class="subscribe-form" onsubmit="event.preventDefault(); alert('订阅功能演示');">
-                <input type="email" placeholder="your@email.com" required />
+              <form class="subscribe-form" onsubmit="event.preventDefault(); alert('订阅功能演示');" aria-label="订阅更新">
+                <label for="email-input" class="visually-hidden">电子邮件地址</label>
+                <input 
+                  type="email" 
+                  id="email-input" 
+                  placeholder="your@email.com" 
+                  required 
+                  aria-required="true"
+                  aria-describedby="email-hint"
+                />
+                <span id="email-hint" class="visually-hidden">我们将发送最新文章到您的邮箱</span>
                 <button type="submit" class="button button-primary">订阅</button>
               </form>
             </div>
@@ -382,15 +414,15 @@
         </div>
         <div class="site-footer__bar">
           <p class="site-footer__meta">© 2026 沈晨玙. 基于静态站点构建。</p>
-          <a href="#" class="site-footer__top-link">↑ 返回顶部</a>
+          <a href="#main-content" class="site-footer__top-link" aria-label="返回页面顶部">↑ 返回顶部</a>
         </div>
       </footer>
     </div>
 
     <!-- Modal / Lightbox -->
-    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
-      <button class="lightbox__close" aria-label="关闭">&times;</button>
-      <img class="lightbox__img" src="" alt="预览图片" />
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lightbox-title">
+      <button class="lightbox__close" aria-label="关闭图片预览">&times;</button>
+      <img class="lightbox__img" src="" alt="图片预览" id="lightbox-title" />
     </div>
 
     <!-- Mobile Navigation Overlay -->
