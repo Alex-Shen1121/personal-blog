@@ -17,6 +17,83 @@ const publicDir = path.join(rootDir, 'public');
 const rawCriticalCssSource = readFileSync(path.join(rootDir, 'critical.css'), 'utf8');
 const canonicalConfig = validateCanonicalConfig(site);
 
+const normalizeFatalBuildError = (error) => {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error(typeof error === 'string' ? error : JSON.stringify(error));
+};
+
+const inferBuildFailureStage = (message = '') => {
+  if (message.startsWith('Missing static resource:')) return '静态资源检查';
+  if (message.startsWith('HTML semantics/accessibility audit failed:')) return 'HTML 语义与可访问性审计';
+  if (message.includes('Canonical') || message.includes('canonical')) return '站点 canonical 配置';
+  if (message.includes('frontmatter')) return '文章 frontmatter 校验';
+  if (message.includes('slug')) return '文章路由生成';
+  if (message.includes('Markdown') || message.startsWith('Post ')) return '文章内容解析';
+  return '构建阶段';
+};
+
+const inferBuildFailureHints = (message = '') => {
+  const hints = [];
+
+  if (message.startsWith('Missing static resource:')) {
+    hints.push('确认报错资源文件真实存在，并放在 src/assets/ 或 public/ 下。');
+    hints.push('检查引用路径是否使用了正确的绝对路径、文件名和扩展名。');
+  }
+
+  if (message.startsWith('HTML semantics/accessibility audit failed:')) {
+    hints.push('根据上面的页面路径逐项修复缺少的 landmark、h1、alt、aria-label 等语义化问题。');
+    hints.push('如果是模板改动导致的问题，优先检查 renderLayout、页面主体结构和交互控件名称。');
+  }
+
+  if (message.includes('frontmatter')) {
+    hints.push('检查 content/posts 中对应文章的 frontmatter 字段名、日期格式、tags、slug 和布尔值写法。');
+  }
+
+  if (message.includes('Markdown') || message.startsWith('Post ')) {
+    hints.push('检查对应 Markdown 正文中的标题层级、图片 alt、链接目标、占位词和内容长度。');
+    hints.push('可先运行 npm run validate，更快定位文章内容问题。');
+  }
+
+  if (message.includes('slug')) {
+    hints.push('确保 slug 或文件名最终生成的文章路径唯一，且不会解析为空。');
+  }
+
+  if (message.includes('Canonical') || message.includes('canonical')) {
+    hints.push('检查 src/data/site.mjs 中的 siteUrl、repoBasePath，以及相关页面路径是否满足 canonical 规则。');
+  }
+
+  hints.push('修复后重新执行 npm run build。');
+
+  return [...new Set(hints)];
+};
+
+const formatBuildFailure = (error) => {
+  const normalizedError = normalizeFatalBuildError(error);
+  const message = normalizedError.message?.trim?.() || '未知构建错误';
+  const stage = inferBuildFailureStage(message);
+  const reasonLines = message.split('\n').map((line) => `- ${line}`);
+  const hintLines = inferBuildFailureHints(message).map((line) => `- ${line}`);
+
+  return ['✖ Build failed', `阶段：${stage}`, '', '原因：', ...reasonLines, '', '建议：', ...hintLines].join('\n');
+};
+
+let hasHandledFatalBuildError = false;
+const exitWithBuildFailure = (error) => {
+  if (hasHandledFatalBuildError) {
+    return;
+  }
+
+  hasHandledFatalBuildError = true;
+  console.error(formatBuildFailure(error));
+  process.exit(1);
+};
+
+process.on('uncaughtException', exitWithBuildFailure);
+process.on('unhandledRejection', (reason) => exitWithBuildFailure(reason));
+
 if (canonicalConfig.errors.length > 0) {
   throw new Error(canonicalConfig.errors.join('\n'));
 }
