@@ -593,19 +593,24 @@ const renderAuthorLinkCards = (links) =>
     })
     .join('')}</ul>`;
 
-const getEmailSubscriptionHref = () => {
-  const email = site.author.email?.trim?.();
-  if (!email) return '';
+const createMailtoHref = ({ email = '', subject = '', body = '' } = {}) => {
+  const normalizedEmail = email?.trim?.();
+  if (!normalizedEmail) return '';
 
-  const subject = site.emailSubscription?.subject?.trim?.();
-  const body = site.emailSubscription?.body?.trim?.();
   const params = new URLSearchParams();
-  if (subject) params.set('subject', subject);
-  if (body) params.set('body', body);
+  if (subject?.trim?.()) params.set('subject', subject.trim());
+  if (body?.trim?.()) params.set('body', body.trim());
 
   const query = params.toString();
-  return `mailto:${email}${query ? `?${query}` : ''}`;
+  return `mailto:${normalizedEmail}${query ? `?${query}` : ''}`;
 };
+
+const getEmailSubscriptionHref = () =>
+  createMailtoHref({
+    email: site.author.email,
+    subject: site.emailSubscription?.subject,
+    body: site.emailSubscription?.body
+  });
 
 const renderEmailSubscriptionLink = ({
   label = site.emailSubscription?.ctaLabel ?? '邮件订阅',
@@ -618,6 +623,78 @@ const renderEmailSubscriptionLink = ({
 
   const classes = ['button', `button-${variant}`, small ? 'button-small' : '', className].filter(Boolean).join(' ');
   return `<a class="${classes}" href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
+};
+
+const getFeedbackEmailHref = ({ pageTitle = '', pageUrl = '' } = {}) => {
+  const subjectBase = site.feedback?.email?.subject?.trim?.() || site.feedback?.title?.trim?.() || '留言 / 反馈';
+  const subject = pageTitle ? `${subjectBase}｜${pageTitle}` : subjectBase;
+  const bodyParts = [site.feedback?.email?.body?.trim?.() || '你好，我想反馈一些关于博客 / 站点的想法。'];
+
+  if (pageTitle) {
+    bodyParts.push(`页面标题：${pageTitle}`);
+  }
+
+  if (pageUrl) {
+    bodyParts.push(`页面链接：${pageUrl}`);
+  }
+
+  return createMailtoHref({
+    email: site.author.email,
+    subject,
+    body: bodyParts.filter(Boolean).join('\n\n')
+  });
+};
+
+const getFeedbackIssueHref = ({ pageTitle = '', pageUrl = '' } = {}) => {
+  const baseUrl = site.feedback?.issue?.url?.trim?.();
+  if (!baseUrl) return '';
+
+  const url = new URL(baseUrl);
+  const title = pageTitle ? `[反馈] ${pageTitle}` : '[反馈] 站点建议';
+  const bodyLines = [
+    '## 反馈说明',
+    '',
+    '- 反馈类型：内容建议 / 勘误 / 体验问题 / 功能建议',
+    pageTitle ? `- 页面标题：${pageTitle}` : '',
+    pageUrl ? `- 页面链接：${pageUrl}` : '',
+    '',
+    '## 具体内容',
+    '',
+    '请在这里补充你的反馈。'
+  ].filter(Boolean);
+
+  url.searchParams.set('title', title);
+  url.searchParams.set('body', bodyLines.join('\n'));
+  return url.toString();
+};
+
+const getPrimaryFeedbackHref = () => getFeedbackEmailHref() || getFeedbackIssueHref();
+
+const renderFeedbackEntry = ({
+  title = site.feedback?.title ?? '留言 / 反馈',
+  description = site.feedback?.description ?? '',
+  note = site.feedback?.note ?? '',
+  pageTitle = '',
+  pageUrl = '',
+  cardClassName = ''
+} = {}) => {
+  const emailHref = getFeedbackEmailHref({ pageTitle, pageUrl });
+  const issueHref = getFeedbackIssueHref({ pageTitle, pageUrl });
+  const actions = [
+    emailHref
+      ? `<a class="button button-primary" href="${escapeHtml(emailHref)}">${escapeHtml(site.feedback?.email?.label ?? '发邮件留言')}</a>`
+      : '',
+    issueHref
+      ? `<a class="button button-secondary" href="${escapeHtml(issueHref)}" target="_blank" rel="noreferrer">${escapeHtml(site.feedback?.issue?.label ?? '提交反馈')}</a>`
+      : ''
+  ]
+    .filter(Boolean)
+    .join('');
+
+  if (!description && !actions) return '';
+
+  const cardClasses = ['note-card', cardClassName].filter(Boolean).join(' ');
+  return `<div class="${cardClasses}"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(description)}</p>${actions ? `<div class="contact-links">${actions}</div>` : ''}${note ? `<p class="muted">${escapeHtml(note)}</p>` : ''}</div>`;
 };
 
 const normalizeProjectExternalLinks = (links) => {
@@ -1687,6 +1764,7 @@ const renderLayout = ({
               ${getAuthorLinks().map((link) => `<a href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
               ${rssHref ? `<a href="${rssHref}">RSS 订阅</a>` : ''}
               ${getEmailSubscriptionHref() ? `<a href="${escapeHtml(getEmailSubscriptionHref())}">邮件订阅</a>` : ''}
+              ${getPrimaryFeedbackHref() ? `<a href="${escapeHtml(getPrimaryFeedbackHref())}"${getLinkTargetAttributes(getPrimaryFeedbackHref())}>${escapeHtml(site.feedback?.footerLabel ?? '留言反馈')}</a>` : ''}
             </div>
           </section>
         </div>
@@ -1920,6 +1998,13 @@ const renderHomePage = (posts) => {
           <p>${site.author.city}</p>
         </article>
       </div>
+    </section>
+
+    <section class="section reveal" id="feedback">
+      ${renderFeedbackEntry({
+        pageTitle: '首页',
+        pageUrl: buildCanonicalUrl(site, '/')
+      })}
     </section>`;
 };
 
@@ -2656,6 +2741,13 @@ const renderPostPage = (post, relatedPosts, navigationPosts, series) => `
           <div class="meta-row meta-row--stack"><span>标签</span><span class="meta-tags">${renderTagLinks(post.tags, '../')}</span></div>
         </div>
         ${renderPostShareCard(post)}
+        ${renderFeedbackEntry({
+          title: '对这篇文章有想法？',
+          description: '如果你发现勘误、想继续追问某个细节，或者希望我展开写某个相关主题，可以直接从这里留言。',
+          note: '邮件会自动带上当前文章标题和链接，方便我回看上下文。',
+          pageTitle: post.title,
+          pageUrl: buildCanonicalUrl(site, `/blog/${post.slug}/`)
+        })}
         <div class="note-card">
           <h3>继续阅读</h3>
           <p>想看更多内容，可以回到文章列表，或者去看看我近期在做的项目与近况。</p>

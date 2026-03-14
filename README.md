@@ -190,7 +190,7 @@ npm run precommit
 - 首页 Hero 区域内容
 - 导航配置
 - 项目页、关于页、近况页文案
-- 联系方式、作者信息与社交媒体跳转配置
+- 联系方式、作者信息、留言 / 反馈入口与社交媒体跳转配置
 - GitHub Pages 部署所需路径配置
 
 ### 新增博客文章
@@ -242,7 +242,7 @@ cover: /assets/illustration-wave.svg
 2. 运行 `npm run build`
 3. 将 `dist/` 目录作为 Pages artifact 发布
 
-构建完成后，站点根目录会额外生成 RSS 订阅地址：`/rss.xml`，博客列表、首页联系区与页脚也会提供 RSS / 邮件订阅 / 社交媒体跳转入口。
+构建完成后，站点根目录会额外生成 RSS 订阅地址：`/rss.xml`，博客列表、首页联系区、文章详情页与页脚也会提供 RSS / 邮件订阅 / 留言反馈 / 社交媒体跳转入口。
 例如当前 GitHub Pages 地址为：<https://alex-shen1121.github.io/personal-blog/rss.xml>
 
 如果仓库名、站点域名或部署路径发生变化，需要同步修改 `src/data/site.mjs` 中的：
