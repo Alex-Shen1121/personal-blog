@@ -529,3 +529,171 @@ if (document.readyState === 'complete') {
 } else {
   window.addEventListener('load', queueEnhancements, { once: true });
 }
+
+/* ===== ENHANCED SCRIPT BEHAVIORS ===== */
+
+// Page loader - remove after content loads
+(function() {
+  const loader = document.querySelector('[data-page-loader]');
+  if (!loader) return;
+
+  function hideLoader() {
+    document.body.classList.remove('is-loading');
+  }
+
+  if (document.readyState === 'complete') {
+    hideLoader();
+  } else {
+    window.addEventListener('load', hideLoader, { once: true });
+    // Fallback timeout
+    setTimeout(hideLoader, 3000);
+  }
+})();
+
+// Header scroll detection
+(function() {
+  const header = document.querySelector('.site-header');
+  if (!header) return;
+
+  let ticking = false;
+  
+  function updateHeader() {
+    header.classList.toggle('is-scrolled', window.scrollY > 48);
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(updateHeader);
+      ticking = true;
+    }
+  }, { passive: true });
+  
+  // Initial check
+  updateHeader();
+})();
+
+// Nav toggle animation
+(function() {
+  const navToggle = document.querySelector('[data-nav-toggle]');
+  if (!navToggle) return;
+
+  navToggle.addEventListener('click', function() {
+    this.classList.toggle('is-open');
+  });
+})();
+
+// Code block copy functionality
+(function() {
+  document.addEventListener('click', function(e) {
+    const copyBtn = e.target.closest('[data-copy-code]');
+    if (!copyBtn) return;
+
+    const codeBlock = copyBtn.closest('.code-block');
+    const codeContent = codeBlock?.querySelector('.code-block__code');
+    const text = codeContent ? codeContent.innerText : '';
+    const originalText = copyBtn.textContent;
+
+    navigator.clipboard.writeText(text).then(function() {
+      copyBtn.textContent = '已复制!';
+      copyBtn.classList.add('is-copied');
+      
+      setTimeout(function() {
+        copyBtn.textContent = originalText;
+        copyBtn.classList.remove('is-copied');
+      }, 2000);
+    }).catch(function() {
+      copyBtn.textContent = '复制失败';
+      setTimeout(function() {
+        copyBtn.textContent = originalText;
+      }, 2000);
+    });
+  });
+})();
+
+// Lightbox for images
+(function() {
+  const lightbox = document.createElement('div');
+  lightbox.className = 'lightbox';
+  lightbox.innerHTML = '<button class="lightbox__close" aria-label="关闭">&times;</button><img class="lightbox__img" src="" alt="" />';
+  document.body.appendChild(lightbox);
+
+  const lightboxImg = lightbox.querySelector('.lightbox__img');
+  const closeBtn = lightbox.querySelector('.lightbox__close');
+
+  function openLightbox(src, alt) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    lightbox.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  // Click on images in prose and post cover
+  document.addEventListener('click', function(e) {
+    const img = e.target.closest('.prose-image img, .prose-figure img, .post-cover img');
+    if (!img) return;
+    
+    const src = img.src || img.dataset.src;
+    const alt = img.alt || '';
+    if (src) openLightbox(src, alt);
+  });
+
+  // Close handlers
+  closeBtn.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && lightbox.classList.contains('is-open')) {
+      closeLightbox();
+    }
+  });
+})();
+
+// Smooth scroll for anchor links
+(function() {
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a[href^="#"]');
+    if (!link) return;
+    
+    const targetId = link.getAttribute('href');
+    if (targetId === '#') return;
+    
+    const target = document.querySelector(targetId);
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Update URL without jump
+      history.pushState(null, '', targetId);
+    }
+  });
+})();
+
+// Enhanced button ripple effect
+(function() {
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.button');
+    if (!btn || btn.querySelector('.ripple')) return;
+
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    
+    btn.appendChild(ripple);
+    
+    ripple.addEventListener('animationend', function() {
+      ripple.remove();
+    });
+  });
+})();

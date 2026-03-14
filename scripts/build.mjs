@@ -1299,13 +1299,21 @@ const highlightCode = (source, language = '') => {
 };
 
 const renderCodeBlock = (lines, language = '') => {
+  const source = lines.join('\n');
   const normalizedLanguage = normalizeCodeLanguage(language);
-  const label = normalizedLanguage ? escapeHtml(normalizedLanguage) : '';
-  const content = highlightCode(lines.join('\n'), normalizedLanguage);
-  const className = normalizedLanguage ? ` class="language-${label}"` : '';
-  const dataLang = normalizedLanguage ? ` data-language="${label}"` : '';
-  const preClassName = normalizedLanguage ? 'code-block has-language' : 'code-block';
-  return `<pre class="${preClassName}"${dataLang}><code${className}>${content}</code></pre>`;
+  const label = escapeHtml(normalizedLanguage || 'text');
+  const copyLabel = '复制代码';
+  const copyContent = escapeHtml(encodeURIComponent(source));
+  const lineMarkup = source
+    .split('\n')
+    .map((line, index) => {
+      const renderedLine = line ? highlightCode(line, normalizedLanguage) : '&nbsp;';
+      return `<span class="code-block__line"><span class="code-block__line-number" aria-hidden="true">${index + 1}</span><span class="code-block__line-content">${renderedLine}</span></span>`;
+    })
+    .join('');
+  const className = normalizedLanguage ? ` language-${escapeHtml(normalizedLanguage)}` : '';
+
+  return `<figure class="code-block${normalizedLanguage ? ' has-language' : ''}" data-language="${label}"><figcaption class="code-block__toolbar"><span class="code-block__language">${label}</span><button class="code-block__copy" type="button" data-copy-code data-copy-content="${copyContent}" aria-label="${copyLabel}">${copyLabel}</button></figcaption><pre class="code-block__pre"><code class="code-block__code${className}">${lineMarkup}</code></pre></figure>`;
 };
 
 const resolveContentPath = (value = '') => {
@@ -1918,7 +1926,7 @@ const renderLayout = ({
   const scriptHref = trimLocalPrefix(resolveStaticAssetPath('/script.js', assetPrefix));
   const enhancementsHref = trimLocalPrefix(resolveStaticAssetPath('/enhancements.js', assetPrefix));
   const analyticsScriptHref = site.analytics?.provider === 'busuanzi' ? site.analytics.scriptUrl : '';
-  const fontStylesheetHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap';
+  const fontStylesheetHref = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap';
   const faviconHref = trimLocalPrefix(resolveStaticAssetPath(site.brand.favicon, assetPrefix));
   const rssHref = site.rss?.path ? trimLocalPrefix(resolveLinkHref(site.rss.path, `${prefix}/`)) : '';
   const resolvedOpenGraph = {
@@ -2050,8 +2058,21 @@ const renderLayout = ({
     <link rel="preload" href="${stylesheetHref}" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="${stylesheetHref}" /></noscript>
   </head>
-  <body>
+  <body class="is-loading">
     <a class="skip-link" href="#main-content">${escapeHtml(uiText.skipToContent ?? '跳到正文')}</a>
+    <div class="page-loader" data-page-loader aria-hidden="true">
+      <div class="page-loader__frame">
+        <span class="page-loader__pill"></span>
+        <span class="page-loader__headline"></span>
+        <span class="page-loader__line page-loader__line--long"></span>
+        <span class="page-loader__line page-loader__line--medium"></span>
+        <div class="page-loader__grid">
+          <span class="page-loader__card"></span>
+          <span class="page-loader__card"></span>
+          <span class="page-loader__card"></span>
+        </div>
+      </div>
+    </div>
     <div class="reading-progress" data-reading-progress>
       <span class="reading-progress__bar" data-reading-progress-bar></span>
     </div>
@@ -2095,23 +2116,35 @@ const renderLayout = ({
           </section>
           <section class="site-footer__section" aria-label="Site navigation">
             <span class="site-footer__heading">${escapeHtml(uiText.footerSite ?? '站内导航')}</span>
-            <div class="footer-links">
+            <div class="footer-links footer-links--stack">
               ${siteConfig.navigation
                 .map(({ label, href }) => `<a href="${trimLocalPrefix(resolveLinkHref(href, `${prefix}/`))}">${label}</a>`)
                 .join('')}
             </div>
           </section>
-          <section class="site-footer__section" aria-label="Links">
-            <span class="site-footer__heading">${escapeHtml(uiText.footerLinks ?? '联系与链接')}</span>
-            <div class="footer-links">
-              ${getAuthorLinks(siteConfig).map((link) => `<a href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`).join('')}
+          <section class="site-footer__section" aria-label="Social links">
+            <span class="site-footer__heading">${escapeHtml(documentLang.startsWith('en') ? 'Social' : '社交与联系')}</span>
+            <div class="footer-links footer-links--stack">
+              ${getAuthorLinksByKind('social', siteConfig)
+                .concat(getAuthorLinksByKind('contact', siteConfig))
+                .map((link) => `<a href="${link.url}"${getLinkTargetAttributes(link.url)}>${escapeHtml(link.label)}</a>`)
+                .join('')}
+            </div>
+          </section>
+          <section class="site-footer__section" aria-label="Utilities">
+            <span class="site-footer__heading">${escapeHtml(documentLang.startsWith('en') ? 'Updates' : '订阅与更新')}</span>
+            <div class="footer-links footer-links--stack">
               ${rssHref ? `<a href="${rssHref}">${escapeHtml(uiText.rssLabel ?? 'RSS 订阅')}</a>` : ''}
               ${getEmailSubscriptionHref(siteConfig) ? `<a href="${escapeHtml(getEmailSubscriptionHref(siteConfig))}">${escapeHtml(uiText.emailLabel ?? '邮件订阅')}</a>` : ''}
               ${getPrimaryFeedbackHref(siteConfig) ? `<a href="${escapeHtml(getPrimaryFeedbackHref(siteConfig))}"${getLinkTargetAttributes(getPrimaryFeedbackHref(siteConfig))}>${escapeHtml(uiText.feedbackLabel ?? '留言反馈')}</a>` : ''}
+              <a href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a>
             </div>
           </section>
         </div>
-        <span class="site-footer__meta">© <span data-current-year></span> ${siteConfig.author.name} · ${escapeHtml(uiText.footerMeta ?? '以轻量静态站方式构建，持续更新中。')} ${documentLang.startsWith('en') ? `Source code is released under <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a>. See <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a> for site updates.` : `源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源，变更记录见 <a class="text-link" href="${site.changelog.url}" target="_blank" rel="noreferrer">${site.changelog.name}</a>。`}</span>
+        <div class="site-footer__bar">
+          <span class="site-footer__meta">© <span data-current-year></span> ${siteConfig.author.name} · ${escapeHtml(uiText.footerMeta ?? '以轻量静态站方式构建，持续更新中。')} ${documentLang.startsWith('en') ? `Source code is released under <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a>.` : `源码采用 <a class="text-link" href="${site.license.url}" target="_blank" rel="noreferrer">${site.license.name}</a> 开源。`}</span>
+          <a class="text-link site-footer__top-link" href="#main-content">${escapeHtml(uiText.backToTop ?? '返回顶部')}</a>
+        </div>
       </footer>
     </div>
     <script src="${scriptHref}" data-site-main-script="true" data-enhancements-src="${enhancementsHref}"${analyticsScriptHref ? ` data-analytics-src="${escapeHtml(analyticsScriptHref)}"` : ''} defer></script>
